@@ -1,0 +1,194 @@
+---
+title: "P203 Subjective Perceptual and ERP Amplitude (N170)"
+author: "[Haiyang Jin](https://haiyangjin.github.io/)"
+date: "`r format(Sys.time(), '%d-%m-%Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+    toc: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: true
+      smooth_scroll: false
+    includes:
+      after_body: Utilities/footer.html
+---
+
+# General introduction
+
+## Introduction
+
+**Linear Mixed Model** were utilized to compare the parameters fittd with different distribution assumptions. 
+  
+## Experiment design
+
+* **Independent variables**:
+    + Stimulus Type (`NS`: *normal* vs. *scrambled*)
+    + Stimulus Category (`FH`: *face* vs. *house*)
+    + Hemisphere (`Hemisphere`: *left* vs. *right*)
+    + Durations (`Durations`: *17*, *50*, *100* vs. *200*)
+
+* **Dependent variables**:
+    + Gaussian -- *mean* (`MeanAmp`)
+    
+## Preparations
+```{r, echo=FALSE, include=FALSE}
+# knitr::opts_chunk$set(error = TRUE)
+knitr::opts_chunk$set(echo = TRUE) # show the code for this chunk
+options(width = 110)  # set the maximum width of the html output
+```
+
+```{r setup and load the related libraries, message=FALSE}
+## load libraries
+library(tidyverse)
+library(lme4)
+library(lmerTest) 
+library(emmeans)
+
+# options for calculating estimated marginal means
+# lmer.df = c("kenward-roger", "satterthwaite", "asymptotic")
+emm_options(lmer.df = "satterthwaite", lmerTest.limit = 1e6)  # , pbkrtest.limit =, disable.pbkrtest = FALSE
+
+```
+  
+```{r foldes and load R files, message = FALSE}
+# folders
+folder.R <- "R"
+folder.data <- "data"
+folder.nesi <- "NeSI"
+folder.output <- "output"
+
+# load R files
+source(file.path(folder.R, "geom_flat_violin.R"))  # flat violin plot 
+source(file.path(folder.R, "substr_Event.R"))  # parse Event to IVs
+# source(file.path(folder.R, "exgaussianplus.R"))
+source(file.path(folder.R, "general_theme.R"))  # plot theme
+
+```
+
+```{r setting for plots}
+# set up the theme for plot and rainclound plot
+plot_theme <- {
+  general_theme +
+    theme(legend.position = "right")
+}
+
+erp_theme <- {
+  general_theme +
+    theme(legend.position = "bottom")
+}
+
+ylimit.n170 <- c(2, -4)  # y axis for plotting N170 amplitude
+
+```
+
+## Model selection procedure
+
+For the analysis for every dependent variable, an optimal model was obtained by the following general steps:
+  
+1. **Maximum Model**: a maximum model with all fixed and random factors was built. 
+2. **ZCP Model**: a zero-correlated-parameter (zcp) model based on the maximum model is built. The only difference between zcp and maximum models is that the correlations between random effects are forced to be zero in the zcp model.
+3. **Reduced Model**: the random effects which are not supported by the data will be removed from the zcp model. The function `step(fit, fixed.reduce = FALSE)` from `library(lmerTest)` is used for this step. The algorithm could be found [here](#stepfun).
+4. **Extended Model**: extending the reduced model with correlation parameters between the remaining random effects.
+5. **Pruning Model**: pruning low correlation parameters. (Usually I don't do this.)
+  
+More details about this whole process chould be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
+
+
+# 204
+## Load mean amplitude for single trials
+The raw mean amplitude of each trial for all participants were loaded.
+```{r load trial mean amplitude, message = FALSE}
+# read the trial mean amplitude data
+df.trial <- {
+  list.files(folder.data, "*_RawSTData.csv", full.names = TRUE) %>%
+    lapply(read_csv) %>%
+    bind_rows() %>% 
+    mutate(ExpCode = as.factor(ExpCode),
+           SubjCode = as.factor(SubjCode),
+           Hemisphere = as.factor(Hemisphere))
+}
+
+# only keep the data for amplitudes of the N170 (all trials)
+df.trial.N170 <- {
+  df.trial %>% 
+    filter(Component == "N170", ACC == "all") %>% 
+    substr_Event() 
+}
+
+# the structure of this dataset
+str(df.trial.N170)
+```
+
+
+## Density plots for single trials
+```{r density distribution of trial mean amplitude, fig.width = 15, fig.height = 10}
+ggplot(data = df.trial.N170, aes(x = MeanAmp, fill = ExpCode)) +
+  geom_histogram(aes(y = ..density..), #  aes(y = ..density..),
+                 binwidth = 1, 
+                 alpha = 0.5, 
+                 position = "identity") + 
+  facet_grid(NS + FH ~ Hemisphere) + 
+  theme(text = element_text(size=20)) + 
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  ggtitle("Desntity distributions of the N170")
+
+```
+Some of the density distributions appear to be non-normal distributed. At least, the desnsity distribution of normal face condition seems to have a longer tail to the left side (e.g. left skewness). The distribution could be fitted with the ex-Gaussian function, which is usually used to fit the dataset of response times (a right skewness distribution). 
+
+```{r density distribution of trial mean amplitude P1, fig.width = 15, fig.height = 10, include=TRUE}
+df.trial.P1 <- {
+  df.trial %>% 
+    filter(Component == "P1", ACC == "all") %>% 
+    substr_Event() 
+}
+
+ggplot(data = df.trial.P1, aes(x = MeanAmp, fill = ExpCode)) +
+  geom_histogram(aes(y = ..density..), #  aes(y = ..density..),
+                 binwidth = 1, 
+                 alpha = 0.5, 
+                 position = "identity") + 
+  facet_grid(NS + FH ~ Hemisphere) + 
+  theme(text = element_text(size=20)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  ggtitle("Desntity distributions of the P1")
+
+```
+
+# Questions and predictions {#prediction}
+
+** Predictions **
+
+* P1. The N170 amplitudes of normal faces are larger than those of houses.
+* P2. The N170 amplitudes of the right hemisphere are larger than those of the left hemisphere. 
+* P3. The differences of the N170 amplitudes between left and right hemisphere for faces are larger than those for houses.
+* P4. There should be no differences among the conditions for scrambled stimuli.
+# Appendix
+## Algorithm of function `step` {#stepfun}
+The outline of the algorithm of `step(fit, reduce.fixed = false)` function is: 
+
+>  Simplification of the random effects structure:
+>
+>   1. Let M be the linear mixed effects model specified by a user. 
+>
+>   2. If there are random effects in M then go to 3, otherwise stop. 
+>
+>   3. For each random effect ri in M do: 
+>       (a) Create a reduced model Mi by eliminating ri from M. 
+>
+>       (b) Calculate pi, the p value from the likelihood ratio test of comparing M to Mi. 
+>
+>       (c) Save pi and Mi.
+>
+>   4. Find pmax; the maximum of all pi and let Mmax denote the corresponding model. 
+>
+>   5. Set M to Mmax. If pmax is higher than α level then go back to 3, otherwise stop.
+
+More deatils could be found: Kuznetsova, A., Brockhoff, P. B., & Christensen, R. H. B. (2017). lmerTest Package: Tests in Linear Mixed Effects Models. Journal of Statistical Software, 82(13), 1-26. http://doi.org/10.18637/jss.v082.i13 **Page 8**
+
+
+# Versions of packages used
+```{r versions}
+sessionInfo()
+```
