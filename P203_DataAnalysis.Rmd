@@ -42,6 +42,7 @@ options(width = 110)  # set the maximum width of the html output
 ```{r setup and load the related libraries, message=FALSE}
 ## load libraries
 library(tidyverse)
+library(magrittr)
 library(lme4)
 library(lmerTest) 
 library(emmeans)
@@ -62,12 +63,15 @@ folder.output <- "output"
 # load R files
 source(file.path(folder.R, "geom_flat_violin.R"))  # flat violin plot 
 source(file.path(folder.R, "substr_Event.R"))  # parse Event to IVs
-# source(file.path(folder.R, "exgaussianplus.R"))
 source(file.path(folder.R, "general_theme.R"))  # plot theme
 
 ```
 
-```{r setting for plots}
+```{r settings}
+# general setting
+saveCSV <- FALSE
+count.ratio <- 0.8
+
 # set up the theme for plot and rainclound plot
 plot_theme <- {
   general_theme +
@@ -83,21 +87,451 @@ ylimit.n170 <- c(2, -4)  # y axis for plotting N170 amplitude
 
 ```
 
-## Model selection procedure
 
-For the analysis for every dependent variable, an optimal model was obtained by the following general steps:
-  
-1. **Maximum Model**: a maximum model with all fixed and random factors was built. 
-2. **ZCP Model**: a zero-correlated-parameter (zcp) model based on the maximum model is built. The only difference between zcp and maximum models is that the correlations between random effects are forced to be zero in the zcp model.
-3. **Reduced Model**: the random effects which are not supported by the data will be removed from the zcp model. The function `step(fit, fixed.reduce = FALSE)` from `library(lmerTest)` is used for this step. The algorithm could be found [here](#stepfun).
-4. **Extended Model**: extending the reduced model with correlation parameters between the remaining random effects.
-5. **Pruning Model**: pruning low correlation parameters. (Usually I don't do this.)
-  
-More details about this whole process chould be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
 
 
 # 204
-## Load mean amplitude for single trials
+## Behavioral results
+
+```{r load behavioral results of 204}
+raw.beha.E4 <- {
+  "E204_Incorrect_Behavior.csv" %>% 
+    file.path(folder.data, .) %>% 
+    read_csv() 
+}
+
+```
+
+
+```{r remove some trials for P426 and P428}
+# locate the trials for P426 and P428
+raw.beha.E4 <- {
+  raw.beha.E4 %>%
+    mutate(isBad426428 = ((Subject == 426) & Block == 6) | (Subject == 428 & Session == 2 & scrambleVar == "S"))  # remove some trials for 426 and 428. (Something wrong happened for the two participants during recording EEG, therefore they have two parts of behavioral data)
+}
+
+head(raw.beha.E4)
+```
+
+```{r select certain rows and columns from the data, and calculate the Z value for reaction times (204)}
+clean.beha.E4 <- {
+  raw.beha.E4 %>%
+    filter(`Procedure[Trial]` %in% c("faceProc", "houseProc") & !isBad426428) %>% # select the rows (remove the practice trials and bad trials for 426 and 428)
+    select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = scrambleVar, Category = FH, Duration = stimDuration, ACC = Resp.ACC, Resp.RT, Resp = Resp.RESP, Stimuli = stimName) %>% # select and rename the columns (remove unuseful columns)
+    mutate(
+      SubjCode = factor(paste("P", SubjCode, sep = "")), # save SubjCode as factor
+      Type = recode_factor(Type, "N" = "normal", "S" = "scrambled"), # rename the levels of Type
+      Category = recode(Category, "hosue" = "house", "house" = "house", "face" = "face", .default = "face"), # rename "hosue" as "house"
+      Duration = factor(Duration) # save Duration as factor
+      ) %>% 
+    group_by(SubjCode, Type, Category, Duration, ACC) %>% # divide the data based on these conditions
+    mutate(
+      RT = Resp.RT + as.numeric(levels(Duration))[Duration],
+      RT.Z = scale(RT), # calculate the Z value for reaction times within each group
+      RT.Within3Z = ifelse(RT.Z <= 3 & RT.Z >= -3, 1, ifelse(RT.Z < -3 | RT.Z > 3, 0, NaN)) # if the Z values are between -3 and 3, will be marked as 1
+      ) %>% 
+    ungroup() # ungroup the data 
+     
+}
+
+# behavior.tidyup
+head(clean.beha.E4, 10)
+
+```
+
+```{r check the number of trials for 204}
+count_beha_E4 <- function(df) {
+  df %>% 
+    group_by(SubjCode, Type, Category, Duration) %>% 
+    summarize(Count = n()) %>% 
+    mutate(Condition = paste(Type, Category, Duration, sep = ".")) %>% 
+    ungroup() %>% 
+    select(SubjCode, Condition, Count) %>% 
+    spread(Condition, Count)
+}
+
+count.beha.E4.num <- count_beha_E4(clean.beha.E4)
+  
+clean.beha.E4 %<>% filter(RT > 200) # filter trials smaller than 200
+count.beha.E4 <- count_beha_E4(clean.beha.E4)
+
+rm.beha.E4 <- {
+  (select(count.beha.E4, -SubjCode) / select(count.beha.E4.num, -SubjCode)) %>% 
+    select(starts_with("normal")) %>% # only select the normal condition
+    mutate_all(all_vars(as.numeric(. > count.ratio))) %>% # compare the ratio
+    rowwise() %>%
+    do(data.frame(., isGood = prod(unlist(.)))) %>% # product of all the ratio
+    bind_cols(SubjCode = count.beha.E4$SubjCode, .) %>% # add the SubjCode
+    filter(isGood == 0) %$% # remove the participants
+    SubjCode
+}
+
+count.beha.E4
+
+# remove the participants
+clean.beha.E4 %<>% filter(!(SubjCode %in% rm.beha.E4))
+```
+
+
+### Participant demographic information
+```{r participant information}
+subj.info.E4 <- {
+  clean.beha.E4 %>% 
+    select(SubjCode, Age, Sex, Handedness) %>% # select the columns of participant inforamtion
+    distinct() # only keep the unique rows
+}
+
+subj.info.E4
+```
+There are `r nrow(subj.info.E4)` participants in total in this experiment.  \
+The averaged age of this group is `r round(mean(subj.info.E4$Age), 3)` and the standard deviation of age is `r round(sd(subj.info.E4$Age))`. \
+The number of female and male participants are `r sum(subj.info.E4$Sex == "female")` and `r sum(subj.info.E4$Sex == "male")` respectively. \
+`r sum(subj.info.E4$Handedness == "right")` of them are right handed.
+
+### Set the dummy coding
+```{r dummy coding for acc E4}
+# set the dummy coding manually 
+clean.beha.E4 %<>%
+  mutate(
+      Type_D = if_else(Type == "normal", 0, if_else(Type == "scrambled", 1, NaN)),
+      Cate_D = if_else(Category == "face", 0, if_else(Category == "house", 1, NaN)),
+      Dura_D = if_else(Duration == "17", 0, if_else(Duration == "200", 1, NaN)),
+      
+      Type_Cate = Type_D * Cate_D,
+      Type_Dura = Type_D * Dura_D,
+      Cate_Dura = Cate_D * Dura_D,
+      
+      Type_Cate_Dura = Type_D * Cate_D * Dura_D
+  )
+
+if (saveCSV) {
+  output.beha.E4 <- file.path(folder.nesi, "E204_beha.RData")
+  save(clean.beha.E4, file = output.beha.E4)
+}
+```
+
+### Behavioral responses
+#### Accuracy
+```{r calculate the accuracy (E4)}
+# accuracy data
+df.acc.R.E4 <- {
+  clean.beha.E4 %>%
+    group_by(SubjCode, Type, Duration) %>%
+    summarize(Accuracy = mean(ACC)) %>%
+    ungroup() 
+}
+
+# descriptive statistics of accuracy for plotting
+sum.acc.R.E4 <- {
+  df.acc.R.E4 %>%
+    group_by(Type, Duration) %>%
+    summarize(Mean = mean(Accuracy)
+              , N = n()
+              , SD = sd(Accuracy)
+              , SE = SD/sqrt(N)
+              , SE.lo = Mean - SE, SE.hi = Mean + SE
+              , CI = SE * qt(0.975,N)
+              , Median = median(Accuracy)
+              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
+              )  
+}
+
+# accuracy data for SPSS analysis
+df.acc.SPSS.E4 <- {
+  df.acc.R.E4 %>%
+    mutate(Conditions = paste(Type, Duration, sep = ".")) %>%
+    select(SubjCode, Conditions, Accuracy) %>%
+    spread(Conditions, Accuracy)
+}
+
+# save the data as *.csv
+if (saveCSV) {
+  output.acc.SPSS.E4 <- file.path(folder.output, "E204_acc.csv")
+  write.csv(df.acc.SPSS.E4, output.acc.SPSS.E4, row.names = FALSE)
+} 
+
+```
+
+
+##### RainClound plot of accuracy
+```{r rainclound plot of accuracy E4, warning=FALSE}
+# print(sum.acc.R, width = Inf)
+knitr::kable(sum.acc.R.E4, digits = 4)
+
+acc.RainPlot.E4 <- {
+  ggplot(data = df.acc.R.E4, aes(y = Accuracy, x = Type, fill = Duration)) + 
+    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
+    geom_point(aes(color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
+    geom_boxplot(width = .2, outlier.shape = NA, alpha = .7) +
+    geom_point(data = sum.acc.R.E4, aes(y = Mean, x = Type, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = sum.acc.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    # scale_colour_grey() + # start = .1, end = .6, color for the contour
+    # scale_fill_grey() + # start = .3, end = .6, color for the fill
+    # scale_color_brewer(palette = "Set1") +
+    # scale_fill_brewer(palette = "Set1") +
+    labs(title = "Accuracy for E204", x = "Stimulus Type", y = "Accuracy", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
+    coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) + # add the line for 0.5 and 1 (y)
+    theme_bw() + # the backgroud color
+    plot_theme
+}
+
+```
+
+&nbsp;
+
+```{r display the RainCloud plot of accuracy}
+acc.RainPlot.E4
+```
+
+
+##### Column plot of accuracy
+```{r Plot of accuracy of behavioral data E4, warning = FALSE}
+
+acc.ColuPlot.E4 = {
+  ggplot(data = sum.acc.R.E4, aes(y = Mean, x = Type, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5, 
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "Accuracy for E204", x = "Stimulus Type", y = "Accuracy", fill = "Durations(ms)") +  # set the names for main, x and y axises
+    scale_fill_grey() +  # set the color for columns
+    geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    theme_bw() +
+    plot_theme
+}
+
+acc.ColuPlot.E4
+```
+
+#### Hits
+```{r calculate the hits (and save the data into csv) E4}
+
+# hit data for R analysis
+df.hit.R.E4 <- {
+  clean.beha.E4 %>%
+    group_by(SubjCode, Type, Category, Duration) %>%
+    summarize(Hit = mean(ACC), count = n()) %>%
+    ungroup()
+}
+
+# descriptive statistics of hits for plotting
+sum.hit.R.E4 <- {
+  df.hit.R.E4 %>% 
+    group_by(Type, Category, Duration) %>% 
+    summarize(Mean = mean(Hit), N = n(), SD = sd(Hit), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(Hit), Lower = Mean - SD, Upper = Mean + SD)
+}
+
+# hit data for SPSS analysis
+df.hit.SPSS.E4 <- {
+  df.hit.R.E4 %>%
+    mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
+    select(SubjCode, Conditions, Hit) %>%
+    spread(Conditions, Hit)
+}
+
+# save the data as *.csv
+if (saveCSV) {
+  output.hit.SPSS.E4 <- file.path(folder.output, "E204_hit.csv")
+  write.csv(df.hit.SPSS.E4, output.hit.SPSS.E4, row.names = FALSE)
+} 
+
+```
+
+
+##### RainClound plot of hits
+```{r rainclound plot of hits E4}
+knitr::kable(sum.hit.R.E4, digits = 4)
+
+hit.RainPlot.E4 <- {
+  ggplot(data = df.hit.R.E4, aes(y = Hit, x = Category, fill = Duration)) + 
+    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
+    geom_point(aes(y = Hit, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
+    geom_boxplot(aes(y = Hit), width = .2, outlier.shape = NA, alpha = .7) +
+    geom_point(data = sum.hit.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = sum.hit.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
+    # scale_colour_grey() + # start = .1, end = .6, color for the contour
+    # scale_fill_grey() + # start = .3, end = .6, color for the fill
+    # scale_color_brewer(palette = "Set1") + # palette = "RdBu"
+    # scale_fill_brewer(palette = "Set1") + # palette = "RdBu"
+    labs(title = "Hits for E204", x = "Stimulus Type", y = "Hit Rate", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
+    coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) + # add the line for 0.5 and 1 (y)
+    theme_bw() + # the backgroud color
+    plot_theme
+}
+
+```
+
+&nbsp;
+
+```{r display the RainCloud plot of hits E4}
+hit.RainPlot.E4
+```
+
+##### Column plot of hits
+```{r Plot of hits for behavioral data E4}
+
+hit.ColuPlot.E4 = {
+  ggplot(data = sum.hit.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5, 
+                  position = position_dodge(width=0.9)) +
+    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "Hits for E204", x = "Stimulus Type", y = "Hit Rate", fill = "Durations(ms)") +  # set the names for main, x and y axises
+    scale_fill_grey() +  # set the color for columns
+    # scale_fill_manual(values=c(faceColors, houseColors)) +  # set the color for columns and the label names for legend  , name = "xxx"
+    geom_text(label = c("***", "***", "***", "***", "*", "", "", ""), color = rep("red", 8), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 4)) + # add starts to the significant columns
+    theme_bw() +
+    plot_theme
+}
+
+hit.ColuPlot.E4
+```
+
+
+#### Linear mixed model
+##### The maximal model
+```{r maximal lmm for E204 Accuracy}
+file.max.acc.E4 <- file.path(folder.nesi, "E204_lmm_max_acc.RData")
+
+if (!file.exists(file.max.acc.E4)) {
+  lmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration + 
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+                          data = clean.beha.E4,
+                          family = "binomial",
+                          # verbose = TRUE,
+                          control = glmerControl(optCtrl = list(maxfun = 1e5)))
+} else {
+  load(file.max.acc.E4)
+}
+
+print(summary(lmm.max.acc.E4), corr = FALSE)
+
+```
+
+
+##### The zero-correlation-parameter model
+```{r zcp lmm for E204 Accuracy}
+file.zcp.acc.E4 <- file.path(folder.nesi, "E204_zcp_acc.RData")
+
+if (!file.exists(file.zcp.acc.E4)) {
+  lmm.zcp.acc.E4 <- update(lmm.max.acc.E4,
+                           formula = ACC ~ Type * Category * Duration + 
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
+                          # verbose = TRUE
+                          )
+} else {
+  load(file.zcp.acc.E4)
+}
+
+print(summary(lmm.zcp.acc.E4), corr = FALSE)
+
+```
+
+
+
+### Correct response times
+```{r calculate the correct RT E4}
+df.rt.R.E4 <- {
+  clean.beha.E4 %>%
+    filter((ACC == 1 | Type == "scrambled")
+           & RT.Within3Z == 1 # remove the RT outsides 3Z
+           ) %>% # only include the correct responses for normal trials but all trial for scrambled
+    select(SubjCode, Type, Category, Duration, RT) %>% # select the columns
+    group_by(SubjCode, Type, Category, Duration) %>% # divide data into groups to get the mean
+    summarize(RT = mean(RT), count = n()) %>%  # calculate the mean of RT
+    ungroup()
+}
+
+sum.rt.R.E4 <- {
+  df.rt.R.E4 %>% 
+    group_by(Type, Category, Duration) %>% 
+    summarize(Mean = mean(RT), N = n(), SD = sd(RT), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(RT), Lower = Mean - SD, Upper = Mean + SD)
+}
+
+df.rt.SPSS.E4 <- {
+  df.rt.R.E4 %>% 
+    mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
+    select(-c(Type, Category, Duration, count)) %>%
+    spread(Conditions, RT)
+}
+
+ # save the data into *.csv
+if (saveCSV) {
+  output.rt.SPSS.E4 <- file.path(folder.output, "E204_RT.csv")
+  write.csv(df.rt.SPSS.E4, output.rt.SPSS.E4, row.names = FALSE)
+}
+```
+
+### RainClound plot of the response times 
+```{r rainclound plot of the RT data}
+knitr::kable(sum.rt.R.E4, digits = 4)
+
+rt.RainPlot.E4 <- {
+  ggplot(data = df.rt.R.E4, aes(y = RT, x = Category, fill = Duration)) + 
+    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
+    geom_point(aes(y = RT, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
+    geom_boxplot(aes(y = RT), width = .2, outlier.shape = NA, alpha = .7) +
+    geom_point(data = sum.rt.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = sum.rt.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
+    # scale_colour_grey() + # start = .1, end = .6, color for the contour
+    # scale_fill_grey() + # start = .3, end = .6, color for the fill
+    # scale_color_brewer(palette = "Set1") + # palette = "RdBu"
+    # scale_fill_brewer(palette = "Set1") + # palette = "RdBu"
+    labs(title = "Reaction times for E204", x = "Stimulus Type", y = "Reaction times (ms)", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
+    # coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    theme_bw() + # the backgroud color
+    plot_theme
+}
+
+```
+
+&nbsp;
+
+```{r display the RainCloud plot for reaction times}
+rt.RainPlot.E4
+```
+
+
+### Column plot of the response times
+```{r Plot of RT data}
+
+rt.ColuPlot.E4 = {
+  ggplot(data = sum.rt.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5, 
+                  position = position_dodge(width=0.9)) +
+    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
+    coord_cartesian(ylim = c(0, 850)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "Reaction times for E204", x = "Stimulus Type", y = "Reaction times (ms)", fill = "Durations(ms)") +  # set the names for main, x and y axises
+    scale_fill_grey() +  # set the color for columns
+    # geom_text(label = c("*", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    theme_bw() +
+    plot_theme
+}
+
+rt.ColuPlot.E4
+```
+
+## ERP data analysis
+### Load mean amplitude for single trials
 The raw mean amplitude of each trial for all participants were loaded.
 ```{r load trial mean amplitude, message = FALSE}
 # read the trial mean amplitude data
@@ -122,7 +556,7 @@ str(df.trial.N170)
 ```
 
 
-## Density plots for single trials
+### Density plots for single trials
 ```{r density distribution of trial mean amplitude, fig.width = 15, fig.height = 10}
 ggplot(data = df.trial.N170, aes(x = MeanAmp, fill = ExpCode)) +
   geom_histogram(aes(y = ..density..), #  aes(y = ..density..),
@@ -156,6 +590,8 @@ ggplot(data = df.trial.P1, aes(x = MeanAmp, fill = ExpCode)) +
 
 ```
 
+#205
+
 # Questions and predictions {#prediction}
 
 ** Predictions **
@@ -164,7 +600,22 @@ ggplot(data = df.trial.P1, aes(x = MeanAmp, fill = ExpCode)) +
 * P2. The N170 amplitudes of the right hemisphere are larger than those of the left hemisphere. 
 * P3. The differences of the N170 amplitudes between left and right hemisphere for faces are larger than those for houses.
 * P4. There should be no differences among the conditions for scrambled stimuli.
+
+
 # Appendix
+
+## Model selection procedure
+
+For the analysis for every dependent variable, an optimal model was obtained by the following general steps:
+  
+1. **Maximum Model**: a maximum model with all fixed and random factors was built. 
+2. **ZCP Model**: a zero-correlated-parameter (zcp) model based on the maximum model is built. The only difference between zcp and maximum models is that the correlations between random effects are forced to be zero in the zcp model.
+3. **Reduced Model**: the random effects which are not supported by the data will be removed from the zcp model. The function `step(fit, fixed.reduce = FALSE)` from `library(lmerTest)` is used for this step. The algorithm could be found [here](#stepfun).
+4. **Extended Model**: extending the reduced model with correlation parameters between the remaining random effects.
+5. **Pruning Model**: pruning low correlation parameters. (Usually I don't do this.)
+  
+More details about this whole process chould be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
+
 ## Algorithm of function `step` {#stepfun}
 The outline of the algorithm of `step(fit, reduce.fixed = false)` function is: 
 
@@ -186,6 +637,7 @@ The outline of the algorithm of `step(fit, reduce.fixed = false)` function is:
 >   5. Set M to Mmax. If pmax is higher than α level then go back to 3, otherwise stop.
 
 More deatils could be found: Kuznetsova, A., Brockhoff, P. B., & Christensen, R. H. B. (2017). lmerTest Package: Tests in Linear Mixed Effects Models. Journal of Statistical Software, 82(13), 1-26. http://doi.org/10.18637/jss.v082.i13 **Page 8**
+
 
 
 # Versions of packages used
