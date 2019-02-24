@@ -198,7 +198,7 @@ if (saveCSV) {
 #### Accuracy
 ```{r calculate the accuracy (E4)}
 # accuracy data
-df.acc.R.E4 <- {
+sum.acc.R.E4 <- {
   clean.beha.E4 %>%
     group_by(SubjCode, Type, Duration) %>%
     summarize(Accuracy = mean(ACC)) %>%
@@ -206,8 +206,8 @@ df.acc.R.E4 <- {
 }
 
 # descriptive statistics of accuracy for plotting
-sum.acc.R.E4 <- {
-  df.acc.R.E4 %>%
+desc.acc.R.E4 <- {
+  sum.acc.R.E4 %>%
     group_by(Type, Duration) %>%
     summarize(Mean = mean(Accuracy)
               , N = n()
@@ -221,8 +221,8 @@ sum.acc.R.E4 <- {
 }
 
 # accuracy data for SPSS analysis
-df.acc.SPSS.E4 <- {
-  df.acc.R.E4 %>%
+sum.acc.SPSS.E4 <- {
+  sum.acc.R.E4 %>%
     mutate(Conditions = paste(Type, Duration, sep = ".")) %>%
     select(SubjCode, Conditions, Accuracy) %>%
     spread(Conditions, Accuracy)
@@ -231,7 +231,7 @@ df.acc.SPSS.E4 <- {
 # save the data as *.csv
 if (saveCSV) {
   output.acc.SPSS.E4 <- file.path(folder.output, "E204_acc.csv")
-  write.csv(df.acc.SPSS.E4, output.acc.SPSS.E4, row.names = FALSE)
+  write.csv(sum.acc.SPSS.E4, output.acc.SPSS.E4, row.names = FALSE)
 } 
 
 ```
@@ -240,15 +240,15 @@ if (saveCSV) {
 ##### RainClound plot of accuracy
 ```{r rainclound plot of accuracy E4, warning=FALSE}
 # print(sum.acc.R, width = Inf)
-knitr::kable(sum.acc.R.E4, digits = 4)
+knitr::kable(desc.acc.R.E4, digits = 4)
 
 acc.RainPlot.E4 <- {
-  ggplot(data = df.acc.R.E4, aes(y = Accuracy, x = Type, fill = Duration)) + 
+  ggplot(data = sum.acc.R.E4, aes(y = Accuracy, x = Type, fill = Duration)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = sum.acc.R.E4, aes(y = Mean, x = Type, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = sum.acc.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.acc.R.E4, aes(y = Mean, x = Type, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.acc.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
     # scale_color_brewer(palette = "Set1") +
@@ -274,7 +274,7 @@ acc.RainPlot.E4
 ```{r Plot of accuracy of behavioral data E4, warning = FALSE}
 
 acc.ColuPlot.E4 = {
-  ggplot(data = sum.acc.R.E4, aes(y = Mean, x = Type, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  ggplot(data = desc.acc.R.E4, aes(y = Mean, x = Type, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5, 
@@ -296,7 +296,7 @@ acc.ColuPlot.E4
 ```{r calculate the hits (and save the data into csv) E4}
 
 # hit data for R analysis
-df.hit.R.E4 <- {
+sum.hit.R.E4 <- {
   clean.beha.E4 %>%
     group_by(SubjCode, Type, Category, Duration) %>%
     summarize(Hit = mean(ACC), count = n()) %>%
@@ -304,15 +304,15 @@ df.hit.R.E4 <- {
 }
 
 # descriptive statistics of hits for plotting
-sum.hit.R.E4 <- {
-  df.hit.R.E4 %>% 
+desc.hit.R.E4 <- {
+  sum.hit.R.E4 %>% 
     group_by(Type, Category, Duration) %>% 
     summarize(Mean = mean(Hit), N = n(), SD = sd(Hit), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(Hit), Lower = Mean - SD, Upper = Mean + SD)
 }
 
 # hit data for SPSS analysis
-df.hit.SPSS.E4 <- {
-  df.hit.R.E4 %>%
+sum.hit.SPSS.E4 <- {
+  sum.hit.R.E4 %>%
     mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
     select(SubjCode, Conditions, Hit) %>%
     spread(Conditions, Hit)
@@ -321,7 +321,7 @@ df.hit.SPSS.E4 <- {
 # save the data as *.csv
 if (saveCSV) {
   output.hit.SPSS.E4 <- file.path(folder.output, "E204_hit.csv")
-  write.csv(df.hit.SPSS.E4, output.hit.SPSS.E4, row.names = FALSE)
+  write.csv(sum.hit.SPSS.E4, output.hit.SPSS.E4, row.names = FALSE)
 } 
 
 ```
@@ -329,15 +329,15 @@ if (saveCSV) {
 
 ##### RainClound plot of hits
 ```{r rainclound plot of hits E4}
-knitr::kable(sum.hit.R.E4, digits = 4)
+knitr::kable(desc.hit.R.E4, digits = 4)
 
 hit.RainPlot.E4 <- {
-  ggplot(data = df.hit.R.E4, aes(y = Hit, x = Category, fill = Duration)) + 
+  ggplot(data = sum.hit.R.E4, aes(y = Hit, x = Category, fill = Duration)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(y = Hit, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(aes(y = Hit), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = sum.hit.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = sum.hit.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.hit.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.hit.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
@@ -363,7 +363,7 @@ hit.RainPlot.E4
 ```{r Plot of hits for behavioral data E4, warning=FALSE}
 
 hit.ColuPlot.E4 = {
-  ggplot(data = sum.hit.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  ggplot(data = desc.hit.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5, 
@@ -384,7 +384,7 @@ hit.ColuPlot.E4
 ```
 
 
-#### Linear mixed model
+#### Logit mixed model
 ##### The maximal model
 ```{r maximal lmm for E204 Accuracy}
 file.max.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_max.RData")
@@ -428,25 +428,29 @@ print(summary(glmm.zcp.acc.E4), corr = FALSE)
 
 ### Correct response times
 ```{r calculate the correct RT E4}
-df.rt.R.E4 <- {
+df.rt.E4 <- {
   clean.beha.E4 %>%
     filter((ACC == 1 | Type == "scrambled")
            & RT.Within3Z == 1 # remove the RT outsides 3Z
-           ) %>% # only include the correct responses for normal trials but all trial for scrambled
+           )
+}
+
+sum.rt.R.E4 <- {
+   df.rt.E4 %>% # only include the correct responses for normal trials but all trial for scrambled
     select(SubjCode, Type, Category, Duration, RT) %>% # select the columns
     group_by(SubjCode, Type, Category, Duration) %>% # divide data into groups to get the mean
     summarize(RT = mean(RT), count = n()) %>%  # calculate the mean of RT
     ungroup()
 }
 
-sum.rt.R.E4 <- {
-  df.rt.R.E4 %>% 
+desc.rt.R.E4 <- {
+  sum.rt.R.E4 %>% 
     group_by(Type, Category, Duration) %>% 
     summarize(Mean = mean(RT), N = n(), SD = sd(RT), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(RT), Lower = Mean - SD, Upper = Mean + SD)
 }
 
-df.rt.SPSS.E4 <- {
-  df.rt.R.E4 %>% 
+sum.rt.SPSS.E4 <- {
+  sum.rt.R.E4 %>% 
     mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
     select(-c(Type, Category, Duration, count)) %>%
     spread(Conditions, RT)
@@ -454,22 +458,24 @@ df.rt.SPSS.E4 <- {
 
  # save the data into *.csv
 if (saveCSV) {
+  output.rt.E4 <- file.path(folder.nesi, "E204_beha_RT.RData")
+  save(df.rt.E4, file = output.rt.E4)
   output.rt.SPSS.E4 <- file.path(folder.output, "E204_RT.csv")
-  write.csv(df.rt.SPSS.E4, output.rt.SPSS.E4, row.names = FALSE)
+  write.csv(sum.rt.SPSS.E4, output.rt.SPSS.E4, row.names = FALSE)
 }
 ```
 
 #### RainClound plot of the response times 
 ```{r rainclound plot of the RT data, warning = FALSE}
-knitr::kable(sum.rt.R.E4, digits = 4)
+knitr::kable(desc.rt.R.E4, digits = 4)
 
 rt.RainPlot.E4 <- {
-  ggplot(data = df.rt.R.E4, aes(y = RT, x = Category, fill = Duration)) + 
+  ggplot(data = sum.rt.R.E4, aes(y = RT, x = Category, fill = Duration)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(y = RT, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(aes(y = RT), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = sum.rt.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = sum.rt.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.rt.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.rt.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
@@ -495,7 +501,7 @@ rt.RainPlot.E4
 ```{r Plot of RT data}
 
 rt.ColuPlot.E4 = {
-  ggplot(data = sum.rt.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  ggplot(data = desc.rt.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5, 
@@ -511,6 +517,26 @@ rt.ColuPlot.E4 = {
 }
 
 rt.ColuPlot.E4
+```
+
+#### Log mixed model
+##### The maximal model
+```{r maximal lmm for E204 RT}
+file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_max.RData")
+
+if (!file.exists(file.max.rt.E4)) {
+  glmm.max.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+                           data = df.rt.E4,
+                           family = "poisson",
+                           control = glmerControl(optCtrl = list(maxfun = 1e5)))
+} else {
+  load(file.max.rt.E4)
+}
+
+print(summary(glmm.max.rt.E4), corr = FALSE)
+
 ```
 
 ## ERP data analysis
