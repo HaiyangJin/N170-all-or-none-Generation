@@ -18,14 +18,14 @@ substr_Event <- function(df.in) {
   df.out <- {
     df.in %>% 
       mutate(
-        NS = ifelse(substr(Event, 1, 1) == "N", "normal", ifelse(substr(Event, 1, 1) == "S", "scrambled", NA)),
-        FH = ifelse(substr(Event, 2, 2) == "F", "face", ifelse(substr(Event, 2, 2) == "H", "house", NA)),
+        Type = ifelse(substr(Event, 1, 1) == "N", "normal", ifelse(substr(Event, 1, 1) == "S", "scrambled", NA)),
+        Category = ifelse(substr(Event, 2, 2) == "F", "face", ifelse(substr(Event, 2, 2) == "H", "house", NA)),
         Duration = ifelse(substr(Event, 3, 3) == "7", 17, 
                           ifelse(substr(Event, 3, 3) == "5", 50, 
                                  ifelse(substr(Event, 3, 3) == "1", 100, 
                                         ifelse(substr(Event, 3, 3) == "2", 200, NaN)))),
-        NS = as.factor(NS), 
-        FH = as.factor(FH),
+        Type = as.factor(Type), 
+        Category = as.factor(Category),
         Duration = as.factor(Duration)
       )
   }
