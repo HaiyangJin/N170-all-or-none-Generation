@@ -64,7 +64,7 @@ folder.output <- "output"
 source(file.path(folder.R, "geom_flat_violin.R"))  # flat violin plot 
 source(file.path(folder.R, "substr_Event.R"))  # parse Event to IVs
 source(file.path(folder.R, "dummy_coding_P203.R")) # set the dummy coding manually
-source(file.path(folder.R, "get_pars.R")) # 
+# source(file.path(folder.R, "get_pars.R")) # 
 source(file.path(folder.R, "general_theme.R"))  # plot theme
 
 ```
@@ -387,43 +387,42 @@ hit.ColuPlot.E4
 #### Linear mixed model
 ##### The maximal model
 ```{r maximal lmm for E204 Accuracy}
-file.max.acc.E4 <- file.path(folder.nesi, "E204_lmm_max_acc.RData")
+file.max.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_max.RData")
 
 if (!file.exists(file.max.acc.E4)) {
-  lmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration + 
-                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
-                          data = clean.beha.E4,
-                          family = "binomial",
-                          # verbose = TRUE,
-                          control = glmerControl(optCtrl = list(maxfun = 1e5)))
+  glmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+                           data = clean.beha.E4,
+                           family = "binomial",
+                           control = glmerControl(optCtrl = list(maxfun = 1e5)))
 } else {
   load(file.max.acc.E4)
 }
 
-print(summary(lmm.max.acc.E4), corr = FALSE)
+print(summary(glmm.max.acc.E4), corr = FALSE)
 
 ```
 
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for E204 Accuracy}
-file.zcp.acc.E4 <- file.path(folder.nesi, "E204_zcp_acc.RData")
+file.zcp.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_zcp.RData")
 
 if (!file.exists(file.zcp.acc.E4)) {
-  lmm.zcp.acc.E4 <- update(lmm.max.acc.E4,
+  glmm.zcp.acc.E4 <- update(glmm.max.acc.E4,
                            formula = ACC ~ Type * Category * Duration + 
                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
-                          # verbose = TRUE
-                          )
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli),
+                          verbose = FALSE)
 } else {
   load(file.zcp.acc.E4)
 }
 
-print(summary(lmm.zcp.acc.E4), corr = FALSE)
+print(summary(glmm.zcp.acc.E4), corr = FALSE)
 
 ```
+
 
 
 
@@ -558,7 +557,7 @@ head(df.erp.P1.E4, 10)
 
 #### The maximal model
 ```{r maximal lmm for E204 p1}
-file.max.P1.E4 <- file.path(folder.nesi, "E204_lmm_max_P1.RData")
+file.max.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.P1.E4)) {
@@ -571,7 +570,7 @@ if (!file.exists(file.max.P1.E4)) {
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e5)))
+                                              optCtrl = list(maxfun = 1e6)))
 } else {
   load(file.max.P1.E4)
 }
@@ -647,7 +646,7 @@ head(df.erp.N170.E4, 10)
 
 #### The maximal model
 ```{r maximal lmm for E204 N170}
-file.max.N170.E4 <- file.path(folder.nesi, "E204_lmm_max_N170.RData")
+file.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.N170.E4)) {
@@ -660,7 +659,7 @@ if (!file.exists(file.max.N170.E4)) {
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e5)))
+                                              optCtrl = list(maxfun = 1e6)))
 } else {
   load(file.max.N170.E4)
 }
