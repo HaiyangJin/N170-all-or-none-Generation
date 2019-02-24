@@ -19,7 +19,7 @@ output:
 
 ## Introduction
 
-**Linear Mixed Model** were utilized to compare the parameters fittd with different distribution assumptions. 
+**Linear Mixed Model** were used.
   
 ## Experiment design
 
@@ -63,6 +63,8 @@ folder.output <- "output"
 # load R files
 source(file.path(folder.R, "geom_flat_violin.R"))  # flat violin plot 
 source(file.path(folder.R, "substr_Event.R"))  # parse Event to IVs
+source(file.path(folder.R, "dummy_coding_P203.R")) # set the dummy coding manually
+source(file.path(folder.R, "get_pars.R")) # 
 source(file.path(folder.R, "general_theme.R"))  # plot theme
 
 ```
@@ -70,7 +72,8 @@ source(file.path(folder.R, "general_theme.R"))  # plot theme
 ```{r settings}
 # general setting
 saveCSV <- FALSE
-count.ratio <- 0.8
+ratio.count <- 0.8
+RT.min <- 200
 
 # set up the theme for plot and rainclound plot
 plot_theme <- {
@@ -92,7 +95,6 @@ ylimit.n170 <- c(2, -4)  # y axis for plotting N170 amplitude
 
 # 204
 ## Behavioral results
-
 ```{r load behavioral results of 204}
 raw.beha.E4 <- {
   "E204_Incorrect_Behavior.csv" %>% 
@@ -140,36 +142,29 @@ head(clean.beha.E4, 10)
 ```
 
 ```{r check the number of trials for 204}
-count_beha_E4 <- function(df) {
-  df %>% 
+# check the number of trials for 204
+sum.count.E4 <- {
+  clean.beha.E4 %>% 
+    group_by(SubjCode, Type, Category, Duration) %>% 
+    summarize(Count_sum = n())
+}
+
+valid.count.E4 <- {
+  clean.beha.E4 %>% 
+    filter(RT > RT.min) %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count = n()) %>% 
-    mutate(Condition = paste(Type, Category, Duration, sep = ".")) %>% 
-    ungroup() %>% 
-    select(SubjCode, Condition, Count) %>% 
-    spread(Condition, Count)
+    right_join(sum.count.E4, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
+    mutate(ratio = Count / Count_sum) %>% 
+    filter(ratio > ratio.count) %$%
+    SubjCode %>% 
+    unique()
 }
 
-count.beha.E4.num <- count_beha_E4(clean.beha.E4)
-  
-clean.beha.E4 %<>% filter(RT > 200) # filter trials smaller than 200
-count.beha.E4 <- count_beha_E4(clean.beha.E4)
-
-rm.beha.E4 <- {
-  (select(count.beha.E4, -SubjCode) / select(count.beha.E4.num, -SubjCode)) %>% 
-    select(starts_with("normal")) %>% # only select the normal condition
-    mutate_all(all_vars(as.numeric(. > count.ratio))) %>% # compare the ratio
-    rowwise() %>%
-    do(data.frame(., isGood = prod(unlist(.)))) %>% # product of all the ratio
-    bind_cols(SubjCode = count.beha.E4$SubjCode, .) %>% # add the SubjCode
-    filter(isGood == 0) %$% # remove the participants
-    SubjCode
-}
-
-count.beha.E4
 
 # remove the participants
-clean.beha.E4 %<>% filter(!(SubjCode %in% rm.beha.E4))
+clean.beha.E4 %<>% filter(SubjCode %in% valid.count.E4)
+
 ```
 
 
@@ -191,18 +186,7 @@ The number of female and male participants are `r sum(subj.info.E4$Sex == "femal
 ### Set the dummy coding
 ```{r dummy coding for acc E4}
 # set the dummy coding manually 
-clean.beha.E4 %<>%
-  mutate(
-      Type_D = if_else(Type == "normal", 0, if_else(Type == "scrambled", 1, NaN)),
-      Cate_D = if_else(Category == "face", 0, if_else(Category == "house", 1, NaN)),
-      Dura_D = if_else(Duration == "17", 0, if_else(Duration == "200", 1, NaN)),
-      
-      Type_Cate = Type_D * Cate_D,
-      Type_Dura = Type_D * Dura_D,
-      Cate_Dura = Cate_D * Dura_D,
-      
-      Type_Cate_Dura = Type_D * Cate_D * Dura_D
-  )
+clean.beha.E4 <- dummy_coding_P203(clean.beha.E4)
 
 if (saveCSV) {
   output.beha.E4 <- file.path(folder.nesi, "E204_beha.RData")
@@ -376,7 +360,7 @@ hit.RainPlot.E4
 ```
 
 ##### Column plot of hits
-```{r Plot of hits for behavioral data E4}
+```{r Plot of hits for behavioral data E4, warning=FALSE}
 
 hit.ColuPlot.E4 = {
   ggplot(data = sum.hit.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
@@ -476,8 +460,8 @@ if (saveCSV) {
 }
 ```
 
-### RainClound plot of the response times 
-```{r rainclound plot of the RT data}
+#### RainClound plot of the response times 
+```{r rainclound plot of the RT data, warning = FALSE}
 knitr::kable(sum.rt.R.E4, digits = 4)
 
 rt.RainPlot.E4 <- {
@@ -508,7 +492,7 @@ rt.RainPlot.E4
 ```
 
 
-### Column plot of the response times
+#### Column plot of the response times
 ```{r Plot of RT data}
 
 rt.ColuPlot.E4 = {
@@ -535,62 +519,282 @@ rt.ColuPlot.E4
 The raw mean amplitude of each trial for all participants were loaded.
 ```{r load trial mean amplitude, message = FALSE}
 # read the trial mean amplitude data
-df.trial <- {
-  list.files(folder.data, "*_RawSTData.csv", full.names = TRUE) %>%
-    lapply(read_csv) %>%
-    bind_rows() %>% 
+df.erp.E4 <- {
+  "P203_204_RawSTData.csv" %>% 
+    file.path(folder.data, .) %>% 
+    read_csv() %>% 
+    substr_Event() %>% 
     mutate(ExpCode = as.factor(ExpCode),
            SubjCode = as.factor(SubjCode),
            Hemisphere = as.factor(Hemisphere))
 }
 
-# only keep the data for amplitudes of the N170 (all trials)
-df.trial.N170 <- {
-  df.trial %>% 
-    filter(Component == "N170", ACC == "all") %>% 
+```
+
+### Set the dummy coding
+```{r set the dummy coding for ERP data E4}
+# dummy coding
+df.erp.E4 <- dummy_coding_P203_erp(df.erp.E4)
+```
+
+
+### Amplitudes of the P1
+```{r erp df for the P1}
+# only keep the data for amplitudes of the P1 (correct and incorrect erps)
+df.erp.P1.E4 <- {
+  df.erp.E4 %>% 
+    filter(Component == "P1", ACC != "all") %>% 
     substr_Event() 
+}
+
+if (saveCSV) {
+  output.erp.P1.E4 <- file.path(folder.nesi, "E204_erp_P1.RData")
+  save(df.erp.P1.E4, file = output.erp.P1.E4)
 }
 
 # the structure of this dataset
-str(df.trial.N170)
+head(df.erp.P1.E4, 10)
+```
+
+#### The maximal model
+```{r maximal lmm for E204 p1}
+file.max.P1.E4 <- file.path(folder.nesi, "E204_lmm_max_P1.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.P1.E4)) {
+  lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
+                          (1 + Type_D + Cate_D + Dura_D + ACC_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
+                             Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                             Type_Cate_Dura_ACC | SubjCode),
+                        data = df.erp.P1.E4,
+                        REML = FALSE,
+                        # verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e5)))
+} else {
+  load(file.max.P1.E4)
+}
+
+print(summary(lmm.max.P1.E4), corr = FALSE)
+
+```
+
+#### The zero-correlation-parameter model
+```{r zcp lmm for E204 p1}
+# fit the zcp model
+lmm.zcp.P1.E4 <- update(lmm.max.P1.E4, 
+                        formula = MeanAmp ~ Type * Category * Duration + 
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode),
+                        verbose = FALSE)
+
+
+print(summary(lmm.zcp.P1.E4), corr = FALSE)
+
+```
+
+```{r compare max and zcp E204 P1}
+anova(lmm.max.P1.E4, lmm.zcp.P1.E4)
+```
+
+#### The reduced model
+```{r PCA analysis for zcp lmm for E204 P1}
+# PCA analysis for zcp model
+summary(rePCA(lmm.zcp.P1.E4))
+
+```
+
+The variances of all directions were larger than 1%, therefore no random factors should be removed without considering the correlations. 
+We will create extended model directly from maximal model.
+
+#### Extended model
+```{r PCA analysis for zcp lmm for E204 P1}
+# PCA analysis for zcp model
+summary(rePCA(lmm.max.P1.E4))
+
+```
+At least three random factors should be removed. (Cate_D, Type_Cate, Cate_Dura)
+
+
+```{r }
+lmm.etd.P1.E4 <- update(lmm.max.P1.E4,
+                        formula = MeanAmp ~ Type * Category * Duration + 
+                          (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode),
+                        verbose = FALSE)
+
+summary(lmm.etd.P1.E4)
 ```
 
 
-### Density plots for single trials
-```{r density distribution of trial mean amplitude, fig.width = 15, fig.height = 10}
-ggplot(data = df.trial.N170, aes(x = MeanAmp, fill = ExpCode)) +
-  geom_histogram(aes(y = ..density..), #  aes(y = ..density..),
-                 binwidth = 1, 
-                 alpha = 0.5, 
-                 position = "identity") + 
-  facet_grid(NS + FH ~ Hemisphere) + 
-  theme(text = element_text(size=20)) + 
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  ggtitle("Desntity distributions of the N170")
 
-```
-Some of the density distributions appear to be non-normal distributed. At least, the desnsity distribution of normal face condition seems to have a longer tail to the left side (e.g. left skewness). The distribution could be fitted with the ex-Gaussian function, which is usually used to fit the dataset of response times (a right skewness distribution). 
-
-```{r density distribution of trial mean amplitude P1, fig.width = 15, fig.height = 10, include=TRUE}
-df.trial.P1 <- {
-  df.trial %>% 
-    filter(Component == "P1", ACC == "all") %>% 
+### Ampitudes of the N170
+```{r erp df for the N170}
+# only keep the data for amplitudes of the N170 (all erps)
+df.erp.N170.E4 <- {
+  df.erp.E4 %>% 
+    filter(Component == "N170", ACC != "all") %>% 
     substr_Event() 
 }
 
-ggplot(data = df.trial.P1, aes(x = MeanAmp, fill = ExpCode)) +
-  geom_histogram(aes(y = ..density..), #  aes(y = ..density..),
-                 binwidth = 1, 
-                 alpha = 0.5, 
-                 position = "identity") + 
-  facet_grid(NS + FH ~ Hemisphere) + 
-  theme(text = element_text(size=20)) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  ggtitle("Desntity distributions of the P1")
+if (saveCSV) {
+  output.erp.N170.E4 <- file.path(folder.nesi, "E204_erp_N170.RData")
+  save(df.erp.N170.E4, file = output.erp.N170.E4)
+}
+
+# the structure of this dataset
+head(df.erp.N170.E4, 10)
+```
+
+#### The maximal model
+```{r maximal lmm for E204 N170}
+file.max.N170.E4 <- file.path(folder.nesi, "E204_lmm_max_N170.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.N170.E4)) {
+  lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
+                          (1 + Type_D + Cate_D + Dura_D + ACC_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
+                             Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                             Type_Cate_Dura_ACC | SubjCode),
+                        data = df.erp.N170.E4,
+                        REML = FALSE,
+                        # verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e5)))
+} else {
+  load(file.max.N170.E4)
+}
+
+print(summary(lmm.max.N170.E4), corr = FALSE)
+
+```
+
+#### The zero-correlation-parameter model
+```{r zcp lmm for E204 N170}
+# fit the zcp model
+lmm.zcp.N170.E4 <- update(lmm.max.N170.E4, 
+                        formula = MeanAmp ~ Type * Category * Duration + 
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode),
+                        verbose = FALSE)
+
+
+print(summary(lmm.zcp.N170.E4), corr = FALSE)
+
+```
+
+```{r compare max and zcp E204 N170}
+anova(lmm.max.N170.E4, lmm.zcp.N170.E4)
+```
+
+#### The reduced model
+```{r PCA analysis for zcp lmm for E204 N170}
+# PCA analysis for zcp model
+summary(rePCA(lmm.zcp.N170.E4))
+
+```
+
+The variances of all directions were larger than 1%, therefore no random factors should be removed without considering the correlations. 
+We will create extended model directly from maximal model.
+
+#### Extended model
+```{r PCA analysis for zcp lmm for E204 N170}
+# PCA analysis for zcp model
+summary(rePCA(lmm.max.N170.E4))
 
 ```
 
 #205
+## Behavior results
+```{r load behavioral results of 205}
+raw.beha.E5 <- {
+  "12.csv" %>% 
+    file.path(folder.data, .) %>% 
+    read_csv() 
+}
+
+```
+
+```{r select certain rows and columns from the data, and calculate the Z value for reaction times (205)}
+clean.beha.E5 <- {
+  raw.beha.E5 %>%
+    filter(`Procedure[Trial]` == "expProc") %>% # remove rows for practice and countdown
+    select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = `stimCategory[Trial]`, Category = `FH[Trial]`, Duration = `stimDuration[Trial]`, ACC = `Resp.ACC[Trial]`, Resp.RT = `Resp.RT[Trial]`, Resp = `Resp.RESP[Trial]`, Stimuli = `stimName[Trial]`) %>% # select and rename the columns (remove unuseful columns)
+    mutate(
+      SubjCode = factor(paste("P", SubjCode, sep = "")), # save SubjCode as factor
+      Type = substr(Type, 1, 1),
+      Type = recode_factor(Type, "N" = "normal", "S" = "scrambled"), # rename the levels of Type
+      Category = recode(Category, "hosue" = "house", "house" = "house", "face" = "face", .default = "face"), # rename "hosue" as "house"
+      Duration = factor(Duration) # save Duration as factor
+      ) %>% 
+    group_by(SubjCode, Type, Category, Duration, ACC) %>% # divide the data based on these conditions
+    mutate(
+      RT = Resp.RT + as.numeric(levels(Duration))[Duration],
+      RT.Z = scale(RT), # calculate the Z value for reaction times within each group
+      RT.Within3Z = ifelse(RT.Z <= 3 & RT.Z >= -3, 1, ifelse(RT.Z < -3 | RT.Z > 3, 0, NaN)) # if the Z values are between -3 and 3, will be marked as 1
+      ) %>% 
+    ungroup() # ungroup the data 
+     
+}
+
+# behavior.tidyup
+head(clean.beha.E5, 10)
+
+```
+
+```{r check the number of trials for 205}
+# check the number of trials for 205
+sum.count.E5 <- {
+  clean.beha.E5 %>% 
+    group_by(SubjCode, Type, Category, Duration) %>% 
+    summarize(Count_sum = n())
+}
+
+valid.count.E5 <- {
+  clean.beha.E5 %>% 
+    filter(RT > RT.min) %>% 
+    group_by(SubjCode, Type, Category, Duration) %>% 
+    summarize(Count = n()) %>% 
+    right_join(sum.count.E5, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
+    mutate(ratio = Count / Count_sum) %>% 
+    filter(ratio > ratio.count) %$%
+    SubjCode %>% 
+    unique()
+}
+
+
+# remove the participants
+clean.beha.E5 %<>% filter(SubjCode %in% valid.count.E5)
+
+```
+
+
+```{r remove participants whose performance in Key 1 and Key 5 conditions were lower than 90%}
+# remove participants whose performance in Key 1 and Key 5 conditions were lower than 90%
+
+valid.17 <- {
+  clean.beha.E5 %>%
+    filter(Type == "normal" & Duration == 17 & Resp == 1) %>% 
+    group_by(SubjCode, Type, Duration, Resp) %>% 
+    summarize(Accuracy = mean(ACC), Count = n()) %>% 
+    filter(Accuracy > 0.9) %$%
+    SubjCode
+}
+
+clean.beha.E5 %<>% filter(SubjCode %in% valid.17)
+
+```
+
+### Participant demographic information
+```{r participant information}
+subj.info.E5 <- {
+  clean.beha.E5 %>% 
+    select(SubjCode, Age, Sex, Handedness) %>% # select the columns of participant inforamtion
+    distinct() # only keep the unique rows
+}
+
+subj.info.E5
+```
+
 
 # Questions and predictions {#prediction}
 
