@@ -37,12 +37,12 @@ lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC +
                       REML = FALSE,
                       # verbose = TRUE,
                       control = lmerControl(optimizer = "bobyqa", 
-                                            optCtrl = list(maxfun = 1e5)))
+                                            optCtrl = list(maxfun = 1e6)))
 
 # Saving lmm.max.P1.E4
 message("")
 message("Saving the lmm.max.acc.E4")
-save(lmm.max.P1.E4, file = "E204_lmm_max_P1.RData")
+save(lmm.max.P1.E4, file = "E204_P1_lmm_max.RData")
 
 
 #############################  Fitting the lmm.zcp.P1 for raw mean amplitude  ##############################
@@ -52,18 +52,13 @@ save(lmm.max.P1.E4, file = "E204_lmm_max_P1.RData")
 # message("Fitting the lmm.zcp.P1 model...")
 # 
 # # lmm.zcp.P1 for mean amplitude
-# load("E204_max_acc.RData")
-# lmm.zcp.acc.E4 <- update(lmm.max.acc.E4,
-#                          formula = ACC ~ Type * Category * Duration + 
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
-#                          # verbose = TRUE
-#                          )
+# load("E204_P1_lmm_max.RData")
+
 # 
 # # Saving lmm.zcp.P1
 # message("")
-# message("Saving the lmm.zcp.acc.E4")
-# save(lmm.zcp.acc.E4, file = "E204_lmm_zcp_acc.RData")
+# message("Saving the lmm.zcp.P1.E4")
+# save(lmm.zcp.P1.E4, file = "E204_P1_lmm_zcp.RData")
 
 
 
