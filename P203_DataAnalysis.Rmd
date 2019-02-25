@@ -581,11 +581,17 @@ if (!file.exists(file.rdc.rt.E4)) {
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
                              (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura || Stimuli))
 } else {
-  load(file.zcp.rt.E4)
+  load(file.rdc.rt.E4)
 }
 
 print(summary(glmm.rdc.rt.E4), corr = FALSE)
 ```
+
+```{r}
+anova(glmm.rdc.rt.E4, glmm.zcp.rt.E4)
+```
+
+
 
 ##### The extended model
 ```{r extended glmm for E204 RT}
@@ -626,6 +632,24 @@ if (!file.exists(file.etd2.rt.E4)) {
 
 print(summary(glmm.etd2.rt.E4), corr = FALSE)
 ```
+
+```{r extended3 glmm for E204 RT}
+
+file.etd3.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_etd3.RData")
+
+# fit the reduced model
+if (!file.exists(file.etd3.rt.E4)) {
+  glmm.etd3.rt.E4 <- update(glmm.etd2.rt.E4,
+                           formula = RT ~ Type * Category * Duration +
+                             (1 + Type_D + Type_Cate + Type_Dura + Type_Cate_Dura | SubjCode) +
+                             (0 + Type_D + Type_Dura + Type_Cate_Dura | Stimuli))
+} else {
+  load(file.etd3.rt.E4)
+}
+
+print(summary(glmm.etd3.rt.E4), corr = FALSE)
+```
+
 
 
 ## ERP data analysis
