@@ -21,44 +21,44 @@ message("Loading the data file...")
 load("E204_beha_RT.RData")
 
 #############################  Fitting the glmm max for response times  ##############################
-# fit the glmm.max.trial model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the glmm.max.trial model...")
-
-# glmm.max.rt.E4 for mean amplitude
-glmm.max.rt.E4 <- glmer(RT ~ Type * Category * Duration +
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
-                        data = df.rt.E4,
-                        family = "poisson",
-                        control = glmerControl(optCtrl = list(maxfun = 1e5)))
-
-# Saving glmm.max.rt.E4
-message("")
-message("Saving the glmm.max.rt.E4")
-save(glmm.max.rt.E4, file = "E204_rt_glmm_max.RData")
+# # fit the glmm.max.trial model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the glmm.max.trial model...")
+# 
+# # glmm.max.rt.E4 for mean amplitude
+# glmm.max.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+#                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+#                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+#                         data = df.rt.E4,
+#                         family = "poisson",
+#                         control = glmerControl(optCtrl = list(maxfun = 1e5)))
+# 
+# # Saving glmm.max.rt.E4
+# message("")
+# message("Saving the glmm.max.rt.E4")
+# save(glmm.max.rt.E4, file = "E204_rt_glmm_max.RData")
 
 
 #############################  Fitting the glmm zcp for response times  ##############################
-# # fit the glmm.zcp.rt.E4 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the glmm.zcp.rt.E4 model...")
-# 
-# # glmm.zcp.rt.E4 for mean amplitude
-# load("E204_rt_glmm_max.RData")
-# glmm.zcp.rt.E4 <- update(glmm.max.rt.E4,
-#                          formula = RT ~ Type * Category * Duration + 
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
-#                          # verbose = TRUE
-#                          )
-# 
-# # Saving glmm.zcp.rt.E4
-# message("")
-# message("Saving the glmm.zcp.rt.E4")
-# save(glmm.zcp.rt.E4, file = "E204_rt_glmm_zcp.RData")
+# fit the glmm.zcp.rt.E4 model
+message("")
+message(paste0(strrep("#", 80)))
+message("Fitting the glmm.zcp.rt.E4 model...")
+
+# glmm.zcp.rt.E4 for mean amplitude
+load("E204_rt_glmm_max.RData")
+glmm.zcp.rt.E4 <- update(glmm.max.rt.E4,
+                         formula = RT ~ Type * Category * Duration +
+                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
+                         # verbose = TRUE
+                         )
+
+# Saving glmm.zcp.rt.E4
+message("")
+message("Saving the glmm.zcp.rt.E4")
+save(glmm.zcp.rt.E4, file = "E204_rt_glmm_zcp.RData")
 
 
 
