@@ -99,6 +99,28 @@ load("E204_beha_RT.RData")
 # save(glmm.etd.rt.E4, file = "E204_rt_glmm_etd.RData")
 
 
+#############################  allFit for extended model  ##############################
+# fit the glmm.etd.rt.E4 model
+message("")
+message(paste0(strrep("#", 80)))
+message("allFit the glmm.etd.rt.E4 model...")
+
+# glmm.etd.rt.E4 for mean amplitude
+glmm.etd.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                          (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli),
+                        data = df.rt.E4,
+                        family = "poisson"
+                        )
+allFit.glmm.etd.rt.E4 <- allFit(glmm.etd.rt.E4,
+                                maxfun = 1e6)
+
+# Saving glmm.etd.rt.E4
+message("")
+message("Saving the allFit.glmm.etd.rt.E4")
+save(allFit.glmm.etd.rt.E4, file = "E204_rt_glmm_etd_allFit.RData")
+
+
 #############################  Fitting the glmm etd2 for response times  ##############################
 # # fit the glmm.etd2.rt.E4 model
 # message("")
@@ -119,22 +141,24 @@ load("E204_beha_RT.RData")
 
 
 #############################  Fitting the glmm etd3 for response times  ##############################
-# fit the glmm.etd2.rt.E4 model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the glmm.etd3.rt.E4 model...")
+# # fit the glmm.etd2.rt.E4 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the glmm.etd3.rt.E4 model...")
+# 
+# # glmm.etd3.rt.E4 for mean amplitude
+# load("E204_rt_glmm_etd2.RData")
+# glmm.etd3.rt.E4 <- update(glmm.etd2.rt.E4,
+#                           formula = RT ~ Type * Category * Duration +
+#                             (1 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | SubjCode) +
+#                             (0 + Type_D + Type_Dura + Type_Cate_Dura | Stimuli))
+# 
+# # Saving glmm.etd3.rt.E4
+# message("")
+# message("Saving the glmm.etd3.rt.E4")
+# save(glmm.etd3.rt.E4, file = "E204_rt_glmm_etd3.RData")
 
-# glmm.etd3.rt.E4 for mean amplitude
-load("E204_rt_glmm_etd2.RData")
-glmm.etd3.rt.E4 <- update(glmm.etd2.rt.E4,
-                          formula = RT ~ Type * Category * Duration +
-                            (1 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | SubjCode) +
-                            (0 + Type_D + Type_Dura + Type_Cate_Dura | Stimuli))
 
-# Saving glmm.etd3.rt.E4
-message("")
-message("Saving the glmm.etd3.rt.E4")
-save(glmm.etd3.rt.E4, file = "E204_rt_glmm_etd3.RData")
 
 
 # versions of packages used
