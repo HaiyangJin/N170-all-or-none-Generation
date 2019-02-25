@@ -64,7 +64,7 @@ folder.output <- "output"
 source(file.path(folder.R, "geom_flat_violin.R"))  # flat violin plot 
 source(file.path(folder.R, "substr_Event.R"))  # parse Event to IVs
 source(file.path(folder.R, "dummy_coding_P203.R")) # set the dummy coding manually
-# source(file.path(folder.R, "get_pars.R")) # 
+source(file.path(folder.R, "get_pars.R")) #
 source(file.path(folder.R, "general_theme.R"))  # plot theme
 
 ```
@@ -424,6 +424,30 @@ print(summary(glmm.zcp.acc.E4), corr = FALSE)
 ```
 
 
+##### The reduced model
+```{r}
+summary(rePCA(glmm.zcp.acc.E4))
+
+```
+
+```{r rdc lmm for E204 Accuracy}
+
+file.rdc.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_rdc.RData")
+
+if (!file.exists(file.rdc.acc.E4)) {
+  glmm.rdc.acc.E4 <- update(glmm.zcp.acc.E4,
+                           formula = ACC ~ Type * Category * Duration + 
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                            (1 + Dura_D || Stimuli),
+                          verbose = FALSE)
+} else {
+  load(file.rdc.acc.E4)
+}
+
+print(summary(glmm.rdc.acc.E4), corr = FALSE)
+
+```
+
 
 
 ### Correct response times
@@ -592,7 +616,6 @@ anova(glmm.rdc.rt.E4, glmm.zcp.rt.E4)
 ```
 
 
-
 ##### The extended model
 ```{r extended glmm for E204 RT}
 
@@ -610,6 +633,17 @@ if (!file.exists(file.etd.rt.E4)) {
 
 print(summary(glmm.etd.rt.E4), corr = FALSE)
 ```
+
+```{r}
+pars.etd.rt.E4 <- get_pars(glmm.etd.rt.E4) 
+
+glmm.etd1.rt.E4 <- update(glmm.etd.rt.E4, start = pars.etd.rt.E4) 
+
+summary(glmm.et1.rt.E4)
+```
+
+
+
 
 ```{r}
 summary(rePCA(glmm.etd.rt.E4))
@@ -650,6 +684,27 @@ if (!file.exists(file.etd3.rt.E4)) {
 print(summary(glmm.etd3.rt.E4), corr = FALSE)
 ```
 
+
+#### Linear mixed model
+##### The maximal model
+```{r maximal lmm for E204 RT}
+file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_max.RData")
+
+if (!file.exists(file.max.rt.E4)) {
+  lmm.max.rt.E4 <- lmer(RT ~ Type * Category * Duration +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+                        data = df.rt.E4,
+                        REML = FALSE,
+                        control = lmerControl(optimizer = "bobyqa",
+                                              optCtrl = list(maxfun = 1e5)))
+} else {
+  load(file.max.rt.E4)
+}
+
+print(summary(lmm.max.rt.E4), corr = FALSE)
+
+```
 
 
 ## ERP data analysis
@@ -1034,5 +1089,6 @@ More deatils could be found: Kuznetsova, A., Brockhoff, P. B., & Christensen, R.
 
 # Versions of packages used
 ```{r versions}
+rstudioapi::versionInfo()
 sessionInfo()
 ```
