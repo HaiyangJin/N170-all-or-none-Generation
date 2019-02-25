@@ -99,26 +99,47 @@ load("E204_beha_RT.RData")
 # save(glmm.etd.rt.E4, file = "E204_rt_glmm_etd.RData")
 
 
-#############################  allFit for extended model  ##############################
+#############################  refit extended model  ##############################
 # fit the glmm.etd.rt.E4 model
 message("")
 message(paste0(strrep("#", 80)))
 message("allFit the glmm.etd.rt.E4 model...")
 
 # glmm.etd.rt.E4 for mean amplitude
-glmm.etd.rt.E4 <- glmer(RT ~ Type * Category * Duration +
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli),
-                        data = df.rt.E4,
-                        family = "poisson"
-                        )
-allFit.glmm.etd.rt.E4 <- allFit(glmm.etd.rt.E4,
-                                maxfun = 1e6)
+source("get_pars.R")
+load("E204_rt_glmm_etd.RData")
+
+pars.etd.rt.E4 <- get_pars(glmm.etd.rt.E4) 
+
+glmm.etd1.rt.E4 <- update(glmm.etd.rt.E4, start = pars.etd.rt.E4) 
 
 # Saving glmm.etd.rt.E4
 message("")
 message("Saving the allFit.glmm.etd.rt.E4")
-save(allFit.glmm.etd.rt.E4, file = "E204_rt_glmm_etd_allFit.RData")
+save(glmm.etd1.rt.E4, file = "E204_rt_glmm_etd1.RData")
+
+
+
+#############################  allFit for extended model  ##############################
+# # fit the glmm.etd.rt.E4 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("allFit the glmm.etd.rt.E4 model...")
+# 
+# # glmm.etd.rt.E4 for mean amplitude
+# glmm.etd.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+#                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+#                           (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli),
+#                         data = df.rt.E4,
+#                         family = "poisson"
+#                         )
+# allFit.glmm.etd.rt.E4 <- allFit(glmm.etd.rt.E4,
+#                                 maxfun = 1e6)
+# 
+# # Saving glmm.etd.rt.E4
+# message("")
+# message("Saving the allFit.glmm.etd.rt.E4")
+# save(allFit.glmm.etd.rt.E4, file = "E204_rt_glmm_etd_allFit.RData")
 
 
 #############################  Fitting the glmm etd2 for response times  ##############################
@@ -162,4 +183,5 @@ save(allFit.glmm.etd.rt.E4, file = "E204_rt_glmm_etd_allFit.RData")
 
 
 # versions of packages used
+rstudioapi::versionInfo()
 sessionInfo()

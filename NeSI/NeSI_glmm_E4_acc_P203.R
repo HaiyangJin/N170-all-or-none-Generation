@@ -21,24 +21,24 @@ message("Loading the data file...")
 load("E204_beha.RData")
 
 #############################  Fitting the glmm max for accuracy  ##############################
-# fit the glmm.max.trial model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the glmm.max.trial model...")
-
-# glmm.max.acc.E4 for mean amplitude
-glmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration +
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
-                        data = clean.beha.E4,
-                        family = "binomial",
-                        verbose = TRUE,
-                        control = glmerControl(optCtrl = list(maxfun = 1e5)))
-
-# Saving glmm.max.acc.E4
-message("")
-message("Saving the glmm.max.acc.E4")
-save(glmm.max.acc.E4, file = "E204_acc_glmm_max.RData")
+# # fit the glmm.max.trial model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the glmm.max.trial model...")
+# 
+# # glmm.max.acc.E4 for mean amplitude
+# glmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration +
+#                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+#                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+#                         data = clean.beha.E4,
+#                         family = "binomial",
+#                         verbose = TRUE,
+#                         control = glmerControl(optCtrl = list(maxfun = 1e5)))
+# 
+# # Saving glmm.max.acc.E4
+# message("")
+# message("Saving the glmm.max.acc.E4")
+# save(glmm.max.acc.E4, file = "E204_acc_glmm_max.RData")
 
 
 #############################  Fitting the glmm zcp for accuracy  ##############################
@@ -50,7 +50,7 @@ save(glmm.max.acc.E4, file = "E204_acc_glmm_max.RData")
 # # glmm.zcp.acc.E4 for mean amplitude
 # load("E204_acc_glmm_max.RData")
 # glmm.zcp.acc.E4 <- update(glmm.max.acc.E4,
-#                          formula = ACC ~ Type * Category * Duration + 
+#                          formula = ACC ~ Type * Category * Duration +
 #                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
 #                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
 #                          # verbose = TRUE
@@ -62,6 +62,27 @@ save(glmm.max.acc.E4, file = "E204_acc_glmm_max.RData")
 # save(glmm.zcp.acc.E4, file = "E204_acc_glmm_zcp.RData")
 
 
+#############################  Fitting the glmm rdc for accuracy  ##############################
+# fit the glmm.rdc.acc.E4 model
+message("")
+message(paste0(strrep("#", 80)))
+message("Fitting the glmm.rdc.acc.E4 model...")
+
+# glmm.rdc.acc.E4 for mean amplitude
+load("E204_acc_glmm_zcp.RData")
+glmm.rdc.acc.E4 <- update(glmm.zcp.acc.E4,
+                          formula = ACC ~ Type * Category * Duration + 
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                            (1 + Dura_D || Stimuli)
+                          # verbose = TRUE
+)
+
+# Saving glmm.rdc.acc.E4
+message("")
+message("Saving the glmm.rdc.acc.E4")
+save(glmm.rdc.acc.E4, file = "E204_acc_glmm_rdc.RData")
+
 
 # versions of packages used
+rstudioapi::versionInfo()
 sessionInfo()

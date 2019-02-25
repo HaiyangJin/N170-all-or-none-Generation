@@ -95,4 +95,5 @@ save(lmm.max.N170.E4, file = "E204_N170_lmm_max.RData")
 
 
 # versions of packages used
+rstudioapi::versionInfo()
 sessionInfo()
