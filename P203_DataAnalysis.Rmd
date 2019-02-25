@@ -655,15 +655,17 @@ file.max.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
 # fit the maximal model
 if (!file.exists(file.max.P1.E4)) {
   lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
-                          (1 + Type_D + Cate_D + Dura_D + ACC_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
-                             Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                             Type_Cate_Dura_ACC | SubjCode),
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                             Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
+                             Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
+                             Type_Cate_Dura_Hemi_ACC| SubjCode),
                         data = df.erp.P1.E4,
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e6)))
+                                              optCtrl = list(maxfun = 1e7)))
 } else {
   load(file.max.P1.E4)
 }
@@ -680,10 +682,12 @@ file.zcp.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_zcp.RData")
 if (!file.exists(file.zcp.P1.E4)) {
   lmm.zcp.P1.E4 <- update(lmm.max.P1.E4, 
                           formula = MeanAmp ~ Type * Category * Duration * ACC + 
-                            (1 + Type_D + Cate_D + Dura_D + ACC_D + 
-                               Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
-                               Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                               Type_Cate_Dura_ACC || SubjCode),
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                             Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
+                             Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
+                             Type_Cate_Dura_Hemi_ACC || SubjCode),
                           verbose = FALSE)
 } else {
   load(file.zcp.P1.E4)
@@ -729,12 +733,12 @@ At least three random factors should be removed. (Cate_D, Type_Cate, Cate_Dura)
 
 
 ```{r }
-lmm.etd.P1.E4 <- update(lmm.max.P1.E4,
-                        formula = MeanAmp ~ Type * Category * Duration + 
-                          (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode),
-                        verbose = FALSE)
-
-summary(lmm.etd.P1.E4)
+# lmm.etd.P1.E4 <- update(lmm.max.P1.E4,
+#                         formula = MeanAmp ~ Type * Category * Duration + 
+#                           (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode),
+#                         verbose = FALSE)
+# 
+# summary(lmm.etd.P1.E4)
 ```
 
 
@@ -764,15 +768,17 @@ file.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 # fit the maximal model
 if (!file.exists(file.max.N170.E4)) {
   lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
-                          (1 + Type_D + Cate_D + Dura_D + ACC_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
-                             Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                             Type_Cate_Dura_ACC | SubjCode),
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                             Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
+                             Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
+                             Type_Cate_Dura_Hemi_ACC | SubjCode),
                         data = df.erp.N170.E4,
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e6)))
+                                              optCtrl = list(maxfun = 1e7)))
 } else {
   load(file.max.N170.E4)
 }
@@ -790,10 +796,12 @@ file.zcp.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_zcp.RData")
 if (!file.exists(file.zcp.N170.E4)) {
   lmm.zcp.N170.E4 <- update(lmm.max.N170.E4, 
                             formula = MeanAmp ~ Type * Category * Duration * ACC + 
-                              (1 + Type_D + Cate_D + Dura_D + ACC_D + 
-                                 Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
-                                 Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                                 Type_Cate_Dura_ACC || SubjCode),
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                             Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
+                             Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
+                             Type_Cate_Dura_Hemi_ACC || SubjCode),
                             verbose = FALSE)
 } else {
   load(file.zcp.N170.E4)

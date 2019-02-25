@@ -88,7 +88,7 @@ message("Fitting the glmm.etd.rt.E4 model...")
 
 # glmm.etd.rt.E4 for mean amplitude
 load("E204_rt_glmm_rdc.RData")
-glmm.etd.rt.E4 <- update(glmm.zcp.rt.E4,
+glmm.etd.rt.E4 <- update(glmm.rdc.rt.E4,
                          formula = RT ~ Type * Category * Duration +
                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                            (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli))
