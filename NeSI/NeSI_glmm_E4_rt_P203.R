@@ -41,26 +41,62 @@ load("E204_beha_RT.RData")
 
 
 #############################  Fitting the glmm zcp for response times  ##############################
-# fit the glmm.zcp.rt.E4 model
+# # fit the glmm.zcp.rt.E4 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the glmm.zcp.rt.E4 model...")
+# 
+# # glmm.zcp.rt.E4 for mean amplitude
+# load("E204_rt_glmm_max.RData")
+# glmm.zcp.rt.E4 <- update(glmm.max.rt.E4,
+#                          formula = RT ~ Type * Category * Duration +
+#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
+#                          # verbose = TRUE
+#                          )
+# 
+# # Saving glmm.zcp.rt.E4
+# message("")
+# message("Saving the glmm.zcp.rt.E4")
+# save(glmm.zcp.rt.E4, file = "E204_rt_glmm_zcp.RData")
+
+
+#############################  Fitting the glmm rdc for response times  ##############################
+# # fit the glmm.rdc.rt.E4 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the glmm.rdc.rt.E4 model...")
+# 
+# # glmm.rdc.rt.E4 for mean amplitude
+# load("E204_rt_glmm_zcp.RData")
+# glmm.rdc.rt.E4 <- update(glmm.zcp.rt.E4,
+#                          formula = RT ~ Type * Category * Duration +
+#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+#                            (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura || Stimuli))
+# 
+# # Saving glmm.rdc.rt.E4
+# message("")
+# message("Saving the glmm.rdc.rt.E4")
+# save(glmm.rdc.rt.E4, file = "E204_rt_glmm_rdc.RData")
+
+
+#############################  Fitting the glmm etd for response times  ##############################
+# fit the glmm.etd.rt.E4 model
 message("")
 message(paste0(strrep("#", 80)))
-message("Fitting the glmm.zcp.rt.E4 model...")
+message("Fitting the glmm.etd.rt.E4 model...")
 
-# glmm.zcp.rt.E4 for mean amplitude
-load("E204_rt_glmm_max.RData")
-glmm.zcp.rt.E4 <- update(glmm.max.rt.E4,
+# glmm.etd.rt.E4 for mean amplitude
+load("E204_rt_glmm_rdc.RData")
+glmm.etd.rt.E4 <- update(glmm.zcp.rt.E4,
                          formula = RT ~ Type * Category * Duration +
-                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
-                         # verbose = TRUE
-                         )
+                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                           (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli))
 
-# Saving glmm.zcp.rt.E4
+# Saving glmm.etd.rt.E4
 message("")
-message("Saving the glmm.zcp.rt.E4")
-save(glmm.zcp.rt.E4, file = "E204_rt_glmm_zcp.RData")
-
-
+message("Saving the glmm.etd.rt.E4")
+save(glmm.etd.rt.E4, file = "E204_rt_glmm_etd.RData")
 
 # versions of packages used
 sessionInfo()

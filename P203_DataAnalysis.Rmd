@@ -521,7 +521,7 @@ rt.ColuPlot.E4
 
 #### Log mixed model
 ##### The maximal model
-```{r maximal lmm for E204 RT}
+```{r maximal glmm for E204 RT}
 file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_max.RData")
 
 if (!file.exists(file.max.rt.E4)) {
@@ -538,6 +538,73 @@ if (!file.exists(file.max.rt.E4)) {
 print(summary(glmm.max.rt.E4), corr = FALSE)
 
 ```
+
+##### The zero-correlation-parameter model
+```{r zcp glmm for E204 RT}
+file.zcp.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_zcp.RData")
+
+# fit the zcp model
+if (!file.exists(file.zcp.rt.E4)) {
+  glmm.zcp.rt.E4 <- update(glmm.max.rt.E4, 
+                          formula = RT ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli),
+                          verbose = FALSE)
+} else {
+  load(file.zcp.rt.E4)
+}
+
+print(summary(glmm.zcp.rt.E4), corr = FALSE)
+
+```
+
+```{r compare max and zcp E204 rt}
+anova(glmm.max.rt.E4, glmm.zcp.rt.E4)
+```
+
+##### The reduced model
+```{r PCA for zcp RT 204}
+# PCA
+summary(rePCA(glmm.zcp.rt.E4))
+```
+
+Three random effects of Stimuli were removed.
+
+```{r reduced glmm for E204 RT}
+
+file.rdc.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_rdc.RData")
+
+# fit the reduced model
+if (!file.exists(file.rdc.rt.E4)) {
+  glmm.rdc.rt.E4 <- update(glmm.zcp.rt.E4,
+                           formula = RT ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                             (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura || Stimuli))
+} else {
+  load(file.zcp.rt.E4)
+}
+
+print(summary(glmm.rdc.rt.E4), corr = FALSE)
+```
+
+##### The extended model
+```{r extended glmm for E204 RT}
+
+file.etd.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_etd.RData")
+
+# fit the reduced model
+if (!file.exists(file.etd.rt.E4)) {
+  glmm.etd.rt.E4 <- update(glmm.zcp.rt.E4,
+                           formula = RT ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                             (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli))
+} else {
+  load(file.zcp.rt.E4)
+}
+
+print(summary(glmm.etd.rt.E4), corr = FALSE)
+```
+
 
 ## ERP data analysis
 ### Load mean amplitude for single trials
@@ -607,12 +674,20 @@ print(summary(lmm.max.P1.E4), corr = FALSE)
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for E204 p1}
-# fit the zcp model
-lmm.zcp.P1.E4 <- update(lmm.max.P1.E4, 
-                        formula = MeanAmp ~ Type * Category * Duration + 
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode),
-                        verbose = FALSE)
+file.zcp.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_zcp.RData")
 
+# fit the zcp model
+if (!file.exists(file.zcp.P1.E4)) {
+  lmm.zcp.P1.E4 <- update(lmm.max.P1.E4, 
+                          formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                            (1 + Type_D + Cate_D + Dura_D + ACC_D + 
+                               Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
+                               Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                               Type_Cate_Dura_ACC || SubjCode),
+                          verbose = FALSE)
+} else {
+  load(file.zcp.P1.E4)
+}
 
 print(summary(lmm.zcp.P1.E4), corr = FALSE)
 
@@ -624,18 +699,30 @@ anova(lmm.max.P1.E4, lmm.zcp.P1.E4)
 
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E204 P1}
-# PCA analysis for zcp model
-summary(rePCA(lmm.zcp.P1.E4))
 
+file.zcp.P1.E4.step <- file.path(folder.nesi, "E204_P1_lmm_zcp_step.RData")
+
+# fit the zcp model
+if (!file.exists(file.zcp.P1.E4)) {
+  lmm.zcp.P1.E4.step <- step(lmm.zcp.P1.E4, reduce.fixed = FALSE)
+} else {
+  load(file.zcp.P1.E4.step)
+}
+
+summary(lmm.zcp.P1.E4.step)
 ```
 
-The variances of all directions were larger than 1%, therefore no random factors should be removed without considering the correlations. 
-We will create extended model directly from maximal model.
+
+```{r get model for P1 E4}
+lmm.rdc.P1.E4 <- get_model(lmm.zcp.P1.E4.step)
+
+print(summary(lmm.rdc.P1.E4), corr = FALSE)
+```
+
 
 #### Extended model
 ```{r PCA analysis for zcp lmm for E204 P1}
-# PCA analysis for zcp model
-summary(rePCA(lmm.max.P1.E4))
+
 
 ```
 At least three random factors should be removed. (Cate_D, Type_Cate, Cate_Dura)
@@ -696,11 +783,21 @@ print(summary(lmm.max.N170.E4), corr = FALSE)
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for E204 N170}
+
+file.zcp.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_zcp.RData")
+
 # fit the zcp model
-lmm.zcp.N170.E4 <- update(lmm.max.N170.E4, 
-                        formula = MeanAmp ~ Type * Category * Duration + 
-                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode),
-                        verbose = FALSE)
+if (!file.exists(file.zcp.N170.E4)) {
+  lmm.zcp.N170.E4 <- update(lmm.max.N170.E4, 
+                            formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                              (1 + Type_D + Cate_D + Dura_D + ACC_D + 
+                                 Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
+                                 Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
+                                 Type_Cate_Dura_ACC || SubjCode),
+                            verbose = FALSE)
+} else {
+  load(file.zcp.N170.E4)
+}
 
 
 print(summary(lmm.zcp.N170.E4), corr = FALSE)
@@ -713,18 +810,30 @@ anova(lmm.max.N170.E4, lmm.zcp.N170.E4)
 
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E204 N170}
-# PCA analysis for zcp model
-summary(rePCA(lmm.zcp.N170.E4))
 
+file.zcp.N170.E4.step <- file.path(folder.nesi, "E204_N170_lmm_zcp_step.RData")
+
+# fit the zcp model
+if (!file.exists(file.zcp.N170.E4)) {
+  lmm.zcp.N170.E4.step <- step(lmm.zcp.N170.E4, reduce.fixed = FALSE)
+} else {
+  load(file.zcp.N170.E4.step)
+}
+
+lmm.zcp.N170.E4.step
 ```
 
-The variances of all directions were larger than 1%, therefore no random factors should be removed without considering the correlations. 
-We will create extended model directly from maximal model.
+
+```{r get model for N170 E4}
+lmm.rdc.N170.E4 <- get_model(lmm.zcp.N170.E4.step)
+
+print(summary(lmm.rdc.N170.E4), corr = FALSE)
+```
+
 
 #### Extended model
 ```{r PCA analysis for zcp lmm for E204 N170}
-# PCA analysis for zcp model
-summary(rePCA(lmm.max.N170.E4))
+
 
 ```
 
