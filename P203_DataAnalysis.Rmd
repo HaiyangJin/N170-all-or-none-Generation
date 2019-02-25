@@ -594,15 +594,37 @@ file.etd.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_etd.RData")
 
 # fit the reduced model
 if (!file.exists(file.etd.rt.E4)) {
-  glmm.etd.rt.E4 <- update(glmm.zcp.rt.E4,
+  glmm.etd.rt.E4 <- update(glmm.rdc.rt.E4,
                            formula = RT ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                              (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli))
 } else {
-  load(file.zcp.rt.E4)
+  load(file.etd.rt.E4)
 }
 
 print(summary(glmm.etd.rt.E4), corr = FALSE)
+```
+
+```{r}
+summary(rePCA(glmm.etd.rt.E4))
+```
+
+
+```{r extended2 glmm for E204 RT}
+
+file.etd2.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_etd2.RData")
+
+# fit the reduced model
+if (!file.exists(file.etd2.rt.E4)) {
+  glmm.etd2.rt.E4 <- update(glmm.etd.rt.E4,
+                           formula = RT ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | SubjCode) +
+                             (0 + Type_D + Type_Dura + Type_Cate_Dura | Stimuli))
+} else {
+  load(file.etd2.rt.E4)
+}
+
+print(summary(glmm.etd2.rt.E4), corr = FALSE)
 ```
 
 

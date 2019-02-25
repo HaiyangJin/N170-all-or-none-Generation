@@ -1,5 +1,5 @@
 Fitting model for P203_DataAnalysis.Rmd...
-The corresponding *.out file is 2586351.out
+The corresponding *.out file is 2587559.out
 Setting the current working directory...
 
 Loading the libraries...
@@ -19,48 +19,14 @@ The following object is masked from ‘package:stats’:
 Loading the data file...
 
 ################################################################################
-Fitting the lmm.zcp.N170 model...
-singular fit
+Fitting the glmm.etd.rt.E4 model...
+Warning messages:
+1: In checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  :
+  unable to evaluate scaled gradient
+2: In checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
 
-Saving the lmm.zcp.N170.E4
-
-################################################################################
-Reducing the lmm.zcp.n170 model...
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-singular fit
-Warning message:
-Model failed to converge with 1 negative eigenvalue: -3.8e+03 
-
-Saving the lmm.zcp.N170.E4.step
+Saving the glmm.etd.rt.E4
 R version 3.5.1 (2018-07-02)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: CentOS Linux 7 (Core)
