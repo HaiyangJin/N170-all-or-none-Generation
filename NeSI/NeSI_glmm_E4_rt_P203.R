@@ -183,5 +183,4 @@ save(glmm.etd1.rt.E4, file = "E204_rt_glmm_etd1.RData")
 
 
 # versions of packages used
-rstudioapi::versionInfo()
 sessionInfo()

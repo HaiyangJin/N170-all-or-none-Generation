@@ -98,5 +98,4 @@ save(lmm.max.P1.E4, file = "E204_P1_lmm_max.RData")
 
 
 # versions of packages used
-rstudioapi::versionInfo()
 sessionInfo()

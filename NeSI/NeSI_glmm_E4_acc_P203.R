@@ -84,5 +84,4 @@ save(glmm.rdc.acc.E4, file = "E204_acc_glmm_rdc.RData")
 
 
 # versions of packages used
-rstudioapi::versionInfo()
 sessionInfo()
