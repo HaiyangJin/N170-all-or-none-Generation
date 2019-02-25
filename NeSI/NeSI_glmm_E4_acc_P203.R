@@ -32,6 +32,7 @@ glmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
                         data = clean.beha.E4,
                         family = "binomial",
+                        verbose = TRUE,
                         control = glmerControl(optCtrl = list(maxfun = 1e5)))
 
 # Saving glmm.max.acc.E4
