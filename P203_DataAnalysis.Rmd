@@ -449,6 +449,34 @@ print(summary(glmm.rdc.acc.E4), corr = FALSE)
 ```
 
 
+```{r}
+
+glmm.rdc.acc.E4.pars <- get_pars(glmm.rdc.acc.E4)
+glmm.rdc1.acc.E4 <- update(glmm.rdc.acc.E4, start = glmm.rdc.acc.E4.pars)
+print(summary(glmm.rdc1.acc.E4), corr = FALSE)
+
+```
+
+
+##### The extended model
+```{r etd lmm for E204 Accuracy}
+
+file.etd.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_etd.RData")
+
+if (!file.exists(file.etd.acc.E4)) {
+  glmm.etd.acc.E4 <- update(glmm.rdc.acc.E4,
+                           formula = ACC ~ Type * Category * Duration + 
+                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                            (1 + Dura_D | Stimuli),
+                          verbose = FALSE)
+} else {
+  load(file.etd.acc.E4)
+}
+
+print(summary(glmm.etd.acc.E4), corr = FALSE)
+
+```
+
 
 ### Correct response times
 ```{r calculate the correct RT E4}
@@ -695,6 +723,7 @@ if (!file.exists(file.max.rt.E4)) {
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
                         data = df.rt.E4,
+                        verbose = TRUE,
                         REML = FALSE,
                         control = lmerControl(optimizer = "bobyqa",
                                               optCtrl = list(maxfun = 1e5)))
@@ -703,6 +732,70 @@ if (!file.exists(file.max.rt.E4)) {
 }
 
 print(summary(lmm.max.rt.E4), corr = FALSE)
+
+```
+
+
+##### The zero-correlation-parameter model
+```{r zcp lmm for E204 RT}
+file.zcp.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_zcp.RData")
+
+if (!file.exists(file.zcp.rt.E4)) {
+  lmm.zcp.rt.E4 <- update(lmm.max.rt.E4,
+                          formula = RT ~ Type * Category * Duration +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli),
+                          verbose = FALSE
+                          )
+} else {
+  load(file.zcp.rt.E4)
+}
+
+print(summary(lmm.zcp.rt.E4), corr = FALSE)
+
+```
+
+
+##### The reduced model
+```{r}
+summary(rePCA(lmm.zcp.rt.E4))
+```
+
+
+```{r reduced lmm for E204 RT}
+file.rdc.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_rdc.RData")
+
+if (!file.exists(file.rdc.rt.E4)) {
+  lmm.rdc.rt.E4 <- update(lmm.max.rt.E4,
+                          formula = RT ~ Type * Category * Duration +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+                          (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura || Stimuli),
+                          verbose = FALSE
+                          )
+} else {
+  load(file.rdc.rt.E4)
+}
+
+print(summary(lmm.rdc.rt.E4), corr = FALSE)
+
+```
+
+##### The extended model
+```{r extended lmm for E204 RT}
+file.etd.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd.RData")
+
+if (!file.exists(file.etd.rt.E4)) {
+  lmm.etd.rt.E4 <- update(lmm.max.rt.E4,
+                          formula = RT ~ Type * Category * Duration +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                          (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli),
+                          verbose = FALSE
+                          )
+} else {
+  load(file.etd.rt.E4)
+}
+
+print(summary(lmm.etd.rt.E4), corr = FALSE)
 
 ```
 
@@ -826,7 +919,7 @@ print(summary(lmm.rdc.P1.E4), corr = FALSE)
 
 
 #### Extended model
-```{r PCA analysis for zcp lmm for E204 P1}
+```{r }
 
 
 ```

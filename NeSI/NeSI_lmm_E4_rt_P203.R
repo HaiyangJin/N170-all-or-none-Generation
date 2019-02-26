@@ -21,24 +21,25 @@ message("Loading the data file...")
 load("E204_beha_RT.RData")
 
 #############################  Fitting the lmm max for response times  ##############################
-# fit the lmm.max.trial model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the lmm.max.trial model...")
-
-# lmm.max.rt.E4 for mean amplitude
-lmm.max.rt.E4 <- lmer(RT ~ Type * Category * Duration +
-                        (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                        (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
-                      data = df.rt.E4,
-                      REML = FALSE,
-                      control = lmerControl(optimizer = "bobyqa",
-                                            optCtrl = list(maxfun = 1e5)))
-
-# Saving lmm.max.rt.E4
-message("")
-message("Saving the lmm.max.rt.E4")
-save(lmm.max.rt.E4, file = "E204_rt_lmm_max.RData")
+# # fit the lmm.max.trial model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm.max.trial model...")
+# 
+# # lmm.max.rt.E4 for mean amplitude
+# lmm.max.rt.E4 <- lmer(RT ~ Type * Category * Duration +
+#                         (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+#                         (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+#                       data = df.rt.E4,
+#                       verbose = TRUE,
+#                       REML = FALSE,
+#                       control = lmerControl(optimizer = "bobyqa",
+#                                             optCtrl = list(maxfun = 1e5)))
+# 
+# # Saving lmm.max.rt.E4
+# message("")
+# message("Saving the lmm.max.rt.E4")
+# save(lmm.max.rt.E4, file = "E204_rt_lmm_max.RData")
 
 
 #############################  Fitting the lmm zcp for response times  ##############################
@@ -72,8 +73,8 @@ save(lmm.max.rt.E4, file = "E204_rt_lmm_max.RData")
 # load("E204_rt_lmm_zcp.RData")
 # lmm.rdc.rt.E4 <- update(lmm.zcp.rt.E4,
 #                          formula = RT ~ Type * Category * Duration +
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                            (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura || Stimuli))
+#                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
+#                           (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura || Stimuli))
 # 
 # # Saving lmm.rdc.rt.E4
 # message("")
@@ -82,22 +83,22 @@ save(lmm.max.rt.E4, file = "E204_rt_lmm_max.RData")
 
 
 #############################  Fitting the lmm etd for response times  ##############################
-# # fit the lmm.etd.rt.E4 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm.etd.rt.E4 model...")
-# 
-# # lmm.etd.rt.E4 for mean amplitude
-# load("E204_rt_lmm_rdc.RData")
-# lmm.etd.rt.E4 <- update(lmm.rdc.rt.E4,
-#                          formula = RT ~ Type * Category * Duration +
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-#                            (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | Stimuli))
-# 
-# # Saving lmm.etd.rt.E4
-# message("")
-# message("Saving the lmm.etd.rt.E4")
-# save(lmm.etd.rt.E4, file = "E204_rt_lmm_etd.RData")
+# fit the lmm.etd.rt.E4 model
+message("")
+message(paste0(strrep("#", 80)))
+message("Fitting the lmm.etd.rt.E4 model...")
+
+# lmm.etd.rt.E4 for mean amplitude
+load("E204_rt_lmm_rdc.RData")
+lmm.etd.rt.E4 <- update(lmm.rdc.rt.E4,
+                         formula = RT ~ Type * Category * Duration +
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                          (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli))
+
+# Saving lmm.etd.rt.E4
+message("")
+message("Saving the lmm.etd.rt.E4")
+save(lmm.etd.rt.E4, file = "E204_rt_lmm_etd.RData")
 
 
 #############################  refit extended model  ##############################
