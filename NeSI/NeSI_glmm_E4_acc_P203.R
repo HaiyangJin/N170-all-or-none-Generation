@@ -53,7 +53,6 @@ load("E204_beha.RData")
 #                          formula = ACC ~ Type * Category * Duration +
 #                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
 #                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
-#                          # verbose = TRUE
 #                          )
 # 
 # # Saving glmm.zcp.acc.E4
@@ -74,7 +73,6 @@ load("E204_beha.RData")
 #                           formula = ACC ~ Type * Category * Duration + 
 #                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
 #                             (1 + Dura_D || Stimuli)
-#                           # verbose = TRUE
 # )
 # 
 # message("Restarting fitting the glmm.rdc.acc.E4 model...")
@@ -101,13 +99,17 @@ glmm.etd.acc.E4 <- update(glmm.rdc.acc.E4,
                           formula = ACC ~ Type * Category * Duration + 
                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                             (1 + Dura_D | Stimuli)
-                          # verbose = TRUE
 )
+
+message("Restarting fitting the glmm.etd.acc.E4 model...")
+source("get_pars.R")
+glmm.etd.acc.E4.pars <- get_pars(glmm.etd.acc.E4)
+glmm.etd1.acc.E4 <- update(glmm.etd.acc.E4, start = glmm.etd.acc.E4.pars)
 
 # Saving glmm.etd.acc.E4
 message("")
 message("Saving the glmm.etd.acc.E4")
-save(glmm.etd.acc.E4, file = "E204_acc_glmm_etd.RData")
+save(glmm.etd.acc.E4, glmm.etd1.acc.E4, file = "E204_acc_glmm_etd.RData")
 
 
 # versions of packages used

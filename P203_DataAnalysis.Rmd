@@ -477,6 +477,13 @@ print(summary(glmm.etd.acc.E4), corr = FALSE)
 
 ```
 
+```{r}
+pars.etd.acc.E4 <- get_pars(glmm.etd.acc.E4)
+glmm.etd1.acc.E4 <- update(glmm.etd.acc.E4, start = pars.etd.acc.E4)
+
+print(summary(glmm.etd1.acc.E4), corr = FALSE)
+```
+
 
 ### Correct response times
 ```{r calculate the correct RT E4}
@@ -799,6 +806,28 @@ print(summary(lmm.etd.rt.E4), corr = FALSE)
 
 ```
 
+
+```{r}
+summary(rePCA(lmm.etd.rt.E4))
+```
+
+```{r extended1 lmm for E204 RT}
+file.etd1.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd1.RData")
+
+if (!file.exists(file.etd1.rt.E4)) {
+  lmm.etd1.rt.E4 <- update(lmm.max.rt.E4,
+                          formula = RT ~ Type * Category * Duration +
+                          (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode) +
+                          (0 + Type_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli),
+                          verbose = FALSE
+                          )
+} else {
+  load(file.etd1.rt.E4)
+}
+
+print(summary(lmm.etd1.rt.E4), corr = FALSE)
+
+```
 
 ## ERP data analysis
 ### Load mean amplitude for single trials
