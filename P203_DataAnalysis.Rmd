@@ -674,7 +674,7 @@ pars.etd.rt.E4 <- get_pars(glmm.etd.rt.E4)
 
 glmm.etd1.rt.E4 <- update(glmm.etd.rt.E4, start = pars.etd.rt.E4) 
 
-summary(glmm.et1.rt.E4)
+summary(glmm.etd1.rt.E4)
 ```
 
 
@@ -792,7 +792,7 @@ print(summary(lmm.rdc.rt.E4), corr = FALSE)
 file.etd.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd.RData")
 
 if (!file.exists(file.etd.rt.E4)) {
-  lmm.etd.rt.E4 <- update(lmm.max.rt.E4,
+  lmm.etd.rt.E4 <- update(lmm.rdc.rt.E4,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                           (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli),
@@ -815,7 +815,7 @@ summary(rePCA(lmm.etd.rt.E4))
 file.etd1.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd1.RData")
 
 if (!file.exists(file.etd1.rt.E4)) {
-  lmm.etd1.rt.E4 <- update(lmm.max.rt.E4,
+  lmm.etd1.rt.E4 <- update(lmm.etd.rt.E4,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode) +
                           (0 + Type_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli),
@@ -828,6 +828,42 @@ if (!file.exists(file.etd1.rt.E4)) {
 print(summary(lmm.etd1.rt.E4), corr = FALSE)
 
 ```
+
+```{r}
+summary(rePCA(lmm.etd1.rt.E4))
+```
+
+```{r extended2 lmm for E204 RT}
+file.etd2.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd2.RData")
+
+if (!file.exists(file.etd2.rt.E4)) {
+  lmm.etd2.rt.E4 <- update(lmm.etd1.rt.E4,
+                          formula = RT ~ Type * Category * Duration +
+                          (1 + Type_D + Type_Dura + Type_Cate_Dura | SubjCode) +
+                          (0 + Type_Dura + Type_Cate_Dura | Stimuli),
+                          verbose = FALSE
+                          )
+} else {
+  load(file.etd2.rt.E4)
+}
+
+print(summary(lmm.etd2.rt.E4), corr = FALSE)
+
+```
+
+
+```{r}
+anova(lmm.etd2.rt.E4, lmm.rdc.rt.E4)
+```
+
+##### The optimal model
+```{r}
+lmm.opt.rt.E4 <- update(lmm.rdc.rt.E4,
+                        REML = TRUE)
+
+summary(lmm.opt.rt.E4)
+```
+
 
 ## ERP data analysis
 ### Load mean amplitude for single trials
