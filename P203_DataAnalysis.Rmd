@@ -839,6 +839,61 @@ if (saveCSV) {
 head(df.erp.P1.E4, 10)
 ```
 
+
+#### Build up 
+```{r}
+lmm.P1.E4.1 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
+                      (1 + Type | SubjCode),
+                    data = df.erp.P1.E4,
+                    REML = FALSE,
+                    control = lmerControl(optimizer = "bobyqa")) 
+
+print(summary(lmm.P1.E4.1), corr = FALSE)
+```
+
+```{r}
+lmm.P1.E4.2 <- update(lmm.P1.E4.1,
+                      formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                      (1 + Type + Category | SubjCode))
+
+anova(lmm.P1.E4.2, lmm.P1.E4.1)
+```
+
+
+```{r}
+lmm.P1.E4.3 <- update(lmm.P1.E4.2,
+                      formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                      (1 + Type * Category | SubjCode))
+
+anova(lmm.P1.E4.3, lmm.P1.E4.2)
+```
+
+
+```{r}
+lmm.P1.E4.4 <- update(lmm.P1.E4.3,
+                      formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                      (1 + Type * Category + Duration | SubjCode))
+save(lmm.P1.E4.4, file = file.path(folder.nesi, "E204_P1_lmm_4.RData") )
+anova(lmm.P1.E4.4, lmm.P1.E4.3)
+```
+
+
+```{r}
+file.P1.E4.5 <- file.path(folder.nesi, "E204_P1_lmm_5.RData")
+
+# fit the maximal model
+if (!file.exists(file.P1.E4.5)) {
+lmm.P1.E4.5 <- update(lmm.P1.E4.4,
+                      formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                      (1 + Type * Category * Duration | SubjCode),
+                      control = lmerControl(optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file.P1.E4.5)
+}
+anova(lmm.P1.E4.5, lmm.P1.E4.4)
+```
+
+
 #### The maximal model
 ```{r maximal lmm for E204 p1}
 file.max.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
