@@ -29,7 +29,7 @@ load("E204_beha_RT.RData")
 # # lmm.max.rt.E4 for mean amplitude
 # lmm.max.rt.E4 <- lmer(RT ~ Type * Category * Duration +
 #                         (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-#                         (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | Stimuli),
+#                         (1 + Dura_D | Stimuli),
 #                       data = df.rt.E4,
 #                       verbose = TRUE,
 #                       REML = FALSE,
@@ -53,9 +53,7 @@ load("E204_beha_RT.RData")
 # lmm.zcp.rt.E4 <- update(lmm.max.rt.E4,
 #                          formula = RT ~ Type * Category * Duration +
 #                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                            (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || Stimuli)
-#                          # verbose = TRUE
-#                          )
+#                            (1 + Dura_D || Stimuli))
 # 
 # # Saving lmm.zcp.rt.E4
 # message("")
@@ -74,7 +72,7 @@ load("E204_beha_RT.RData")
 # lmm.rdc.rt.E4 <- update(lmm.zcp.rt.E4,
 #                          formula = RT ~ Type * Category * Duration +
 #                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                           (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura || Stimuli))
+#                           (1 | Stimuli))
 # 
 # # Saving lmm.rdc.rt.E4
 # message("")
@@ -83,7 +81,7 @@ load("E204_beha_RT.RData")
 
 
 #############################  Fitting the lmm etd for response times  ##############################
-# fit the lmm.etd.rt.E4 model
+# # fit the lmm.etd.rt.E4 model
 # message("")
 # message(paste0(strrep("#", 80)))
 # message("Fitting the lmm.etd.rt.E4 model...")
@@ -91,9 +89,9 @@ load("E204_beha_RT.RData")
 # # lmm.etd.rt.E4 for mean amplitude
 # load("E204_rt_lmm_rdc.RData")
 # lmm.etd.rt.E4 <- update(lmm.rdc.rt.E4,
-#                          formula = RT ~ Type * Category * Duration +
+#                         formula = RT ~ Type * Category * Duration +
 #                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-#                           (0 + Type_D + Cate_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli))
+#                           (1 | Stimuli))
 # 
 # # Saving lmm.etd.rt.E4
 # message("")
@@ -102,41 +100,41 @@ load("E204_beha_RT.RData")
 
 
 #############################  Fitting the lmm etd1 for response times  ##############################
-# # fit the lmm.etd1.rt.E4 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm.etd1.rt.E4 model...")
-# 
-# # lmm.etd1.rt.E4 for mean amplitude
-# load("E204_rt_lmm_etd.RData")
-# lmm.etd1.rt.E4 <- update(lmm.etd.rt.E4,
-#                           formula = RT ~ Type * Category * Duration +
-#                            (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode) +
-#                            (0 + Type_D + Type_Cate + Type_Dura + Type_Cate_Dura | Stimuli))
-# 
-# # Saving lmm.etd1.rt.E4
-# message("")
-# message("Saving the lmm.etd1.rt.E4")
-# save(lmm.etd1.rt.E4, file = "E204_rt_lmm_etd1.RData")
+# fit the lmm.etd1.rt.E4 model
+message("")
+message(paste0(strrep("#", 80)))
+message("Fitting the lmm.etd1.rt.E4 model...")
+
+# lmm.etd1.rt.E4 for mean amplitude
+load("E204_rt_lmm_etd.RData")
+lmm.etd1.rt.E4 <- update(lmm.etd.rt.E4,
+                          formula = RT ~ Type * Category * Duration +
+                           (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode) +
+                           (1 | Stimuli))
+
+# Saving lmm.etd1.rt.E4
+message("")
+message("Saving the lmm.etd1.rt.E4")
+save(lmm.etd1.rt.E4, file = "E204_rt_lmm_etd1.RData")
 
 
 #############################  Fitting the lmm etd2 for response times  ##############################
-# fit the lmm.etd2.rt.E4 model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the lmm.etd2.rt.E4 model...")
-
-# lmm.etd2.rt.E4 for mean amplitude
-load("E204_rt_lmm_etd1.RData")
-lmm.etd2.rt.E4 <- update(lmm.etd1.rt.E4,
-                          formula = RT ~ Type * Category * Duration +
-                           (1 + Type_D + Type_Dura + Type_Cate_Dura | SubjCode) +
-                           (0 + Type_Dura + Type_Cate_Dura | Stimuli))
-
-# Saving lmm.etd2.rt.E4
-message("")
-message("Saving the lmm.etd2.rt.E4")
-save(lmm.etd2.rt.E4, file = "E204_rt_lmm_etd2.RData")
+# # fit the lmm.etd2.rt.E4 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm.etd2.rt.E4 model...")
+# 
+# # lmm.etd2.rt.E4 for mean amplitude
+# load("E204_rt_lmm_etd1.RData")
+# lmm.etd2.rt.E4 <- update(lmm.etd1.rt.E4,
+#                           formula = RT ~ Type * Category * Duration +
+#                            (1 + Type_D + Type_Dura + Type_Cate_Dura | SubjCode) +
+#                            (0 + Type_Dura + Type_Cate_Dura | Stimuli))
+# 
+# # Saving lmm.etd2.rt.E4
+# message("")
+# message("Saving the lmm.etd2.rt.E4")
+# save(lmm.etd2.rt.E4, file = "E204_rt_lmm_etd2.RData")
 
 
 
