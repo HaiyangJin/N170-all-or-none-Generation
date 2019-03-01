@@ -890,8 +890,26 @@ lmm.P1.E4.5 <- update(lmm.P1.E4.4,
 } else {
   load(file.P1.E4.5)
 }
+summary(lmm.P1.E4.5)
 anova(lmm.P1.E4.5, lmm.P1.E4.4)
 ```
+
+
+```{r}
+file.P1.E4.6 <- file.path(folder.nesi, "E204_P1_lmm_6.RData")
+
+# fit the maximal model
+if (!file.exists(file.P1.E4.6)) {
+lmm.P1.E4.6 <- update(lmm.P1.E4.5,
+                      formula = MeanAmp ~ Type * Category * Duration * ACC + 
+                      (1 + Type * Category * Duration + ACC | SubjCode),
+                      control = lmerControl(optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file.P1.E4.6)
+}
+anova(lmm.P1.E4.6, lmm.P1.E4.5)
+```
+
 
 
 #### The maximal model
