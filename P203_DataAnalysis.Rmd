@@ -93,8 +93,6 @@ ylimit.n170 <- c(2, -4)  # y axis for plotting N170 amplitude
 ```
 
 
-
-
 # 204
 ## Behavioral results
 ```{r load behavioral results of 204}
