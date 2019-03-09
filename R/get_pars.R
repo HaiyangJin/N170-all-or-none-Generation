@@ -12,3 +12,10 @@ get_pars <- function(lmm) {
     }
     return(pars)
 } 
+
+re_fit <- function(lmm_input) {
+  lmm_output <- update(lmm_input,
+                       start = get_pars(lmm_input))
+  
+  return(lmm_output)
+}
