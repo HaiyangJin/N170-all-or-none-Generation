@@ -388,114 +388,58 @@ hit.ColuPlot.E4
 
 #### Logit mixed model
 ##### The maximal model
-```{r maximal lmm for E204 Accuracy}
-file.max.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_max.RData")
+```{r maximal lmm for E204 responses}
+file.max.resp.E4 <- file.path(folder.nesi, "E204_resp_glmm_max.RData")
 
-if (!file.exists(file.max.acc.E4)) {
-  glmm.max.acc.E4 <- glmer(ACC ~ Type * Category * Duration +
+if (!file.exists(file.max.resp.E4)) {
+  glmm.max.resp.E4 <- glmer(ACC ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                              (1 + Dura_D | Stimuli),
                            data = clean.beha.E4,
                            family = "binomial",
                            control = glmerControl(optCtrl = list(maxfun = 1e6)))
 } else {
-  load(file.max.acc.E4)
+  load(file.max.resp.E4)
 }
 
-print(summary(glmm.max.acc.E4), corr = FALSE)
+print(summary(glmm.max.resp.E4), corr = FALSE)
 
 ```
 
 
 ##### The zero-correlation-parameter model
-```{r zcp lmm for E204 Accuracy}
-file.zcp.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_zcp.RData")
+```{r zcp lmm for E204 Response}
+file.zcp.resp.E4 <- file.path(folder.nesi, "E204_resp_glmm_zcp.RData")
 
-if (!file.exists(file.zcp.acc.E4)) {
-  glmm.zcp.acc.E4 <- update(glmm.max.acc.E4,
+if (!file.exists(file.zcp.resp.E4)) {
+  glmm.zcp.resp.E4 <- update(glmm.max.resp.E4,
                            formula = ACC ~ Type * Category * Duration + 
                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
                             (1 + Dura_D || Stimuli),
                           verbose = FALSE)
   
-  glmm.zcp.acc.E4.pars <- get_pars(glmm.zcp.acc.E4)
-  
-  glmm.zcp1.acc.E4 <- update(glmm.zcp.acc.E4,
-                             start = glmm.zcp.acc.E4.pars)
+  glmm.zcp1.resp.E4 <- re_fit(glmm.zcp.resp.E4)
   
 } else {
-  load(file.zcp.acc.E4)
+  load(file.zcp.resp.E4)
 }
 
-print(summary(glmm.zcp.acc.E4), corr = FALSE)
+print(summary(glmm.zcp.resp.E4), corr = FALSE)
 
 ```
 
 ```{r}
-print(summary(glmm.zcp1.acc.E4), corr = FALSE)
+print(summary(glmm.zcp1.resp.E4), corr = FALSE)
 
 ```
 
 
 ##### The reduced model
 ```{r}
-summary(rePCA(glmm.zcp1.acc.E4))
+summary(rePCA(glmm.zcp1.resp.E4))
 
 ```
 
-```{r rdc lmm for E204 Accuracy}
-
-# file.rdc.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_rdc.RData")
-# 
-# if (!file.exists(file.rdc.acc.E4)) {
-#   glmm.rdc.acc.E4 <- update(glmm.zcp.acc.E4,
-#                            formula = ACC ~ Type * Category * Duration + 
-#                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                             (1 + Dura_D || Stimuli),
-#                           verbose = FALSE)
-# } else {
-#   load(file.rdc.acc.E4)
-# }
-# 
-# print(summary(glmm.rdc.acc.E4), corr = FALSE)
-
-```
-
-
-```{r}
-
-# glmm.rdc.acc.E4.pars <- get_pars(glmm.rdc.acc.E4)
-# glmm.rdc1.acc.E4 <- update(glmm.rdc.acc.E4, start = glmm.rdc.acc.E4.pars)
-# print(summary(glmm.rdc1.acc.E4), corr = FALSE)
-
-```
-
-
-##### The extended model
-```{r etd lmm for E204 Accuracy}
-
-# file.etd.acc.E4 <- file.path(folder.nesi, "E204_acc_glmm_etd.RData")
-# 
-# if (!file.exists(file.etd.acc.E4)) {
-#   glmm.etd.acc.E4 <- update(glmm.rdc.acc.E4,
-#                            formula = ACC ~ Type * Category * Duration + 
-#                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-#                             (1 + Dura_D | Stimuli),
-#                           verbose = FALSE)
-# } else {
-#   load(file.etd.acc.E4)
-# }
-# 
-# print(summary(glmm.etd.acc.E4), corr = FALSE)
-
-```
-
-```{r}
-# pars.etd.acc.E4 <- get_pars(glmm.etd.acc.E4)
-# glmm.etd1.acc.E4 <- update(glmm.etd.acc.E4, start = pars.etd.acc.E4)
-# 
-# print(summary(glmm.etd1.acc.E4), corr = FALSE)
-```
 
 
 ### Correct response times
@@ -682,6 +626,7 @@ print(summary(lmm.etd.rt.E4), corr = FALSE)
 summary(rePCA(lmm.etd.rt.E4))
 ```
 
+
 ```{r extended1 lmm for E204 RT}
 file.etd1.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd1.RData")
 
@@ -738,8 +683,8 @@ if (!file.exists(file.max.rt.E4)) {
 }
 
 print(summary(glmm.max.rt.E4), corr = FALSE)
-
 ```
+
 
 ##### The zero-correlation-parameter model
 ```{r zcp glmm for E204 RT}
@@ -770,30 +715,42 @@ anova(glmm.max.rt.E4, glmm.zcp.rt.E4)
 summary(rePCA(glmm.zcp.rt.E4))
 ```
 
-
-```{r reduced glmm for E204 RT}
-
-# file.rdc.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_rdc.RData")
-# 
-# # fit the reduced model
-# if (!file.exists(file.rdc.rt.E4)) {
-#   glmm.rdc.rt.E4 <- update(glmm.zcp.rt.E4,
-#                            formula = RT ~ Type * Category * Duration +
-#                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-#                              (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura || Stimuli))
-# } else {
-#   load(file.rdc.rt.E4)
-# }
-# 
-# print(summary(glmm.rdc.rt.E4), corr = FALSE)
-```
-
+##### Refit the maximal model
 ```{r}
-anova(glmm.rdc.rt.E4, glmm.zcp.rt.E4)
+file.max1.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_max1.RData")
+
+if (!file.exists(file.max1.rt.E4)) {
+  glmm.max1.rt.E4 <- refit(glmm.max.rt.E4)
+} else {
+  load(file.max1.rt.E4)
+}
+
+print(summary(glmm.max1.rt.E4), corr = FALSE)
+
 ```
 
+##### Fit with all optimizers
+```{r}
+file.max.rt.E4.allFit <- file.path(folder.nesi, "E204_rt_glmm_max_allFit.RData")
 
-##### The extended model
+if (!file.exists(file.max.rt.E4.allFit)) {
+  glmm.max0.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                             (1 + Dura_D | Stimuli),
+                           data = df.rt.E4,
+                           family = "poisson")
+  
+  glmm.max.rt.E4.allFit = allFit(glmm.max0.rt.E4,
+                                 maxfun = 1e5,
+                                 parallel = "multicore")
+} else {
+  load(file.max.rt.E4.allFit)
+}
+
+print(summary(glmm.max.rt.E4.allFit), corr = FALSE)
+
+
+```
 
 
 
@@ -918,7 +875,7 @@ file.max.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.P1.E4)) {
-  lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
+  lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
@@ -988,25 +945,6 @@ print(summary(lmm.rdc.P1.E4), corr = FALSE)
 ```
 
 
-#### Extended model
-```{r }
-
-
-```
-At least three random factors should be removed. (Cate_D, Type_Cate, Cate_Dura)
-
-
-```{r }
-# lmm.etd.P1.E4 <- update(lmm.max.P1.E4,
-#                         formula = MeanAmp ~ Type * Category * Duration + 
-#                           (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode),
-#                         verbose = FALSE)
-# 
-# summary(lmm.etd.P1.E4)
-```
-
-
-
 ### Ampitudes of the N170
 ```{r erp df for the N170}
 # only keep the data for amplitudes of the N170 (all erps)
@@ -1031,13 +969,13 @@ file.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.N170.E4)) {
-  lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
+  lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
                              Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
                              Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-                             Type_Cate_Dura_Hemi_ACC | SubjCode),
+                             Type_Cate_Dura_Hemi_ACC| SubjCode),
                         data = df.erp.N170.E4,
                         REML = FALSE,
                         # verbose = TRUE,
@@ -1102,12 +1040,6 @@ lmm.rdc.N170.E4 <- get_model(lmm.zcp.N170.E4.step)
 print(summary(lmm.rdc.N170.E4), corr = FALSE)
 ```
 
-
-#### Extended model
-```{r PCA analysis for zcp lmm for E204 N170}
-
-
-```
 
 #205
 ## Behavior results

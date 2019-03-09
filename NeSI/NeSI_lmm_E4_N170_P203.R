@@ -15,7 +15,6 @@ library(readr)
 library(lme4)
 library(lmerTest)
 
-
 # load the data file
 message("")
 message("Loading the data file...")
@@ -28,7 +27,7 @@ message(paste0(strrep("#", 80)))
 message("Fitting the lmm.max.N170.E4 model...")
 
 # lmm.max.N170 for mean amplitude
-lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC + 
+lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
@@ -37,20 +36,9 @@ lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC +
                              Type_Cate_Dura_Hemi_ACC| SubjCode),
                         data = df.erp.N170.E4,
                         REML = FALSE,
-                        # verbose = TRUE,
+                        verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                               optCtrl = list(maxfun = 1e7)))
-
-# lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * ACC +
-#                         (1 + Type_D + Cate_D + Dura_D + ACC_D +
-#                            Type_Cate + Type_Dura + Cate_Dura + Type_ACC + Cate_ACC + Dura_ACC +
-#                            Type_Cate_Dura + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-#                            Type_Cate_Dura_ACC | SubjCode),
-#                       data = df.erp.N170.E4,
-#                       REML = FALSE,
-#                       # verbose = TRUE,
-#                       control = lmerControl(optimizer = "bobyqa",
-#                                             optCtrl = list(maxfun = 1e6)))
 
 # Saving lmm.max.N170.E4
 message("")

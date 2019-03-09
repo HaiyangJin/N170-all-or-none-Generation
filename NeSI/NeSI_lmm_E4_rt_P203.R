@@ -118,26 +118,5 @@ message("Saving the lmm.etd1.rt.E4")
 save(lmm.etd1.rt.E4, file = "E204_rt_lmm_etd1.RData")
 
 
-#############################  Fitting the lmm etd2 for response times  ##############################
-# # fit the lmm.etd2.rt.E4 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm.etd2.rt.E4 model...")
-# 
-# # lmm.etd2.rt.E4 for mean amplitude
-# load("E204_rt_lmm_etd1.RData")
-# lmm.etd2.rt.E4 <- update(lmm.etd1.rt.E4,
-#                           formula = RT ~ Type * Category * Duration +
-#                            (1 + Type_D + Type_Dura + Type_Cate_Dura | SubjCode) +
-#                            (0 + Type_Dura + Type_Cate_Dura | Stimuli))
-# 
-# # Saving lmm.etd2.rt.E4
-# message("")
-# message("Saving the lmm.etd2.rt.E4")
-# save(lmm.etd2.rt.E4, file = "E204_rt_lmm_etd2.RData")
-
-
-
-
 # versions of packages used
 sessionInfo()
