@@ -109,7 +109,7 @@ glmm.max0.rt.E4 <- glmer(RT ~ Type * Category * Duration +
                          family = "poisson")
 
 glmm.max.rt.E4.allFit = allFit(glmm.max0.rt.E4,
-                               maxfun = 1e5,
+                               maxfun = 1e6,
                                parallel = "multicore")
 
 # Saving glmm.max.rt.E4.allFit
