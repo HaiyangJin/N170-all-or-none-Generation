@@ -404,6 +404,10 @@ print(summary(glmm.max.resp.E4), corr = FALSE)
 
 ```
 
+```{r}
+summary(rePCA(glmm.max.resp.E4))
+```
+
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for E204 Response}
@@ -438,6 +442,27 @@ summary(rePCA(glmm.zcp1.resp.E4))
 
 ```
 
+##### Fit with all optimizers
+```{r}
+file.max.resp.E4.allFit <- file.path(folder.nesi, "E204_resp_glmm_max_allFit.RData")
+
+if (!file.exists(file.max.resp.E4.allFit)) {
+  glmm.max0.resp.E4 <- glmer(resp ~ Type * Category * Duration +
+                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
+                             (1 + Dura_D | Stimuli),
+                           data = clean.beha.E4,
+                           family = "binomial")
+  
+  glmm.max.resp.E4.allFit = allFit(glmm.max0.resp.E4,
+                                 maxfun = 1e6)
+} else {
+  load(file.max.resp.E4.allFit)
+}
+
+print(summary(glmm.max.resp.E4.allFit), corr = FALSE)
+
+
+```
 
 
 ### Correct response times

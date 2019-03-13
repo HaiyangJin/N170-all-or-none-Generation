@@ -96,7 +96,7 @@ load("E204_beha_RT.RData")
 
 
 #############################  Fitting the glmm allFit for response times  ##############################
-# fit the glmm.max2.rt.E4 model
+# fit the glmm.max.rt.E4.allFit model
 message("")
 message(paste0(strrep("#", 80)))
 message("Fitting the glmm.max.rt.E4.allFit model...")
@@ -109,8 +109,7 @@ glmm.max0.rt.E4 <- glmer(RT ~ Type * Category * Duration +
                          family = "poisson")
 
 glmm.max.rt.E4.allFit = allFit(glmm.max0.rt.E4,
-                               maxfun = 1e6,
-                               parallel = "multicore")
+                               maxfun = 1e6)
 
 # Saving glmm.max.rt.E4.allFit
 message("")
