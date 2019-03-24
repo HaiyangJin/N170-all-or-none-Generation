@@ -838,6 +838,11 @@ lmm.P1.E4.1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
 print(summary(lmm.P1.E4.1), corr = FALSE)
 ```
 
+```{r}
+summary(rePCA(lmm.P1.E4.1))
+```
+
+
 
 ```{r}
 file.P1.E4.2 <- file.path(folder.nesi, "E204_P1_lmm_2.RData")
@@ -856,6 +861,11 @@ if (!file.exists(file.P1.E4.2)) {
 
 print(summary(lmm.P1.E4.2), corr = FALSE)
 ```
+
+```{r}
+summary(rePCA(lmm.P1.E4.2))
+```
+
 
 
 ```{r}
