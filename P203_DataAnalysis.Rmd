@@ -292,6 +292,92 @@ acc.ColuPlot.E4 = {
 acc.ColuPlot.E4
 ```
 
+##### Linear mixed model for accuracy
+```{r manually add dummy coding for accuracy (E4)}
+sum.acc.R.E4 <- {
+  sum.acc.R.E4 %>% 
+    mutate(Type_D = ifelse(Type == "normal", 0, 1),
+           Dura_D = ifelse(Duration == "17", 0, 1),
+           
+           Type_Dura = Type_D * Dura_D)
+}
+```
+
+
+
+```{r}
+lmm.max.acc.E4 <- lmer(Accuracy ~ Type * Duration + (1 + Type_D + Dura_D | SubjCode),
+                       data = sum.acc.R.E4,
+                       REML = FALSE,
+                       control = lmerControl(optimizer = "bobyqa"))
+
+summary(lmm.max.acc.E4)
+```
+
+```{r}
+lmm.zcp.acc.E4 <- update(lmm.max.acc.E4,
+                         formula =  Accuracy ~ Type * Duration + (1 + Type_D + Dura_D || SubjCode))
+
+summary(lmm.zcp.acc.E4)
+```
+
+```{r}
+lmm.rdc.acc.E4 <- update(lmm.zcp.acc.E4, 
+                         formula = Accuracy ~ Type * Duration + (1 | SubjCode))
+
+summary(lmm.rdc.acc.E4)
+```
+
+```{r}
+anova(lmm.zcp.acc.E4, lmm.rdc.acc.E4)
+```
+
+```{r}
+lmm.rdc1.acc.E4 <- update(lmm.zcp.acc.E4,
+                          formula = Accuracy ~ Type * Duration + (1 + Type_Dura || SubjCode))
+
+summary(lmm.rdc1.acc.E4)
+```
+
+```{r}
+anova(lmm.rdc1.acc.E4, lmm.rdc.acc.E4)
+```
+
+```{r}
+lmm.opt.acc.E4 <- update(lmm.rdc.acc.E4,
+                         REML = TRUE)
+
+summary(lmm.opt.acc.E4)
+```
+
+```{r}
+# qqplot_lmer(lmm.opt.acc.E4)
+
+```
+
+
+
+
+```{r}
+emm.acc.E4 <- emmeans(lmm.opt.acc.E4, ~ Duration | Type)
+
+data.frame(emm.acc.E4)
+```
+
+```{r}
+emmip(lmm.opt.acc.E4, ~ Duration | Type, CIs = TRUE)
+```
+
+```{r}
+contrast(emm.acc.E4, "pairwise", simple = "each", combine = TRUE)
+```
+
+```{r}
+test(emm.acc.E4, null = 0.5, side = ">")
+
+```
+
+
 #### Hits
 ```{r calculate the hits (and save the data into csv) E4}
 
@@ -381,6 +467,105 @@ hit.ColuPlot.E4 = {
 }
 
 hit.ColuPlot.E4
+```
+
+
+##### Linear mixed model for hits
+```{r manually add dummy coding for hit (E4)}
+sum.hit.R.E4 %<>% dummy_coding_P203() 
+
+```
+
+
+
+```{r}
+lmm.max.hit.E4 <- lmer(Hit ~ Type * Category * Duration + 
+                         (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura | SubjCode),
+                       data = sum.hit.R.E4,
+                       REML = FALSE,
+                       control = lmerControl(optimizer = "bobyqa"))
+
+summary(lmm.max.hit.E4)
+```
+
+```{r}
+lmm.zcp.hit.E4 <- update(lmm.max.hit.E4,
+                         formula = Hit ~ Type * Category * Duration + 
+                         (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura || SubjCode))
+
+summary(lmm.zcp.hit.E4)
+```
+
+```{r}
+summary(rePCA(lmm.zcp.hit.E4))
+
+lmm.rdc.hit.E4 <- update(lmm.zcp.hit.E4,
+                         formula = Hit ~ Type * Category * Duration + 
+                         (0 + Cate_D + Type_Cate || SubjCode))
+
+anova(lmm.rdc.hit.E4, lmm.zcp.hit.E4)
+
+```
+
+```{r}
+lmm.rdc1.hit.E4 <- update(lmm.rdc.hit.E4, 
+                          formula = Hit ~ Type * Category * Duration + 
+                         (0 + Cate_D + Type_Cate + Type_Cate_Dura || SubjCode))
+
+anova(lmm.rdc1.hit.E4, lmm.rdc.hit.E4)
+```
+
+```{r}
+lmm.etd.hit.E4 <- update(lmm.rdc.hit.E4,
+                         formula = Hit ~ Type * Category * Duration + 
+                         (0 + Cate_D + Type_Cate | SubjCode))
+
+summary(lmm.etd.hit.E4)
+```
+
+```{r}
+lmm.etd1.hit.E4 <- update(lmm.rdc.hit.E4,
+                         formula = Hit ~ Type * Category * Duration + 
+                         (0 + Cate_D | SubjCode))
+
+summary(lmm.etd1.hit.E4)
+```
+
+```{r}
+lmm.etd2.hit.E4 <- update(lmm.rdc.hit.E4,
+                         formula = Hit ~ Type * Category * Duration + 
+                         (0 + Type_Cate | SubjCode))
+
+summary(lmm.etd2.hit.E4)
+```
+
+```{r}
+anova(lmm.etd1.hit.E4, lmm.etd2.hit.E4)
+```
+
+```{r}
+lmm.opt.hit.E4 <- update(lmm.etd2.hit.E4,
+                         REML = TRUE)
+
+summary(lmm.opt.hit.E4)
+```
+
+```{r}
+emm.hit.E4 <- emmeans(lmm.opt.hit.E4, ~ c(Category, Duration) | Type)
+
+data.frame(emm.hit.E4)
+```
+
+```{r}
+emmip(lmm.opt.hit.E4, Category ~ Duration | Type, CIs = TRUE)
+```
+
+```{r}
+contrast(emm.hit.E4, "pairwise", simple = "each", combine = TRUE)
+```
+
+```{r}
+test(emm.hit.E4, null = 0.5, side = "two-sided")
 ```
 
 
@@ -700,7 +885,8 @@ if (!file.exists(file.max.rt.E4)) {
                              (1 + Dura_D | Stimuli),
                            data = df.rt.E4,
                            family = "poisson",
-                           control = glmerControl(optCtrl = list(maxfun = 1e5)))
+                           control = glmerControl(optimizer = "Nelder_Mead",
+                                                  optCtrl = list(maxfun = 1e5)))
 } else {
   load(file.max.rt.E4)
 }
@@ -1045,6 +1231,37 @@ if (saveCSV) {
 head(df.erp.N170.E4, 10)
 ```
 
+
+#### Model 1 without acc
+##### The maximal model
+```{r maximal lmm for E204 N170}
+file1.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
+
+# fit the maximal model
+if (!file.exists(file1.max.N170.E4)) {
+  lmm1.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
+                             Type_Cate_Dura_Hemi | SubjCode),
+                        data = df.erp.N170.E4,
+                        REML = FALSE,
+                        # verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file1.max.N170.E4)
+}
+
+print(summary(lmm1.max.N170.E4), corr = FALSE)
+
+```
+
+
+
+
+
+#### Model 2 with acc
 #### The maximal model
 ```{r maximal lmm for E204 N170}
 file.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
@@ -1061,7 +1278,7 @@ if (!file.exists(file.max.N170.E4)) {
                         data = df.erp.N170.E4,
                         REML = FALSE,
                         # verbose = TRUE,
-                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                        control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
                                               optCtrl = list(maxfun = 1e7)))
 } else {
   load(file.max.N170.E4)
@@ -1172,6 +1389,31 @@ print(summary(lmm.rdc1.N170.E4), corr = FALSE)
 
 ```
 
+
+#### Model 3 (intact only)
+#### The maximal model
+```{r maximal lmm3 for E204 N170}
+file3.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm3_max.RData")
+
+# fit the maximal model
+if (!file.exists(file3.max.N170.E4)) {
+  lmm3.max.N170.E4 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC + 
+                          (1 + Cate_D + Dura_D + Hemi_D + ACC_D + 
+                             Cate_Dura + Cate_Hemi + Dura_Hemi + Cate_ACC + Dura_ACC + Hemi_ACC +
+                             Cate_Dura_Hemi + Cate_Dura_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
+                             Hemi_Cate_Dura_ACC | SubjCode),
+                        data = filter(df.erp.N170.E4, Type == "intact"),
+                        REML = FALSE,
+                        # verbose = TRUE,
+                        control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file3.max.N170.E4)
+}
+
+print(summary(lmm3.max.N170.E4), corr = FALSE)
+
+```
 
 
 #205
