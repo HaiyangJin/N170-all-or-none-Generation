@@ -18,7 +18,7 @@ substr_Event <- function(df.in) {
   df.out <- {
     df.in %>% 
       mutate(
-        Type = ifelse(substr(Event, 1, 1) == "N", "normal", ifelse(substr(Event, 1, 1) == "S", "scrambled", NA)),
+        Type = ifelse(substr(Event, 1, 1) == "N", "intact", ifelse(substr(Event, 1, 1) == "S", "scrambled", NA)),
         Category = ifelse(substr(Event, 2, 2) == "F", "face", ifelse(substr(Event, 2, 2) == "H", "house", NA)),
         Duration = ifelse(substr(Event, 3, 3) == "7", 17, 
                           ifelse(substr(Event, 3, 3) == "5", 50, 

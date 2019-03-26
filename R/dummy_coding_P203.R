@@ -1,7 +1,7 @@
 dummy_coding_P203 <- function(df) {
   df %<>%
     mutate(
-      Type_D = if_else(Type == "normal", 0, if_else(Type == "scrambled", 1, NaN)),
+      Type_D = if_else(Type == "intact", 0, if_else(Type == "scrambled", 1, NaN)),
       Cate_D = if_else(Category == "face", 0, if_else(Category == "house", 1, NaN)),
       Dura_D = if_else(Duration == "17", 0, if_else(Duration == "200", 1, NaN)),
       
