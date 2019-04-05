@@ -119,11 +119,12 @@ head(raw.beha.E4)
 clean.beha.E4 <- {
   raw.beha.E4 %>%
     filter(`Procedure[Trial]` %in% c("faceProc", "houseProc") & !isBad426428) %>% # select the rows (remove the practice trials and bad trials for 426 and 428)
-    select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = scrambleVar, Category = FH, Duration = stimDuration, ACC = Resp.ACC, Resp.RT, Resp = Resp.RESP, Stimuli = stimName) %>% # select and rename the columns (remove unuseful columns)
+    select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = scrambleVar, Category = FH, Duration = stimDuration, ACC = Resp.ACC, Resp.RT, Resp = Resp.RESP, stimName) %>% # select and rename the columns (remove unuseful columns)
     mutate(
       SubjCode = factor(paste("P", SubjCode, sep = "")), # save SubjCode as factor
-      Type = recode_factor(Type, "N" = "normal", "S" = "scrambled"), # rename the levels of Type
+      Type = recode_factor(Type, "N" = "intact", "S" = "scrambled"), # rename the levels of Type
       Category = recode(Category, "hosue" = "house", "house" = "house", "face" = "face", .default = "face"), # rename "hosue" as "house"
+      Stimuli = substr(stimName, 2, 6),
       Duration = factor(Duration) # save Duration as factor
       ) %>% 
     group_by(SubjCode, Type, Category, Duration, ACC) %>% # divide the data based on these conditions
@@ -577,9 +578,9 @@ file.max.resp.E4 <- file.path(folder.nesi, "E204_resp_glmm_max.RData")
 if (!file.exists(file.max.resp.E4)) {
   glmm.max.resp.E4 <- glmer(ACC ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                             (1 + Dura_D | Stimuli),
+                             (1 + Type_D + Dura_D + Type_Dura | Stimuli),
                            data = clean.beha.E4,
-                           family = "binomial",
+                           family = binomial(link = "logit"),
                            control = glmerControl(optCtrl = list(maxfun = 1e6)))
 } else {
   load(file.max.resp.E4)
@@ -751,7 +752,7 @@ file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_max.RData")
 if (!file.exists(file.max.rt.E4)) {
   lmm.max.rt.E4 <- lmer(RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 + Dura_D | Stimuli),
+                          (1 + Type_D + Dura_D + Type_Dura | Stimuli),
                         data = df.rt.E4,
                         verbose = TRUE,
                         REML = FALSE,
@@ -762,6 +763,7 @@ if (!file.exists(file.max.rt.E4)) {
 }
 
 print(summary(lmm.max.rt.E4), corr = FALSE)
+
 
 ```
 
@@ -774,7 +776,7 @@ if (!file.exists(file.zcp.rt.E4)) {
   lmm.zcp.rt.E4 <- update(lmm.max.rt.E4,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-                          (1 + Dura_D || Stimuli),
+                          (1 + Type_D + Dura_D + Type_Dura || Stimuli),
                           verbose = FALSE
                           )
 } else {
@@ -796,10 +798,12 @@ summary(rePCA(lmm.zcp.rt.E4))
 file.rdc.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_rdc.RData")
 
 if (!file.exists(file.rdc.rt.E4)) {
+  lmm.rdc.rt.E4 <- step(lmm.zcp.rt.E4, reduce.fixed = FALSE)
+  
   lmm.rdc.rt.E4 <- update(lmm.max.rt.E4,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-                          (1 | Stimuli),
+                          (0 + Type_D + Type_Dura || Stimuli),
                           verbose = FALSE
                           )
 } else {
@@ -808,7 +812,14 @@ if (!file.exists(file.rdc.rt.E4)) {
 
 print(summary(lmm.rdc.rt.E4), corr = FALSE)
 
+lmm.zcp.rt.E4.step
+
 ```
+
+```{r}
+anova(lmm.zcp.rt.E4, lmm.rdc.rt.E4)
+```
+
 
 ##### The extended model
 ```{r extended lmm for E204 RT}
@@ -818,7 +829,7 @@ if (!file.exists(file.etd.rt.E4)) {
   lmm.etd.rt.E4 <- update(lmm.rdc.rt.E4,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 | Stimuli),
+                          (0 + Type_D + Type_Dura | Stimuli),
                           verbose = FALSE
                           )
 } else {
@@ -841,8 +852,8 @@ file.etd1.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd1.RData")
 if (!file.exists(file.etd1.rt.E4)) {
   lmm.etd1.rt.E4 <- update(lmm.etd.rt.E4,
                           formula = RT ~ Type * Category * Duration +
-                          (1 + Type_D + Dura_D + Type_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 | Stimuli),
+                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Type_Cate_Dura | SubjCode) +
+                          (0 + Type_D + Type_Dura | Stimuli),
                           verbose = FALSE
                           )
 } else {
@@ -860,11 +871,19 @@ anova(lmm.etd1.rt.E4, lmm.rdc.rt.E4)
 
 ##### The optimal model
 ```{r}
-lmm.opt.rt.E4 <- update(lmm.rdc.rt.E4,
-                        REML = TRUE,
-                        verbose = FALSE)
 
-summary(lmm.opt.rt.E4)
+file.opt.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_opt.RData")
+
+if (!file.exists(file.opt.rt.E4)) {
+  lmm.opt.rt.E4 <- update(lmm.etd1.rt.E4,
+                          REML = TRUE,
+                          verbose = FALSE)
+} else {
+  load(file.opt.rt.E4)
+}
+
+print(summary(lmm.opt.rt.E4), corr = FALSE)
+
 ```
 
 ##### Disgnostic plots
@@ -882,11 +901,11 @@ file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_max.RData")
 if (!file.exists(file.max.rt.E4)) {
   glmm.max.rt.E4 <- glmer(RT ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                             (1 + Dura_D | Stimuli),
+                             (1 + Type_D + Dura_D + Type_Dura | Stimuli),
                            data = df.rt.E4,
-                           family = "poisson",
+                           family = poisson(link = "log"),
                            control = glmerControl(optimizer = "Nelder_Mead",
-                                                  optCtrl = list(maxfun = 1e5)))
+                                                  optCtrl = list(maxfun = 1e6)))
 } else {
   load(file.max.rt.E4)
 }
@@ -1231,6 +1250,112 @@ if (saveCSV) {
 head(df.erp.N170.E4, 10)
 ```
 
+#### Model 0
+```{r}
+# random intercept only model
+
+lmm0.int.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
+                           (1 | SubjCode),
+                         data = df.erp.N170.E4,
+                         REML = FALSE,
+                         # verbose = TRUE,
+                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                               optCtrl = list(maxfun = 1e7)))
+
+print(summary(lmm0.int.N170.E4), corr = FALSE)
+
+```
+
+```{r}
+# random intercept and the correspondin random slopes
+file1.slp.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm0_slp.RData")
+
+if (!file.exists(file1.slp.N170.E4)) {
+  lmm0.slp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                             Type_Cate_Dura + Type_Cate_Hemi || SubjCode),
+                        data = df.erp.N170.E4,
+                        REML = FALSE,
+                        # verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file1.slp.N170.E4)
+}
+
+print(summary(lmm0.slp.N170.E4), corr = FALSE)
+
+```
+
+```{r}
+# lmm0.slp.N170.E4.step <- step(lmm0.slp.N170.E4, reduce.fixed = FALSE)
+# 
+# lmm0.rdc.N170.E4 <- get_model(lmm0.slp.N170.E4.step)
+# 
+# summary(rePCA(lmm0.slp.N170.E4))
+```
+
+
+```{r}
+# random intercept and the correspondin random slopes
+file1.etd.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm0_etd.RData")
+
+if (!file.exists(file1.etd.N170.E4)) {
+  lmm0.etd.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
+                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                             Type_Cate_Dura + Type_Cate_Hemi | SubjCode),
+                        data = df.erp.N170.E4,
+                        REML = FALSE,
+                        # verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file1.etd.N170.E4)
+}
+
+print(summary(lmm0.etd.N170.E4), corr = FALSE)
+```
+
+
+#### Model 00
+```{r}
+# random intercept only model
+
+lmm00.int.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
+                           (1 | SubjCode),
+                         data = df.erp.N170.E4,
+                         REML = FALSE,
+                         # verbose = TRUE,
+                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                               optCtrl = list(maxfun = 1e7)))
+
+print(summary(lmm00.int.N170.E4), corr = FALSE)
+
+```
+
+
+```{r}
+lmm00.slp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
+                            (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
+                               Type_Cate + Type_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + 
+                               Type_Cate_ACC + Cate_Dura_ACC || SubjCode),
+                          data = df.erp.N170.E4,
+                          REML = FALSE,
+                          # verbose = TRUE,
+                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                optCtrl = list(maxfun = 1e7)))
+
+print(summary(lmm00.slp.N170.E4), corr = FALSE)
+```
+
+
+```{r}
+summary(rePCA(lmm00.slp.N170.E4))
+```
+
+
 
 #### Model 1 without acc
 ##### The maximal model
@@ -1391,6 +1516,18 @@ print(summary(lmm.rdc1.N170.E4), corr = FALSE)
 
 
 #### Model 3 (intact only)
+```{r}
+df.erp.N170.E4.intact <- filter(df.erp.N170.E4, Type == "intact")
+
+if (saveCSV) {
+  output.erp.N170.E4.intact <- file.path(folder.nesi, "E204_erp_N170_intact.RData")
+  save(df.erp.N170.E4.intact, file = output.erp.N170.E4.intact)
+}
+```
+
+
+
+
 #### The maximal model
 ```{r maximal lmm3 for E204 N170}
 file3.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm3_max.RData")
@@ -1402,7 +1539,7 @@ if (!file.exists(file3.max.N170.E4)) {
                              Cate_Dura + Cate_Hemi + Dura_Hemi + Cate_ACC + Dura_ACC + Hemi_ACC +
                              Cate_Dura_Hemi + Cate_Dura_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
                              Hemi_Cate_Dura_ACC | SubjCode),
-                        data = filter(df.erp.N170.E4, Type == "intact"),
+                        data = df.erp.N170.E4.intact,
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
