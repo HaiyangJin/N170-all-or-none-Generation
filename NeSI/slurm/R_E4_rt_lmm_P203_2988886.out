@@ -1,0 +1,58 @@
+Fitting model for P203_DataAnalysis.Rmd...
+The corresponding *.out file is 2988886.out
+Setting the current working directory...
+
+Loading the libraries...
+Loading required package: Matrix
+
+Attaching package: ‘lmerTest’
+
+The following object is masked from ‘package:lme4’:
+
+    lmer
+
+The following object is masked from ‘package:stats’:
+
+    step
+
+
+Loading the data file...
+
+################################################################################
+Fitting the lmm.etd.rt.E4 model...
+start par. =  1 0 0 1 0 1 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 fn =  440739.3 
+At return
+eval: 5777 fn:      439647.98 par:  0.00000 0.0663364 0.0461515 0.0198865 -0.197933 0.0409306 0.587294 -0.321845 0.0220427 -0.274395 -0.0566347 0.237941 -0.0541145 0.188621  1.06079 0.0968766 0.00275218 -0.0832630 0.0426583 -0.104881 -0.00445042 0.308563 -0.00205675 -0.276138 -0.0506867 -0.196762 0.195643 0.183514 0.00691264 -0.221220 0.0119912 -0.0942945 0.142411 0.189152 -0.0152740 -0.191253 0.487187 -0.0338439 0.0638970 0.0740395 -0.438167 1.10271e-05
+singular fit
+Warning message:
+Model failed to converge with 1 negative eigenvalue: -3.2e+02 
+
+Saving the lmm.etd.rt.E4
+R version 3.5.1 (2018-07-02)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /scale_wlg_persistent/filesets/opt_nesi/CS400_centos7_bdw/imkl/2017.6.256-gimpi-2017a/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] lmerTest_3.0-1 lme4_1.1-20    Matrix_1.2-14  readr_1.1.1   
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.0        lattice_0.20-35   MASS_7.3-50       plyr_1.8.4       
+ [5] grid_3.5.1        R6_2.2.2          gtable_0.2.0      nlme_3.1-137     
+ [9] scales_0.5.0      ggplot2_2.2.1     pillar_1.2.2      rlang_0.3.1      
+[13] lazyeval_0.2.1    minqa_1.2.4       nloptr_1.0.4      splines_3.5.1    
+[17] munsell_0.4.3     hms_0.4.2         numDeriv_2016.8-1 compiler_3.5.1   
+[21] colorspace_1.3-2  pkgconfig_2.0.1   tibble_1.4.2     

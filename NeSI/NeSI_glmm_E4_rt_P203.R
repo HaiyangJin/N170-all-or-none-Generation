@@ -29,11 +29,11 @@ message("Fitting the glmm.max.rt.E4 model...")
 # glmm.max.rt.E4 for mean amplitude
 glmm.max.rt.E4 <- glmer(RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
-                          (1 + Dura_D | Stimuli),
+                          (1 + Type_D + Dura_D + Type_Dura | Stimuli),
                         data = df.rt.E4,
-                        family = "poisson",
+                        family = poisson(link = "log"),
                         control = glmerControl(optimizer = "Nelder_Mead",
-                                               optCtrl = list(maxfun = 1e5)))
+                                               optCtrl = list(maxfun = 1e6)))
 
 # Saving glmm.max.rt.E4
 message("")

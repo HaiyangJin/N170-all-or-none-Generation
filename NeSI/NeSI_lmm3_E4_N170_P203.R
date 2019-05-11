@@ -12,60 +12,61 @@ setwd("P203")
 message("")
 message("Loading the libraries...")
 library(readr)
+library(tidyverse)
 library(lme4)
 library(lmerTest)
 
 # load the data file
 message("")
 message("Loading the data file...")
-load("E204_erp_N170.RData")
+load("E204_erp_N170_intact.RData")
 
 #############################  Fitting the lmm.max.N170 for N170  ##############################
-# # fit the lmm.max.N170 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm3.max.N170.E4 model...")
-# 
-# # lmm3.max.N170 for mean amplitude
-# lmm3.max.N170.E4 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC + 
-#                            (1 + Cate_D + Dura_D + Hemi_D + ACC_D + 
-#                               Cate_Dura + Cate_Hemi + Dura_Hemi + Cate_ACC + Dura_ACC + Hemi_ACC +
-#                               Cate_Dura_Hemi + Cate_Dura_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-#                               Hemi_Cate_Dura_ACC | SubjCode),
-#                          data = filter(df.erp.N170.E4, Type == "intact"),
-#                          REML = FALSE,
-#                          # verbose = TRUE,
-#                          control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
-#                                                optCtrl = list(maxfun = 1e7)))
-# 
-# # Saving lmm.max.N170.E4
-# message("")
-# message("Saving the lmm3.max.acc.E4")
-# save(lmm3.max.N170.E4, file = "E204_N170_lmm3_max.RData")
-
-
-#############################  Fitting the lmm.zcp.N170 for N170  ##############################
 # fit the lmm.max.N170 model
 message("")
 message(paste0(strrep("#", 80)))
 message("Fitting the lmm3.max.N170.E4 model...")
 
 # lmm3.max.N170 for mean amplitude
-lmm3.zcp.N170.E4 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC + 
-                           (1 + Cate_D + Dura_D + Hemi_D + ACC_D + 
+lmm3.max.N170.E4 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC +
+                           (1 + Cate_D + Dura_D + Hemi_D + ACC_D +
                               Cate_Dura + Cate_Hemi + Dura_Hemi + Cate_ACC + Dura_ACC + Hemi_ACC +
                               Cate_Dura_Hemi + Cate_Dura_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-                              Hemi_Cate_Dura_ACC || SubjCode),
-                         data = filter(df.erp.N170.E4, Type == "intact"),
+                              Hemi_Cate_Dura_ACC | SubjCode),
+                         data = df.erp.N170.E4.intact,
                          REML = FALSE,
-                         # verbose = TRUE,
+                         verbose = TRUE,
                          control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
                                                optCtrl = list(maxfun = 1e7)))
 
 # Saving lmm.max.N170.E4
 message("")
 message("Saving the lmm3.max.acc.E4")
-save(lmm3.zcp.N170.E4, file = "E204_N170_lmm3_zcp.RData")
+save(lmm3.max.N170.E4, file = "E204_N170_lmm3_max.RData")
+
+
+#############################  Fitting the lmm.zcp.N170 for N170  ##############################
+# # fit the lmm3.zcp.N170 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm3.zcp.N170.E4 model...")
+# 
+# # lmm3.zcp.N170 for mean amplitude
+# lmm3.zcp.N170.E4 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC + 
+#                            (1 + Cate_D + Dura_D + Hemi_D + ACC_D + 
+#                               Cate_Dura + Cate_Hemi + Dura_Hemi + Cate_ACC + Dura_ACC + Hemi_ACC +
+#                               Cate_Dura_Hemi + Cate_Dura_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
+#                               Hemi_Cate_Dura_ACC || SubjCode),
+#                          data = filter(df.erp.N170.E4, Type == "intact"),
+#                          REML = FALSE,
+#                          # verbose = TRUE,
+#                          control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
+#                                                optCtrl = list(maxfun = 1e7)))
+# 
+# # Saving lmm.zcp.N170.E4
+# message("")
+# message("Saving the lmm3.zcp.acc.E4")
+# save(lmm3.zcp.N170.E4, file = "E204_N170_lmm3_zcp.RData")
 
 #############################  Obtaining (step) the lmm.rdc.N170 for N170  ##############################
 # # reduce the lmm.zcp.n170.E4 model

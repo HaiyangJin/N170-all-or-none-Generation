@@ -603,7 +603,7 @@ if (!file.exists(file.zcp.resp.E4)) {
   glmm.zcp.resp.E4 <- update(glmm.max.resp.E4,
                            formula = ACC ~ Type * Category * Duration + 
                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
-                            (1 + Dura_D || Stimuli),
+                            (1 + Type_D + Dura_D + Type_Dura || Stimuli),
                           verbose = FALSE)
   
   glmm.zcp1.resp.E4 <- re_fit(glmm.zcp.resp.E4)
@@ -1249,113 +1249,6 @@ if (saveCSV) {
 # the structure of this dataset
 head(df.erp.N170.E4, 10)
 ```
-
-#### Model 0
-```{r}
-# random intercept only model
-
-lmm0.int.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                           (1 | SubjCode),
-                         data = df.erp.N170.E4,
-                         REML = FALSE,
-                         # verbose = TRUE,
-                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                               optCtrl = list(maxfun = 1e7)))
-
-print(summary(lmm0.int.N170.E4), corr = FALSE)
-
-```
-
-```{r}
-# random intercept and the correspondin random slopes
-file1.slp.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm0_slp.RData")
-
-if (!file.exists(file1.slp.N170.E4)) {
-  lmm0.slp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                             Type_Cate_Dura + Type_Cate_Hemi || SubjCode),
-                        data = df.erp.N170.E4,
-                        REML = FALSE,
-                        # verbose = TRUE,
-                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e7)))
-} else {
-  load(file1.slp.N170.E4)
-}
-
-print(summary(lmm0.slp.N170.E4), corr = FALSE)
-
-```
-
-```{r}
-# lmm0.slp.N170.E4.step <- step(lmm0.slp.N170.E4, reduce.fixed = FALSE)
-# 
-# lmm0.rdc.N170.E4 <- get_model(lmm0.slp.N170.E4.step)
-# 
-# summary(rePCA(lmm0.slp.N170.E4))
-```
-
-
-```{r}
-# random intercept and the correspondin random slopes
-file1.etd.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm0_etd.RData")
-
-if (!file.exists(file1.etd.N170.E4)) {
-  lmm0.etd.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                             Type_Cate_Dura + Type_Cate_Hemi | SubjCode),
-                        data = df.erp.N170.E4,
-                        REML = FALSE,
-                        # verbose = TRUE,
-                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e7)))
-} else {
-  load(file1.etd.N170.E4)
-}
-
-print(summary(lmm0.etd.N170.E4), corr = FALSE)
-```
-
-
-#### Model 00
-```{r}
-# random intercept only model
-
-lmm00.int.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
-                           (1 | SubjCode),
-                         data = df.erp.N170.E4,
-                         REML = FALSE,
-                         # verbose = TRUE,
-                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                               optCtrl = list(maxfun = 1e7)))
-
-print(summary(lmm00.int.N170.E4), corr = FALSE)
-
-```
-
-
-```{r}
-lmm00.slp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
-                            (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
-                               Type_Cate + Type_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + 
-                               Type_Cate_ACC + Cate_Dura_ACC || SubjCode),
-                          data = df.erp.N170.E4,
-                          REML = FALSE,
-                          # verbose = TRUE,
-                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                optCtrl = list(maxfun = 1e7)))
-
-print(summary(lmm00.slp.N170.E4), corr = FALSE)
-```
-
-
-```{r}
-summary(rePCA(lmm00.slp.N170.E4))
-```
-
-
 
 #### Model 1 without acc
 ##### The maximal model
