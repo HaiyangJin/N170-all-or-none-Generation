@@ -1450,7 +1450,7 @@ print(summary(lmm3.max.N170.E4), corr = FALSE)
 ## Behavior results
 ```{r load behavioral results of 205}
 raw.beha.E5 <- {
-  "12.csv" %>% 
+  "E205_35_Behavior.csv" %>% 
     file.path(folder.data, .) %>% 
     read_csv() 
 }
@@ -1518,7 +1518,7 @@ valid.17 <- {
     filter(Type == "normal" & Duration == 17 & Resp == 1) %>% 
     group_by(SubjCode, Type, Duration, Resp) %>% 
     summarize(Accuracy = mean(ACC), Count = n()) %>% 
-    filter(Accuracy > 0.9) %$%
+    filter(Accuracy > 0.95) %$%
     SubjCode
 }
 
