@@ -93,7 +93,7 @@ ylimit.n170 <- c(2, -4)  # y axis for plotting N170 amplitude
 ```
 
 
-# 204
+# Experiment 1 (204)
 ## Behavioral results
 ```{r load behavioral results of 204}
 raw.beha.E4 <- {
@@ -988,21 +988,30 @@ The raw mean amplitude of each trial for all participants were loaded.
 ```{r load trial mean amplitude, message = FALSE}
 # read the trial mean amplitude data
 df.erp.E4 <- {
-  "P203_204_RawSTData.csv" %>% 
+  "E204_MeanAmp.csv" %>% 
     file.path(folder.data, .) %>% 
     read_csv() %>% 
     substr_Event() %>% 
-    mutate(ExpCode = as.factor(ExpCode),
-           SubjCode = as.factor(SubjCode),
-           Hemisphere = as.factor(Hemisphere))
+    mutate(SubjCode = as.factor(SubjCode),
+           Hemisphere = as.factor(Hemisphere),
+           urResponse = as.factor(urResponse),
+           Stimuli = substr(stimName, 2, 6))
 }
+
+
+df.erp.E4 %>% 
+  group_by(SubjCode, Stimuli, Hemisphere, Type, Category, Duration) %>% 
+  summarize(count = n())
+
+
+
 
 ```
 
-### Set the dummy coding
+### Set the successive difference coding
 ```{r set the dummy coding for ERP data E4}
 # dummy coding
-df.erp.E4 <- dummy_coding_P203_erp(df.erp.E4)
+df.erp.E4 <- sdif_coding_P203_erp(df.erp.E4)
 ```
 
 
@@ -1011,7 +1020,7 @@ df.erp.E4 <- dummy_coding_P203_erp(df.erp.E4)
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
 df.erp.P1.E4 <- {
   df.erp.E4 %>% 
-    filter(Component == "P1", ACC != "all") %>% 
+    filter(Component == "P1") %>% 
     substr_Event() 
 }
 
@@ -1023,72 +1032,6 @@ if (saveCSV) {
 # the structure of this dataset
 head(df.erp.P1.E4, 10)
 ```
-
-
-#### Build up 
-```{r}
-file.P1.E4.1 <- file.path(folder.nesi, "E204_P1_lmm_1.RData")
-
-# fit the maximal model
-if (!file.exists(file.P1.E4.1)) {
-lmm.P1.E4.1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                      (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D | SubjCode),
-                    data = df.erp.P1.E4,
-                    REML = FALSE,
-                    control = lmerControl(optimizer = "bobyqa")) 
-} else {
-  load(file.P1.E4.1)
-}
-
-print(summary(lmm.P1.E4.1), corr = FALSE)
-```
-
-```{r}
-summary(rePCA(lmm.P1.E4.1))
-```
-
-
-
-```{r}
-file.P1.E4.2 <- file.path(folder.nesi, "E204_P1_lmm_2.RData")
-
-# fit the maximal model
-if (!file.exists(file.P1.E4.2)) {
-  lmm.P1.E4.2 <- update(lmm.P1.E4.1,
-                        formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC | SubjCode),
-                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e7)))
-} else {
-  load(file.P1.E4.2)
-}
-
-print(summary(lmm.P1.E4.2), corr = FALSE)
-```
-
-```{r}
-summary(rePCA(lmm.P1.E4.2))
-```
-
-
-
-```{r}
-file.P1.E4.3 <- file.path(folder.nesi, "E204_P1_lmm_1.RData")
-
-# fit the maximal model
-if (!file.exists(file.P1.E4.3)) {
-  lmm.P1.E4.3 <- update(lmm.P1.E4.2,
-                        formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC | SubjCode))
-} else {
-  load(file.P1.E4.3)
-}
-
-print(summary(lmm.P1.E4.3), corr = FALSE)
-```
-
 
 
 #### The maximal model
@@ -1237,7 +1180,7 @@ summary(rePCA(lmm.rdc1.P1.E4))
 # only keep the data for amplitudes of the N170 (all erps)
 df.erp.N170.E4 <- {
   df.erp.E4 %>% 
-    filter(Component == "N170", ACC != "all") %>% 
+    filter(Component == "N170") %>% 
     substr_Event() 
 }
 
@@ -1257,16 +1200,19 @@ file1.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file1.max.N170.E4)) {
-  lmm1.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-                             Type_Cate_Dura_Hemi | SubjCode),
-                        data = df.erp.N170.E4,
-                        REML = FALSE,
-                        # verbose = TRUE,
-                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e7)))
+  lmm1.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse + 
+                             (1 + Type_C + Cate_C + Dura_C + Hemi_C + 
+                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
+                                Type_Cate_Dura_Hemi | SubjCode) +
+                             (1 + Type_C + Dura_C + Hemi_C + 
+                                Type_Dura + Type_Hemi + Dura_Hemi +
+                                Type_Dura_Hemi | Stimuli),
+                           data = df.erp.N170.E4,
+                           REML = FALSE,
+                           # verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                 optCtrl = list(maxfun = 1e7)))
 } else {
   load(file1.max.N170.E4)
 }
@@ -1286,13 +1232,26 @@ file.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.N170.E4)) {
-  lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                             Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-                             Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-                             Type_Cate_Dura_Hemi_ACC| SubjCode),
+  lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere *  + 
+                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
+                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
+                                Type_Cate_Dura_Hemi +
+                                Resp_C + 
+                                Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
+                                Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp + 
+                                Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
+                                Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
+                                Type_Cate_Dura_Hemi_Resp
+                                | SubjCode) +
+                             (1 + Type_C + Dura_C + Hemi_C + 
+                                Type_Dura + Type_Hemi + Dura_Hemi +
+                                Type_Dura_Hemi +
+                                Resp_C + 
+                                Type_Resp + Dura_Resp + Hemi_Resp +
+                                Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
+                                Type_Hemi_Dura_Resp
+                                | Stimuli ),
                         data = df.erp.N170.E4,
                         REML = FALSE,
                         # verbose = TRUE,
@@ -1446,7 +1405,7 @@ print(summary(lmm3.max.N170.E4), corr = FALSE)
 ```
 
 
-#205
+# Experiment 2 (205)
 ## Behavior results
 ```{r load behavioral results of 205}
 raw.beha.E5 <- {

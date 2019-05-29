@@ -27,18 +27,19 @@ load("E204_erp_N170.RData")
 # message("Fitting the lmm.max.N170.E4 model...")
 # 
 # # lmm.max.N170 for mean amplitude
-# lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
-#                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
-#                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-#                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-#                              Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-#                              Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-#                              Type_Cate_Dura_Hemi_ACC | SubjCode),
-#                         data = df.erp.N170.E4,
-#                         REML = FALSE,
-#                         verbose = TRUE,
-#                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                               optCtrl = list(maxfun = 1e7)))
+# lmm1.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse + 
+#                            (1 + Type_C + Cate_C + Dura_C + Hemi_C + 
+#                               Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+#                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
+#                               Type_Cate_Dura_Hemi | SubjCode) +
+#                            (1 + Type_C + Dura_C + Hemi_C + 
+#                               Type_Dura + Type_Hemi + Dura_Hemi +
+#                               Type_Dura_Hemi | Stimuli),
+#                          data = df.erp.N170.E4,
+#                          REML = FALSE,
+#                          verbose = TRUE,
+#                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+#                                                optCtrl = list(maxfun = 1e7)))
 # 
 # # Saving lmm.max.N170.E4
 # message("")
@@ -53,30 +54,19 @@ message(paste0(strrep("#", 80)))
 message("Fitting the lmm.zcp.N170 model...")
 
 # lmm.zcp.N170 for mean amplitude
-load("E204_N170_lmm_max.RData")
-lmm.zcp.N170.E4 <- update(lmm.max.N170.E4,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                            (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
-                               Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                               Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-                               Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-                               Type_Cate_Dura_Hemi_ACC || SubjCode),
-                          control = lmerControl(optimizer = "Nelder_Mead",
-                                                optCtrl = list(maxfun = 1e7)))
-
-# lmm.zcp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-#                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
-#                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-#                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-#                              Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-#                              Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-#                              Type_Cate_Dura_Hemi_ACC || SubjCode),
-#                         data = df.erp.N170.E4,
-#                         REML = FALSE,
-#                         verbose = TRUE,
-#                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                               optCtrl = list(maxfun = 1e7)))
+lmm.zcp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse +
+                          (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+                             Type_Cate_Dura_Hemi || SubjCode) +
+                          (1 + Type_C + Dura_C + Hemi_C +
+                             Type_Dura + Type_Hemi + Dura_Hemi +
+                             Type_Dura_Hemi || Stimuli),
+                        data = df.erp.N170.E4,
+                        REML = FALSE,
+                        verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
 
 # Saving lmm.zcp.N170
 message("")
