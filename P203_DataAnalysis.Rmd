@@ -60,14 +60,8 @@ folder.data <- "data"
 folder.nesi <- "NeSI"
 folder.output <- "output"
 
-# load R files
+# load all the R files
 sapply(list.files(folder.R, "*.R", full.names = TRUE, recursive = TRUE), source)
-
-# source(file.path(folder.R, "geom_flat_violin.R"))  # flat violin plot 
-# source(file.path(folder.R, "substr_Event.R"))  # parse Event to IVs
-# source(file.path(folder.R, "dummy_coding_P203.R")) # set the dummy coding manually
-# source(file.path(folder.R, "get_pars.R")) #
-# source(file.path(folder.R, "general_theme.R"))  # plot theme
 
 ```
 
@@ -96,7 +90,7 @@ ylimit.n170 <- c(2, -4)  # y axis for plotting N170 amplitude
 # Experiment 1 (204)
 ## Behavioral results
 ```{r load behavioral results of 204}
-raw.beha.E4 <- {
+raw.beha.E1 <- {
   "E204_Incorrect_Behavior.csv" %>% 
     file.path(folder.data, .) %>% 
     read_csv() 
@@ -107,17 +101,17 @@ raw.beha.E4 <- {
 
 ```{r remove some trials for P426 and P428}
 # locate the trials for P426 and P428
-raw.beha.E4 <- {
-  raw.beha.E4 %>%
+raw.beha.E1 <- {
+  raw.beha.E1 %>%
     mutate(isBad426428 = ((Subject == 426) & Block == 6) | (Subject == 428 & Session == 2 & scrambleVar == "S"))  # remove some trials for 426 and 428. (Something wrong happened for the two participants during recording EEG, therefore they have two parts of behavioral data)
 }
 
-head(raw.beha.E4)
+head(raw.beha.E1)
 ```
 
 ```{r select certain rows and columns from the data, and calculate the Z value for reaction times (204)}
-clean.beha.E4 <- {
-  raw.beha.E4 %>%
+clean.beha.E1 <- {
+  raw.beha.E1 %>%
     filter(`Procedure[Trial]` %in% c("faceProc", "houseProc") & !isBad426428) %>% # select the rows (remove the practice trials and bad trials for 426 and 428)
     select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = scrambleVar, Category = FH, Duration = stimDuration, ACC = Resp.ACC, Resp.RT, Resp = Resp.RESP, stimName) %>% # select and rename the columns (remove unuseful columns)
     mutate(
@@ -138,24 +132,24 @@ clean.beha.E4 <- {
 }
 
 # behavior.tidyup
-head(clean.beha.E4, 10)
+head(clean.beha.E1, 10)
 
 ```
 
 ```{r check the number of trials for 204}
 # check the number of trials for 204
-sum.count.E4 <- {
-  clean.beha.E4 %>% 
+sum.count.E1 <- {
+  clean.beha.E1 %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count_sum = n())
 }
 
-valid.count.E4 <- {
-  clean.beha.E4 %>% 
+valid.count.E1 <- {
+  clean.beha.E1 %>% 
     filter(RT > RT.min) %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count = n()) %>% 
-    right_join(sum.count.E4, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
+    right_join(sum.count.E1, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
     mutate(ratio = Count / Count_sum) %>% 
     filter(ratio > ratio.count) %$%
     SubjCode %>% 
@@ -164,51 +158,51 @@ valid.count.E4 <- {
 
 
 # remove the participants
-clean.beha.E4 %<>% filter(SubjCode %in% valid.count.E4)
+clean.beha.E1 %<>% filter(SubjCode %in% valid.count.E1)
 
 ```
 
 
 ### Participant demographic information
 ```{r participant information}
-subj.info.E4 <- {
-  clean.beha.E4 %>% 
+subj.info.E1 <- {
+  clean.beha.E1 %>% 
     select(SubjCode, Age, Sex, Handedness) %>% # select the columns of participant inforamtion
     distinct() # only keep the unique rows
 }
 
-subj.info.E4
+subj.info.E1
 ```
-There are `r nrow(subj.info.E4)` participants in total in this experiment.  \
-The averaged age of this group is `r round(mean(subj.info.E4$Age), 3)` and the standard deviation of age is `r round(sd(subj.info.E4$Age))`. \
-The number of female and male participants are `r sum(subj.info.E4$Sex == "female")` and `r sum(subj.info.E4$Sex == "male")` respectively. \
-`r sum(subj.info.E4$Handedness == "right")` of them are right handed.
+There are `r nrow(subj.info.E1)` participants in total in this experiment.  \
+The averaged age of this group is `r round(mean(subj.info.E1$Age), 3)` and the standard deviation of age is `r round(sd(subj.info.E1$Age))`. \
+The number of female and male participants are `r sum(subj.info.E1$Sex == "female")` and `r sum(subj.info.E1$Sex == "male")` respectively. \
+`r sum(subj.info.E1$Handedness == "right")` of them are right handed.
 
 ### Set the dummy coding
-```{r dummy coding for acc E4}
+```{r dummy coding for acc E1}
 # set the dummy coding manually 
-clean.beha.E4 <- dummy_coding_P203(clean.beha.E4)
+clean.beha.E1 <- dummy_coding_P203(clean.beha.E1)
 
 if (saveCSV) {
-  output.beha.E4 <- file.path(folder.nesi, "E204_beha.RData")
-  save(clean.beha.E4, file = output.beha.E4)
+  output.beha.E1 <- file.path(folder.nesi, "E204_beha.RData")
+  save(clean.beha.E1, file = output.beha.E1)
 }
 ```
 
 ### Behavioral responses
 #### Accuracy
-```{r calculate the accuracy (E4)}
+```{r calculate the accuracy (E1)}
 # accuracy data
-sum.acc.R.E4 <- {
-  clean.beha.E4 %>%
+avg.acc.R.E1 <- {
+  clean.beha.E1 %>%
     group_by(SubjCode, Type, Duration) %>%
     summarize(Accuracy = mean(ACC)) %>%
     ungroup() 
 }
 
 # descriptive statistics of accuracy for plotting
-desc.acc.R.E4 <- {
-  sum.acc.R.E4 %>%
+desc.acc.R.E1 <- {
+  avg.acc.R.E1 %>%
     group_by(Type, Duration) %>%
     summarize(Mean = mean(Accuracy)
               , N = n()
@@ -222,8 +216,8 @@ desc.acc.R.E4 <- {
 }
 
 # accuracy data for SPSS analysis
-sum.acc.SPSS.E4 <- {
-  sum.acc.R.E4 %>%
+avg.acc.SPSS.E1 <- {
+  avg.acc.R.E1 %>%
     mutate(Conditions = paste(Type, Duration, sep = ".")) %>%
     select(SubjCode, Conditions, Accuracy) %>%
     spread(Conditions, Accuracy)
@@ -231,25 +225,25 @@ sum.acc.SPSS.E4 <- {
 
 # save the data as *.csv
 if (saveCSV) {
-  output.acc.SPSS.E4 <- file.path(folder.output, "E204_acc.csv")
-  write.csv(sum.acc.SPSS.E4, output.acc.SPSS.E4, row.names = FALSE)
+  output.acc.SPSS.E1 <- file.path(folder.output, "E204_acc.csv")
+  write.csv(avg.acc.SPSS.E1, output.acc.SPSS.E1, row.names = FALSE)
 } 
 
 ```
 
 
 ##### RainClound plot of accuracy
-```{r rainclound plot of accuracy E4, warning=FALSE}
+```{r rainclound plot of accuracy E1, warning=FALSE}
 # print(sum.acc.R, width = Inf)
-knitr::kable(desc.acc.R.E4, digits = 4)
+knitr::kable(desc.acc.R.E1, digits = 4)
 
-acc.RainPlot.E4 <- {
-  ggplot(data = sum.acc.R.E4, aes(y = Accuracy, x = Type, fill = Duration)) + 
+acc.RainPlot.E1 <- {
+  ggplot(data = sum.acc.R.E1, aes(y = Accuracy, x = Type, fill = Duration)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.acc.R.E4, aes(y = Mean, x = Type, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.acc.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.acc.R.E1, aes(y = Mean, x = Type, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.acc.R.E1, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
     # scale_color_brewer(palette = "Set1") +
@@ -267,15 +261,15 @@ acc.RainPlot.E4 <- {
 &nbsp;
 
 ```{r display the RainCloud plot of accuracy}
-acc.RainPlot.E4
+acc.RainPlot.E1
 ```
 
 
 ##### Column plot of accuracy
-```{r Plot of accuracy of behavioral data E4, warning = FALSE}
+```{r Plot of accuracy of behavioral data E1, warning = FALSE}
 
-acc.ColuPlot.E4 = {
-  ggplot(data = desc.acc.R.E4, aes(y = Mean, x = Type, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+acc.ColuPlot.E1 = {
+  ggplot(data = desc.acc.R.E1, aes(y = Mean, x = Type, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5, 
@@ -290,13 +284,13 @@ acc.ColuPlot.E4 = {
     plot_theme
 }
 
-acc.ColuPlot.E4
+acc.ColuPlot.E1
 ```
 
 ##### Linear mixed model for accuracy
-```{r manually add dummy coding for accuracy (E4)}
-sum.acc.R.E4 <- {
-  sum.acc.R.E4 %>% 
+```{r manually add dummy coding for accuracy (E1)}
+sum.acc.R.E1 <- {
+  sum.acc.R.E1 %>% 
     mutate(Type_D = ifelse(Type == "normal", 0, 1),
            Dura_D = ifelse(Duration == "17", 0, 1),
            
@@ -307,52 +301,52 @@ sum.acc.R.E4 <- {
 
 
 ```{r}
-lmm.max.acc.E4 <- lmer(Accuracy ~ Type * Duration + (1 + Type_D + Dura_D | SubjCode),
-                       data = sum.acc.R.E4,
+lmm.max.acc.E1 <- lmer(Accuracy ~ Type * Duration + (1 + Type_D + Dura_D | SubjCode),
+                       data = sum.acc.R.E1,
                        REML = FALSE,
                        control = lmerControl(optimizer = "bobyqa"))
 
-summary(lmm.max.acc.E4)
+summary(lmm.max.acc.E1)
 ```
 
 ```{r}
-lmm.zcp.acc.E4 <- update(lmm.max.acc.E4,
+lmm.zcp.acc.E1 <- update(lmm.max.acc.E1,
                          formula =  Accuracy ~ Type * Duration + (1 + Type_D + Dura_D || SubjCode))
 
-summary(lmm.zcp.acc.E4)
+summary(lmm.zcp.acc.E1)
 ```
 
 ```{r}
-lmm.rdc.acc.E4 <- update(lmm.zcp.acc.E4, 
+lmm.rdc.acc.E1 <- update(lmm.zcp.acc.E1, 
                          formula = Accuracy ~ Type * Duration + (1 | SubjCode))
 
-summary(lmm.rdc.acc.E4)
+summary(lmm.rdc.acc.E1)
 ```
 
 ```{r}
-anova(lmm.zcp.acc.E4, lmm.rdc.acc.E4)
+anova(lmm.zcp.acc.E1, lmm.rdc.acc.E1)
 ```
 
 ```{r}
-lmm.rdc1.acc.E4 <- update(lmm.zcp.acc.E4,
+lmm.rdc1.acc.E1 <- update(lmm.zcp.acc.E1,
                           formula = Accuracy ~ Type * Duration + (1 + Type_Dura || SubjCode))
 
-summary(lmm.rdc1.acc.E4)
+summary(lmm.rdc1.acc.E1)
 ```
 
 ```{r}
-anova(lmm.rdc1.acc.E4, lmm.rdc.acc.E4)
+anova(lmm.rdc1.acc.E1, lmm.rdc.acc.E1)
 ```
 
 ```{r}
-lmm.opt.acc.E4 <- update(lmm.rdc.acc.E4,
+lmm.opt.acc.E1 <- update(lmm.rdc.acc.E1,
                          REML = TRUE)
 
-summary(lmm.opt.acc.E4)
+summary(lmm.opt.acc.E1)
 ```
 
 ```{r}
-# qqplot_lmer(lmm.opt.acc.E4)
+# qqplot_lmer(lmm.opt.acc.E1)
 
 ```
 
@@ -360,46 +354,46 @@ summary(lmm.opt.acc.E4)
 
 
 ```{r}
-emm.acc.E4 <- emmeans(lmm.opt.acc.E4, ~ Duration | Type)
+emm.acc.E1 <- emmeans(lmm.opt.acc.E1, ~ Duration | Type)
 
-data.frame(emm.acc.E4)
+data.frame(emm.acc.E1)
 ```
 
 ```{r}
-emmip(lmm.opt.acc.E4, ~ Duration | Type, CIs = TRUE)
+emmip(lmm.opt.acc.E1, ~ Duration | Type, CIs = TRUE)
 ```
 
 ```{r}
-contrast(emm.acc.E4, "pairwise", simple = "each", combine = TRUE)
+contrast(emm.acc.E1, "pairwise", simple = "each", combine = TRUE)
 ```
 
 ```{r}
-test(emm.acc.E4, null = 0.5, side = ">")
+test(emm.acc.E1, null = 0.5, side = ">")
 
 ```
 
 
 #### Hits
-```{r calculate the hits (and save the data into csv) E4}
+```{r calculate the hits (and save the data into csv) E1}
 
 # hit data for R analysis
-sum.hit.R.E4 <- {
-  clean.beha.E4 %>%
+sum.hit.R.E1 <- {
+  clean.beha.E1 %>%
     group_by(SubjCode, Type, Category, Duration) %>%
     summarize(Hit = mean(ACC), count = n()) %>%
     ungroup()
 }
 
 # descriptive statistics of hits for plotting
-desc.hit.R.E4 <- {
-  sum.hit.R.E4 %>% 
+desc.hit.R.E1 <- {
+  sum.hit.R.E1 %>% 
     group_by(Type, Category, Duration) %>% 
     summarize(Mean = mean(Hit), N = n(), SD = sd(Hit), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(Hit), Lower = Mean - SD, Upper = Mean + SD)
 }
 
 # hit data for SPSS analysis
-sum.hit.SPSS.E4 <- {
-  sum.hit.R.E4 %>%
+sum.hit.SPSS.E1 <- {
+  sum.hit.R.E1 %>%
     mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
     select(SubjCode, Conditions, Hit) %>%
     spread(Conditions, Hit)
@@ -407,24 +401,24 @@ sum.hit.SPSS.E4 <- {
 
 # save the data as *.csv
 if (saveCSV) {
-  output.hit.SPSS.E4 <- file.path(folder.output, "E204_hit.csv")
-  write.csv(sum.hit.SPSS.E4, output.hit.SPSS.E4, row.names = FALSE)
+  output.hit.SPSS.E1 <- file.path(folder.output, "E204_hit.csv")
+  write.csv(sum.hit.SPSS.E1, output.hit.SPSS.E1, row.names = FALSE)
 } 
 
 ```
 
 
 ##### RainClound plot of hits
-```{r rainclound plot of hits E4}
-knitr::kable(desc.hit.R.E4, digits = 4)
+```{r rainclound plot of hits E1}
+knitr::kable(desc.hit.R.E1, digits = 4)
 
-hit.RainPlot.E4 <- {
-  ggplot(data = sum.hit.R.E4, aes(y = Hit, x = Category, fill = Duration)) + 
+hit.RainPlot.E1 <- {
+  ggplot(data = sum.hit.R.E1, aes(y = Hit, x = Category, fill = Duration)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(y = Hit, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(aes(y = Hit), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.hit.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.hit.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.hit.R.E1, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.hit.R.E1, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
@@ -442,15 +436,15 @@ hit.RainPlot.E4 <- {
 
 &nbsp;
 
-```{r display the RainCloud plot of hits E4}
-hit.RainPlot.E4
+```{r display the RainCloud plot of hits E1}
+hit.RainPlot.E1
 ```
 
 ##### Column plot of hits
-```{r Plot of hits for behavioral data E4, warning=FALSE}
+```{r Plot of hits for behavioral data E1, warning=FALSE}
 
-hit.ColuPlot.E4 = {
-  ggplot(data = desc.hit.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+hit.ColuPlot.E1 = {
+  ggplot(data = desc.hit.R.E1, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5, 
@@ -467,215 +461,215 @@ hit.ColuPlot.E4 = {
     plot_theme
 }
 
-hit.ColuPlot.E4
+hit.ColuPlot.E1
 ```
 
 
 ##### Linear mixed model for hits
-```{r manually add dummy coding for hit (E4)}
-sum.hit.R.E4 %<>% dummy_coding_P203() 
+```{r manually add dummy coding for hit (E1)}
+sum.hit.R.E1 %<>% dummy_coding_P203() 
 
 ```
 
 
 
 ```{r}
-lmm.max.hit.E4 <- lmer(Hit ~ Type * Category * Duration + 
+lmm.max.hit.E1 <- lmer(Hit ~ Type * Category * Duration + 
                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura | SubjCode),
-                       data = sum.hit.R.E4,
+                       data = sum.hit.R.E1,
                        REML = FALSE,
                        control = lmerControl(optimizer = "bobyqa"))
 
-summary(lmm.max.hit.E4)
+summary(lmm.max.hit.E1)
 ```
 
 ```{r}
-lmm.zcp.hit.E4 <- update(lmm.max.hit.E4,
+lmm.zcp.hit.E1 <- update(lmm.max.hit.E1,
                          formula = Hit ~ Type * Category * Duration + 
                          (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura || SubjCode))
 
-summary(lmm.zcp.hit.E4)
+summary(lmm.zcp.hit.E1)
 ```
 
 ```{r}
-summary(rePCA(lmm.zcp.hit.E4))
+summary(rePCA(lmm.zcp.hit.E1))
 
-lmm.rdc.hit.E4 <- update(lmm.zcp.hit.E4,
+lmm.rdc.hit.E1 <- update(lmm.zcp.hit.E1,
                          formula = Hit ~ Type * Category * Duration + 
                          (0 + Cate_D + Type_Cate || SubjCode))
 
-anova(lmm.rdc.hit.E4, lmm.zcp.hit.E4)
+anova(lmm.rdc.hit.E1, lmm.zcp.hit.E1)
 
 ```
 
 ```{r}
-lmm.rdc1.hit.E4 <- update(lmm.rdc.hit.E4, 
+lmm.rdc1.hit.E1 <- update(lmm.rdc.hit.E1, 
                           formula = Hit ~ Type * Category * Duration + 
                          (0 + Cate_D + Type_Cate + Type_Cate_Dura || SubjCode))
 
-anova(lmm.rdc1.hit.E4, lmm.rdc.hit.E4)
+anova(lmm.rdc1.hit.E1, lmm.rdc.hit.E1)
 ```
 
 ```{r}
-lmm.etd.hit.E4 <- update(lmm.rdc.hit.E4,
+lmm.etd.hit.E1 <- update(lmm.rdc.hit.E1,
                          formula = Hit ~ Type * Category * Duration + 
                          (0 + Cate_D + Type_Cate | SubjCode))
 
-summary(lmm.etd.hit.E4)
+summary(lmm.etd.hit.E1)
 ```
 
 ```{r}
-lmm.etd1.hit.E4 <- update(lmm.rdc.hit.E4,
+lmm.etd1.hit.E1 <- update(lmm.rdc.hit.E1,
                          formula = Hit ~ Type * Category * Duration + 
                          (0 + Cate_D | SubjCode))
 
-summary(lmm.etd1.hit.E4)
+summary(lmm.etd1.hit.E1)
 ```
 
 ```{r}
-lmm.etd2.hit.E4 <- update(lmm.rdc.hit.E4,
+lmm.etd2.hit.E1 <- update(lmm.rdc.hit.E1,
                          formula = Hit ~ Type * Category * Duration + 
                          (0 + Type_Cate | SubjCode))
 
-summary(lmm.etd2.hit.E4)
+summary(lmm.etd2.hit.E1)
 ```
 
 ```{r}
-anova(lmm.etd1.hit.E4, lmm.etd2.hit.E4)
+anova(lmm.etd1.hit.E1, lmm.etd2.hit.E1)
 ```
 
 ```{r}
-lmm.opt.hit.E4 <- update(lmm.etd2.hit.E4,
+lmm.opt.hit.E1 <- update(lmm.etd2.hit.E1,
                          REML = TRUE)
 
-summary(lmm.opt.hit.E4)
+summary(lmm.opt.hit.E1)
 ```
 
 ```{r}
-emm.hit.E4 <- emmeans(lmm.opt.hit.E4, ~ c(Category, Duration) | Type)
+emm.hit.E1 <- emmeans(lmm.opt.hit.E1, ~ c(Category, Duration) | Type)
 
-data.frame(emm.hit.E4)
+data.frame(emm.hit.E1)
 ```
 
 ```{r}
-emmip(lmm.opt.hit.E4, Category ~ Duration | Type, CIs = TRUE)
+emmip(lmm.opt.hit.E1, Category ~ Duration | Type, CIs = TRUE)
 ```
 
 ```{r}
-contrast(emm.hit.E4, "pairwise", simple = "each", combine = TRUE)
+contrast(emm.hit.E1, "pairwise", simple = "each", combine = TRUE)
 ```
 
 ```{r}
-test(emm.hit.E4, null = 0.5, side = "two-sided")
+test(emm.hit.E1, null = 0.5, side = "two-sided")
 ```
 
 
 #### Logit mixed model
 ##### The maximal model
 ```{r maximal lmm for E204 responses}
-file.max.resp.E4 <- file.path(folder.nesi, "E204_resp_glmm_max.RData")
+file.max.resp.E1 <- file.path(folder.nesi, "E204_resp_glmm_max.RData")
 
-if (!file.exists(file.max.resp.E4)) {
-  glmm.max.resp.E4 <- glmer(ACC ~ Type * Category * Duration +
+if (!file.exists(file.max.resp.E1)) {
+  glmm.max.resp.E1 <- glmer(ACC ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                              (1 + Type_D + Dura_D + Type_Dura | Stimuli),
-                           data = clean.beha.E4,
+                           data = clean.beha.E1,
                            family = binomial(link = "logit"),
                            control = glmerControl(optCtrl = list(maxfun = 1e6)))
 } else {
-  load(file.max.resp.E4)
+  load(file.max.resp.E1)
 }
 
-print(summary(glmm.max.resp.E4), corr = FALSE)
+print(summary(glmm.max.resp.E1), corr = FALSE)
 
 ```
 
 ```{r}
-summary(rePCA(glmm.max.resp.E4))
+summary(rePCA(glmm.max.resp.E1))
 ```
 
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for E204 Response}
-file.zcp.resp.E4 <- file.path(folder.nesi, "E204_resp_glmm_zcp.RData")
+file.zcp.resp.E1 <- file.path(folder.nesi, "E204_resp_glmm_zcp.RData")
 
-if (!file.exists(file.zcp.resp.E4)) {
-  glmm.zcp.resp.E4 <- update(glmm.max.resp.E4,
+if (!file.exists(file.zcp.resp.E1)) {
+  glmm.zcp.resp.E1 <- update(glmm.max.resp.E1,
                            formula = ACC ~ Type * Category * Duration + 
                             (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
                             (1 + Type_D + Dura_D + Type_Dura || Stimuli),
                           verbose = FALSE)
   
-  glmm.zcp1.resp.E4 <- re_fit(glmm.zcp.resp.E4)
+  glmm.zcp1.resp.E1 <- re_fit(glmm.zcp.resp.E1)
   
 } else {
-  load(file.zcp.resp.E4)
+  load(file.zcp.resp.E1)
 }
 
-print(summary(glmm.zcp.resp.E4), corr = FALSE)
+print(summary(glmm.zcp.resp.E1), corr = FALSE)
 
 ```
 
 ```{r}
-print(summary(glmm.zcp1.resp.E4), corr = FALSE)
+print(summary(glmm.zcp1.resp.E1), corr = FALSE)
 
 ```
 
 
 ##### The reduced model
 ```{r}
-summary(rePCA(glmm.zcp1.resp.E4))
+summary(rePCA(glmm.zcp1.resp.E1))
 
 ```
 
 ##### Fit with all optimizers
 ```{r}
-file.max.resp.E4.allFit <- file.path(folder.nesi, "E204_resp_glmm_max_allFit.RData")
+file.max.resp.E1.allFit <- file.path(folder.nesi, "E204_resp_glmm_max_allFit.RData")
 
-if (!file.exists(file.max.resp.E4.allFit)) {
-  glmm.max0.resp.E4 <- glmer(resp ~ Type * Category * Duration +
+if (!file.exists(file.max.resp.E1.allFit)) {
+  glmm.max0.resp.E1 <- glmer(resp ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                              (1 + Dura_D | Stimuli),
-                           data = clean.beha.E4,
+                           data = clean.beha.E1,
                            family = "binomial")
   
-  glmm.max.resp.E4.allFit = allFit(glmm.max0.resp.E4,
+  glmm.max.resp.E1.allFit = allFit(glmm.max0.resp.E1,
                                  maxfun = 1e6)
 } else {
-  load(file.max.resp.E4.allFit)
+  load(file.max.resp.E1.allFit)
 }
 
-print(summary(glmm.max.resp.E4.allFit), corr = FALSE)
+print(summary(glmm.max.resp.E1.allFit), corr = FALSE)
 
 
 ```
 
 
 ### Correct response times
-```{r calculate the correct RT E4}
-df.rt.E4 <- {
-  clean.beha.E4 %>%
+```{r calculate the correct RT E1}
+df.rt.E1 <- {
+  clean.beha.E1 %>%
     filter((ACC == 1 | Type == "scrambled")
            & RT.Within3Z == 1 # remove the RT outsides 3Z
            )
 }
 
-sum.rt.R.E4 <- {
-   df.rt.E4 %>% # only include the correct responses for normal trials but all trial for scrambled
+sum.rt.R.E1 <- {
+   df.rt.E1 %>% # only include the correct responses for normal trials but all trial for scrambled
     select(SubjCode, Type, Category, Duration, RT) %>% # select the columns
     group_by(SubjCode, Type, Category, Duration) %>% # divide data into groups to get the mean
     summarize(RT = mean(RT), count = n()) %>%  # calculate the mean of RT
     ungroup()
 }
 
-desc.rt.R.E4 <- {
-  sum.rt.R.E4 %>% 
+desc.rt.R.E1 <- {
+  sum.rt.R.E1 %>% 
     group_by(Type, Category, Duration) %>% 
     summarize(Mean = mean(RT), N = n(), SD = sd(RT), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(RT), Lower = Mean - SD, Upper = Mean + SD)
 }
 
-sum.rt.SPSS.E4 <- {
-  sum.rt.R.E4 %>% 
+sum.rt.SPSS.E1 <- {
+  sum.rt.R.E1 %>% 
     mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
     select(-c(Type, Category, Duration, count)) %>%
     spread(Conditions, RT)
@@ -683,24 +677,24 @@ sum.rt.SPSS.E4 <- {
 
  # save the data into *.csv
 if (saveCSV) {
-  output.rt.E4 <- file.path(folder.nesi, "E204_beha_RT.RData")
-  save(df.rt.E4, file = output.rt.E4)
-  output.rt.SPSS.E4 <- file.path(folder.output, "E204_RT.csv")
-  write.csv(sum.rt.SPSS.E4, output.rt.SPSS.E4, row.names = FALSE)
+  output.rt.E1 <- file.path(folder.nesi, "E204_beha_RT.RData")
+  save(df.rt.E1, file = output.rt.E1)
+  output.rt.SPSS.E1 <- file.path(folder.output, "E204_RT.csv")
+  write.csv(sum.rt.SPSS.E1, output.rt.SPSS.E1, row.names = FALSE)
 }
 ```
 
 #### RainClound plot of the response times 
 ```{r rainclound plot of the RT data, warning = FALSE}
-knitr::kable(desc.rt.R.E4, digits = 4)
+knitr::kable(desc.rt.R.E1, digits = 4)
 
-rt.RainPlot.E4 <- {
-  ggplot(data = sum.rt.R.E4, aes(y = RT, x = Category, fill = Duration)) + 
+rt.RainPlot.E1 <- {
+  ggplot(data = sum.rt.R.E1, aes(y = RT, x = Category, fill = Duration)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(y = RT, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(aes(y = RT), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.rt.R.E4, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.rt.R.E4, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.rt.R.E1, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.rt.R.E1, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
@@ -718,15 +712,15 @@ rt.RainPlot.E4 <- {
 &nbsp;
 
 ```{r display the RainCloud plot for reaction times}
-rt.RainPlot.E4
+rt.RainPlot.E1
 ```
 
 
 #### Column plot of the response times
 ```{r Plot of RT data}
 
-rt.ColuPlot.E4 = {
-  ggplot(data = desc.rt.R.E4, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+rt.ColuPlot.E1 = {
+  ggplot(data = desc.rt.R.E1, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5, 
@@ -741,28 +735,28 @@ rt.ColuPlot.E4 = {
     plot_theme
 }
 
-rt.ColuPlot.E4
+rt.ColuPlot.E1
 ```
 
 #### Linear mixed model
 ##### The maximal model
 ```{r maximal lmm for E204 RT}
-file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_max.RData")
+file.max.rt.E1 <- file.path(folder.nesi, "E204_rt_lmm_max.RData")
 
-if (!file.exists(file.max.rt.E4)) {
-  lmm.max.rt.E4 <- lmer(RT ~ Type * Category * Duration +
+if (!file.exists(file.max.rt.E1)) {
+  lmm.max.rt.E1 <- lmer(RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                           (1 + Type_D + Dura_D + Type_Dura | Stimuli),
-                        data = df.rt.E4,
+                        data = df.rt.E1,
                         verbose = TRUE,
                         REML = FALSE,
                         control = lmerControl(optimizer = "bobyqa",
                                               optCtrl = list(maxfun = 1e5)))
 } else {
-  load(file.max.rt.E4)
+  load(file.max.rt.E1)
 }
 
-print(summary(lmm.max.rt.E4), corr = FALSE)
+print(summary(lmm.max.rt.E1), corr = FALSE)
 
 
 ```
@@ -770,212 +764,212 @@ print(summary(lmm.max.rt.E4), corr = FALSE)
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for E204 RT}
-file.zcp.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_zcp.RData")
+file.zcp.rt.E1 <- file.path(folder.nesi, "E204_rt_lmm_zcp.RData")
 
-if (!file.exists(file.zcp.rt.E4)) {
-  lmm.zcp.rt.E4 <- update(lmm.max.rt.E4,
+if (!file.exists(file.zcp.rt.E1)) {
+  lmm.zcp.rt.E1 <- update(lmm.max.rt.E1,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
                           (1 + Type_D + Dura_D + Type_Dura || Stimuli),
                           verbose = FALSE
                           )
 } else {
-  load(file.zcp.rt.E4)
+  load(file.zcp.rt.E1)
 }
 
-print(summary(lmm.zcp.rt.E4), corr = FALSE)
+print(summary(lmm.zcp.rt.E1), corr = FALSE)
 
 ```
 
 
 ##### The reduced model
 ```{r}
-summary(rePCA(lmm.zcp.rt.E4))
+summary(rePCA(lmm.zcp.rt.E1))
 ```
 
 
 ```{r reduced lmm for E204 RT}
-file.rdc.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_rdc.RData")
+file.rdc.rt.E1 <- file.path(folder.nesi, "E204_rt_lmm_rdc.RData")
 
-if (!file.exists(file.rdc.rt.E4)) {
-  lmm.rdc.rt.E4 <- step(lmm.zcp.rt.E4, reduce.fixed = FALSE)
+if (!file.exists(file.rdc.rt.E1)) {
+  lmm.rdc.rt.E1 <- step(lmm.zcp.rt.E1, reduce.fixed = FALSE)
   
-  lmm.rdc.rt.E4 <- update(lmm.max.rt.E4,
+  lmm.rdc.rt.E1 <- update(lmm.max.rt.E1,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
                           (0 + Type_D + Type_Dura || Stimuli),
                           verbose = FALSE
                           )
 } else {
-  load(file.rdc.rt.E4)
+  load(file.rdc.rt.E1)
 }
 
-print(summary(lmm.rdc.rt.E4), corr = FALSE)
+print(summary(lmm.rdc.rt.E1), corr = FALSE)
 
-lmm.zcp.rt.E4.step
+lmm.zcp.rt.E1.step
 
 ```
 
 ```{r}
-anova(lmm.zcp.rt.E4, lmm.rdc.rt.E4)
+anova(lmm.zcp.rt.E1, lmm.rdc.rt.E1)
 ```
 
 
 ##### The extended model
 ```{r extended lmm for E204 RT}
-file.etd.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd.RData")
+file.etd.rt.E1 <- file.path(folder.nesi, "E204_rt_lmm_etd.RData")
 
-if (!file.exists(file.etd.rt.E4)) {
-  lmm.etd.rt.E4 <- update(lmm.rdc.rt.E4,
+if (!file.exists(file.etd.rt.E1)) {
+  lmm.etd.rt.E1 <- update(lmm.rdc.rt.E1,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                           (0 + Type_D + Type_Dura | Stimuli),
                           verbose = FALSE
                           )
 } else {
-  load(file.etd.rt.E4)
+  load(file.etd.rt.E1)
 }
 
-print(summary(lmm.etd.rt.E4), corr = FALSE)
+print(summary(lmm.etd.rt.E1), corr = FALSE)
 
 ```
 
 
 ```{r}
-summary(rePCA(lmm.etd.rt.E4))
+summary(rePCA(lmm.etd.rt.E1))
 ```
 
 
 ```{r extended1 lmm for E204 RT}
-file.etd1.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_etd1.RData")
+file.etd1.rt.E1 <- file.path(folder.nesi, "E204_rt_lmm_etd1.RData")
 
-if (!file.exists(file.etd1.rt.E4)) {
-  lmm.etd1.rt.E4 <- update(lmm.etd.rt.E4,
+if (!file.exists(file.etd1.rt.E1)) {
+  lmm.etd1.rt.E1 <- update(lmm.etd.rt.E1,
                           formula = RT ~ Type * Category * Duration +
                           (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Type_Cate_Dura | SubjCode) +
                           (0 + Type_D + Type_Dura | Stimuli),
                           verbose = FALSE
                           )
 } else {
-  load(file.etd1.rt.E4)
+  load(file.etd1.rt.E1)
 }
 
-print(summary(lmm.etd1.rt.E4), corr = FALSE)
+print(summary(lmm.etd1.rt.E1), corr = FALSE)
 
 ```
 
 
 ```{r}
-anova(lmm.etd1.rt.E4, lmm.rdc.rt.E4)
+anova(lmm.etd1.rt.E1, lmm.rdc.rt.E1)
 ```
 
 ##### The optimal model
 ```{r}
 
-file.opt.rt.E4 <- file.path(folder.nesi, "E204_rt_lmm_opt.RData")
+file.opt.rt.E1 <- file.path(folder.nesi, "E204_rt_lmm_opt.RData")
 
-if (!file.exists(file.opt.rt.E4)) {
-  lmm.opt.rt.E4 <- update(lmm.etd1.rt.E4,
+if (!file.exists(file.opt.rt.E1)) {
+  lmm.opt.rt.E1 <- update(lmm.etd1.rt.E1,
                           REML = TRUE,
                           verbose = FALSE)
 } else {
-  load(file.opt.rt.E4)
+  load(file.opt.rt.E1)
 }
 
-print(summary(lmm.opt.rt.E4), corr = FALSE)
+print(summary(lmm.opt.rt.E1), corr = FALSE)
 
 ```
 
 ##### Disgnostic plots
-```{r qqplot for lmm.opt.rt.E4}
+```{r qqplot for lmm.opt.rt.E1}
 # qqplot
-qqplot_lmer(lmm.opt.rt.E4)
+qqplot_lmer(lmm.opt.rt.E1)
 ```
 
 
 #### Log mixed model
 ##### The maximal model
 ```{r maximal glmm for E204 RT}
-file.max.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_max.RData")
+file.max.rt.E1 <- file.path(folder.nesi, "E204_rt_glmm_max.RData")
 
-if (!file.exists(file.max.rt.E4)) {
-  glmm.max.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+if (!file.exists(file.max.rt.E1)) {
+  glmm.max.rt.E1 <- glmer(RT ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                              (1 + Type_D + Dura_D + Type_Dura | Stimuli),
-                           data = df.rt.E4,
+                           data = df.rt.E1,
                            family = poisson(link = "log"),
                            control = glmerControl(optimizer = "Nelder_Mead",
                                                   optCtrl = list(maxfun = 1e6)))
 } else {
-  load(file.max.rt.E4)
+  load(file.max.rt.E1)
 }
 
-print(summary(glmm.max.rt.E4), corr = FALSE)
+print(summary(glmm.max.rt.E1), corr = FALSE)
 ```
 
 
 ##### The zero-correlation-parameter model
 ```{r zcp glmm for E204 RT}
-file.zcp.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_zcp.RData")
+file.zcp.rt.E1 <- file.path(folder.nesi, "E204_rt_glmm_zcp.RData")
 
 # fit the zcp model
-if (!file.exists(file.zcp.rt.E4)) {
-  glmm.zcp.rt.E4 <- update(glmm.max.rt.E4, 
+if (!file.exists(file.zcp.rt.E1)) {
+  glmm.zcp.rt.E1 <- update(glmm.max.rt.E1, 
                           formula = RT ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura || SubjCode) +
                              (1 + Dura_D || Stimuli),
                           verbose = FALSE)
 } else {
-  load(file.zcp.rt.E4)
+  load(file.zcp.rt.E1)
 }
 
-print(summary(glmm.zcp.rt.E4), corr = FALSE)
+print(summary(glmm.zcp.rt.E1), corr = FALSE)
 
 ```
 
 ```{r compare max and zcp E204 rt}
-anova(glmm.max.rt.E4, glmm.zcp.rt.E4)
+anova(glmm.max.rt.E1, glmm.zcp.rt.E1)
 ```
 
 ##### The reduced model
 ```{r PCA for zcp RT 204}
 # PCA
-summary(rePCA(glmm.zcp.rt.E4))
+summary(rePCA(glmm.zcp.rt.E1))
 ```
 
 ##### Refit the maximal model
 ```{r}
-file.max1.rt.E4 <- file.path(folder.nesi, "E204_rt_glmm_max1.RData")
+file.max1.rt.E1 <- file.path(folder.nesi, "E204_rt_glmm_max1.RData")
 
-if (!file.exists(file.max1.rt.E4)) {
-  glmm.max1.rt.E4 <- refit(glmm.max.rt.E4)
+if (!file.exists(file.max1.rt.E1)) {
+  glmm.max1.rt.E1 <- refit(glmm.max.rt.E1)
 } else {
-  load(file.max1.rt.E4)
+  load(file.max1.rt.E1)
 }
 
-print(summary(glmm.max1.rt.E4), corr = FALSE)
+print(summary(glmm.max1.rt.E1), corr = FALSE)
 
 ```
 
 ##### Fit with all optimizers
 ```{r}
-file.max.rt.E4.allFit <- file.path(folder.nesi, "E204_rt_glmm_max_allFit.RData")
+file.max.rt.E1.allFit <- file.path(folder.nesi, "E204_rt_glmm_max_allFit.RData")
 
-if (!file.exists(file.max.rt.E4.allFit)) {
-  glmm.max0.rt.E4 <- glmer(RT ~ Type * Category * Duration +
+if (!file.exists(file.max.rt.E1.allFit)) {
+  glmm.max0.rt.E1 <- glmer(RT ~ Type * Category * Duration +
                              (1 + Type_D + Cate_D + Dura_D + Type_Cate + Type_Dura + Cate_Dura + Type_Cate_Dura | SubjCode) +
                              (1 + Dura_D | Stimuli),
-                           data = df.rt.E4,
+                           data = df.rt.E1,
                            family = "poisson")
   
-  glmm.max.rt.E4.allFit = allFit(glmm.max0.rt.E4,
+  glmm.max.rt.E1.allFit = allFit(glmm.max0.rt.E1,
                                  maxfun = 1e5,
                                  parallel = "multicore")
 } else {
-  load(file.max.rt.E4.allFit)
+  load(file.max.rt.E1.allFit)
 }
 
-print(summary(glmm.max.rt.E4.allFit), corr = FALSE)
+print(summary(glmm.max.rt.E1.allFit), corr = FALSE)
 
 
 ```
@@ -987,7 +981,7 @@ print(summary(glmm.max.rt.E4.allFit), corr = FALSE)
 The raw mean amplitude of each trial for all participants were loaded.
 ```{r load trial mean amplitude, message = FALSE}
 # read the trial mean amplitude data
-df.erp.E4 <- {
+df.erp.E1 <- {
   "E204_MeanAmp.csv" %>% 
     file.path(folder.data, .) %>% 
     read_csv() %>% 
@@ -999,7 +993,7 @@ df.erp.E4 <- {
 }
 
 
-df.erp.E4 %>% 
+df.erp.E1 %>% 
   group_by(SubjCode, Stimuli, Hemisphere, Type, Category, Duration) %>% 
   summarize(count = n())
 
@@ -1009,64 +1003,64 @@ df.erp.E4 %>%
 ```
 
 ### Set the successive difference coding
-```{r set the dummy coding for ERP data E4}
+```{r set the dummy coding for ERP data E1}
 # dummy coding
-df.erp.E4 <- sdif_coding_P203_erp(df.erp.E4)
+df.erp.E1 <- sdif_coding_P203_erp(df.erp.E1)
 ```
 
 
 ### Amplitudes of the P1
 ```{r erp df for the P1}
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
-df.erp.P1.E4 <- {
-  df.erp.E4 %>% 
+df.erp.P1.E1 <- {
+  df.erp.E1 %>% 
     filter(Component == "P1") %>% 
     substr_Event() 
 }
 
 if (saveCSV) {
-  output.erp.P1.E4 <- file.path(folder.nesi, "E204_erp_P1.RData")
-  save(df.erp.P1.E4, file = output.erp.P1.E4)
+  output.erp.P1.E1 <- file.path(folder.nesi, "E204_erp_P1.RData")
+  save(df.erp.P1.E1, file = output.erp.P1.E1)
 }
 
 # the structure of this dataset
-head(df.erp.P1.E4, 10)
+head(df.erp.P1.E1, 10)
 ```
 
 
 #### The maximal model
 ```{r maximal lmm for E204 p1}
-file.max.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
+file.max.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
 
 # fit the maximal model
-if (!file.exists(file.max.P1.E4)) {
-  lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
+if (!file.exists(file.max.P1.E1)) {
+  lmm.max.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
                              Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
                              Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
                              Type_Cate_Dura_Hemi_ACC| SubjCode),
-                        data = df.erp.P1.E4,
+                        data = df.erp.P1.E1,
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                               optCtrl = list(maxfun = 1e7)))
 } else {
-  load(file.max.P1.E4)
+  load(file.max.P1.E1)
 }
 
-print(summary(lmm.max.P1.E4), corr = FALSE)
+print(summary(lmm.max.P1.E1), corr = FALSE)
 
 ```
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for E204 p1}
-file.zcp.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_zcp.RData")
+file.zcp.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_zcp.RData")
 
 # fit the zcp model
-if (!file.exists(file.zcp.P1.E4)) {
-  lmm.zcp.P1.E4 <- update(lmm.max.P1.E4,
+if (!file.exists(file.zcp.P1.E1)) {
+  lmm.zcp.P1.E1 <- update(lmm.max.P1.E1,
                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
@@ -1076,45 +1070,45 @@ if (!file.exists(file.zcp.P1.E4)) {
                              Type_Cate_Dura_Hemi_ACC || SubjCode),
                           verbose = FALSE)
   
-  # lmm.zcp.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
+  # lmm.zcp.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
   #                         (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
   #                            Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
   #                            Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
   #                            Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
   #                            Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
   #                            Type_Cate_Dura_Hemi_ACC || SubjCode),
-  #                       data = df.erp.P1.E4,
+  #                       data = df.erp.P1.E1,
   #                       REML = FALSE,
   #                       # verbose = TRUE,
   #                       control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
   #                                             optCtrl = list(maxfun = 1e7)))
 } else {
-  load(file.zcp.P1.E4)
+  load(file.zcp.P1.E1)
 }
 
-print(summary(lmm.zcp.P1.E4), corr = FALSE)
+print(summary(lmm.zcp.P1.E1), corr = FALSE)
 
 ```
 
 ```{r compare max and zcp E204 P1}
-anova(lmm.max.P1.E4, lmm.zcp.P1.E4)
+anova(lmm.max.P1.E1, lmm.zcp.P1.E1)
 ```
 
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E204 P1}
-summary(rePCA(lmm.zcp.P1.E4))
+summary(rePCA(lmm.zcp.P1.E1))
 ```
 
 
 ```{r }
 
-file.rdc.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_rdc.RData")
+file.rdc.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_rdc.RData")
 
 # fit the rdc model
-if (!file.exists(file.rdc.P1.E4)) {
-  # lmm.rdc.P1.E4.step <- step(lmm.rdc.P1.E4, reduce.fixed = FALSE)
+if (!file.exists(file.rdc.P1.E1)) {
+  # lmm.rdc.P1.E1.step <- step(lmm.rdc.P1.E1, reduce.fixed = FALSE)
   
-  lmm.rdc.P1.E4 <- update(lmm.zcp.P1.E4,
+  lmm.rdc.P1.E1 <- update(lmm.zcp.P1.E1,
                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
                             (1 + Type_D + Dura_D + Hemi_D + 
                                Type_Dura + Cate_Dura + Type_Hemi + Dura_Hemi +
@@ -1123,33 +1117,33 @@ if (!file.exists(file.rdc.P1.E4)) {
                           verbose = FALSE)
   
 } else {
-  load(file.rdc.P1.E4)
+  load(file.rdc.P1.E1)
 }
 
-print(summary(lmm.rdc.P1.E4), corr = FALSE)
+print(summary(lmm.rdc.P1.E1), corr = FALSE)
 
 ```
 
 
 ```{r}
-anova(lmm.rdc.P1.E4, lmm.zcp.P1.E4)
+anova(lmm.rdc.P1.E1, lmm.zcp.P1.E1)
 ```
 
 
 ```{r}
-summary(rePCA(lmm.rdc.P1.E4))
+summary(rePCA(lmm.rdc.P1.E1))
 ```
 
 
 ```{r}
 
-file.rdc1.P1.E4 <- file.path(folder.nesi, "E204_P1_lmm_rdc1.RData")
+file.rdc1.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_rdc1.RData")
 
 # fit the rdc1 model
-if (!file.exists(file.rdc1.P1.E4)) {
-  # lmm.rdc1.P1.E4.step <- step(lmm.rdc1.P1.E4, reduce.fixed = FALSE)
+if (!file.exists(file.rdc1.P1.E1)) {
+  # lmm.rdc1.P1.E1.step <- step(lmm.rdc1.P1.E1, reduce.fixed = FALSE)
   
-  lmm.rdc1.P1.E4 <- update(lmm.rdc.P1.E4,
+  lmm.rdc1.P1.E1 <- update(lmm.rdc.P1.E1,
                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
                             (1 + Type_D + Dura_D + Hemi_D + 
                                Type_Dura + Cate_Dura + Type_Hemi + Dura_Hemi +
@@ -1158,19 +1152,19 @@ if (!file.exists(file.rdc1.P1.E4)) {
                           verbose = FALSE)
   
 } else {
-  load(file.rdc1.P1.E4)
+  load(file.rdc1.P1.E1)
 }
 
-print(summary(lmm.rdc1.P1.E4), corr = FALSE)
+print(summary(lmm.rdc1.P1.E1), corr = FALSE)
 ```
 
 
 ```{r}
-anova(lmm.rdc.P1.E4, lmm.rdc1.P1.E4)
+anova(lmm.rdc.P1.E1, lmm.rdc1.P1.E1)
 ```
 
 ```{r}
-summary(rePCA(lmm.rdc1.P1.E4))
+summary(rePCA(lmm.rdc1.P1.E1))
 ```
 
 
@@ -1178,29 +1172,29 @@ summary(rePCA(lmm.rdc1.P1.E4))
 ### Ampitudes of the N170
 ```{r erp df for the N170}
 # only keep the data for amplitudes of the N170 (all erps)
-df.erp.N170.E4 <- {
-  df.erp.E4 %>% 
+df.erp.N170.E1 <- {
+  df.erp.E1 %>% 
     filter(Component == "N170") %>% 
     substr_Event() 
 }
 
 if (saveCSV) {
-  output.erp.N170.E4 <- file.path(folder.nesi, "E204_erp_N170.RData")
-  save(df.erp.N170.E4, file = output.erp.N170.E4)
+  output.erp.N170.E1 <- file.path(folder.nesi, "E204_erp_N170.RData")
+  save(df.erp.N170.E1, file = output.erp.N170.E1)
 }
 
 # the structure of this dataset
-head(df.erp.N170.E4, 10)
+head(df.erp.N170.E1, 10)
 ```
 
 #### Model 1 without acc
 ##### The maximal model
 ```{r maximal lmm for E204 N170}
-file1.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
+file1.max.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 
 # fit the maximal model
-if (!file.exists(file1.max.N170.E4)) {
-  lmm1.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse + 
+if (!file.exists(file1.max.N170.E1)) {
+  lmm1.max.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse + 
                              (1 + Type_C + Cate_C + Dura_C + Hemi_C + 
                                 Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
                                 Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
@@ -1208,16 +1202,16 @@ if (!file.exists(file1.max.N170.E4)) {
                              (1 + Type_C + Dura_C + Hemi_C + 
                                 Type_Dura + Type_Hemi + Dura_Hemi +
                                 Type_Dura_Hemi | Stimuli),
-                           data = df.erp.N170.E4,
+                           data = df.erp.N170.E1,
                            REML = FALSE,
                            # verbose = TRUE,
                            control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                                  optCtrl = list(maxfun = 1e7)))
 } else {
-  load(file1.max.N170.E4)
+  load(file1.max.N170.E1)
 }
 
-print(summary(lmm1.max.N170.E4), corr = FALSE)
+print(summary(lmm1.max.N170.E1), corr = FALSE)
 
 ```
 
@@ -1228,11 +1222,11 @@ print(summary(lmm1.max.N170.E4), corr = FALSE)
 #### Model 2 with acc
 #### The maximal model
 ```{r maximal lmm for E204 N170}
-file.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
+file.max.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
 
 # fit the maximal model
-if (!file.exists(file.max.N170.E4)) {
-  lmm.max.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere *  + 
+if (!file.exists(file.max.N170.E1)) {
+  lmm.max.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere *  + 
                              (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
                                 Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
                                 Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
@@ -1252,27 +1246,27 @@ if (!file.exists(file.max.N170.E4)) {
                                 Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
                                 Type_Hemi_Dura_Resp
                                 | Stimuli ),
-                        data = df.erp.N170.E4,
+                        data = df.erp.N170.E1,
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
                                               optCtrl = list(maxfun = 1e7)))
 } else {
-  load(file.max.N170.E4)
+  load(file.max.N170.E1)
 }
 
-print(summary(lmm.max.N170.E4), corr = FALSE)
+print(summary(lmm.max.N170.E1), corr = FALSE)
 
 ```
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for E204 N170}
 
-file.zcp.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_zcp.RData")
+file.zcp.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_zcp.RData")
 
 # fit the zcp model
-if (!file.exists(file.zcp.N170.E4)) {
-  lmm.zcp.N170.E4 <- update(lmm.max.N170.E4,
+if (!file.exists(file.zcp.N170.E1)) {
+  lmm.zcp.N170.E1 <- update(lmm.max.N170.E1,
                             formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
@@ -1282,47 +1276,47 @@ if (!file.exists(file.zcp.N170.E4)) {
                              Type_Cate_Dura_Hemi_ACC || SubjCode),
                             verbose = FALSE)
   
-   # lmm.zcp.N170.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
+   # lmm.zcp.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
    #                        (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
    #                           Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
    #                           Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
    #                           Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
    #                           Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
    #                           Type_Cate_Dura_Hemi_ACC || SubjCode),
-   #                      data = df.erp.N170.E4,
+   #                      data = df.erp.N170.E1,
    #                      REML = FALSE,
    #                      # verbose = TRUE,
    #                      control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
    #                                            optCtrl = list(maxfun = 1e7)))
 } else {
-  load(file.zcp.N170.E4)
+  load(file.zcp.N170.E1)
 }
 
 
-print(summary(lmm.zcp.N170.E4), corr = FALSE)
+print(summary(lmm.zcp.N170.E1), corr = FALSE)
 
 ```
 
 ```{r compare max and zcp E204 N170}
-anova(lmm.max.N170.E4, lmm.zcp.N170.E4)
+anova(lmm.max.N170.E1, lmm.zcp.N170.E1)
 ```
 
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E204 N170}
 
-summary(rePCA(lmm.zcp.N170.E4))
+summary(rePCA(lmm.zcp.N170.E1))
 ```
 
 
 ```{r}
 
-file.rdc.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_rdc.RData")
+file.rdc.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_rdc.RData")
 
 # fit the rdc model
-if (!file.exists(file.rdc.N170.E4)) {
-  # lmm.rdc.N170.E4.step <- step(lmm.rdc.N170.E4, reduce.fixed = FALSE)
+if (!file.exists(file.rdc.N170.E1)) {
+  # lmm.rdc.N170.E1.step <- step(lmm.rdc.N170.E1, reduce.fixed = FALSE)
   
-  lmm.rdc.N170.E4 <- update(lmm.rdc.N170.E4,
+  lmm.rdc.N170.E1 <- update(lmm.rdc.N170.E1,
                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Cate_ACC +
@@ -1330,28 +1324,28 @@ if (!file.exists(file.rdc.N170.E4)) {
                           verbose = FALSE)
   
 } else {
-  load(file.rdc.N170.E4)
+  load(file.rdc.N170.E1)
 }
 
-print(summary(lmm.rdc.N170.E4), corr = FALSE)
+print(summary(lmm.rdc.N170.E1), corr = FALSE)
 
 ```
 
 ```{r}
-anova(lmm.rdc.N170.E4, lmm.zcp.N170.E4)
+anova(lmm.rdc.N170.E1, lmm.zcp.N170.E1)
 ```
 
 
 
 ```{r}
 
-file.rdc1.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm_rdc1.RData")
+file.rdc1.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_rdc1.RData")
 
 # fit the rdc1 model
-if (!file.exists(file.rdc1.N170.E4)) {
-  # lmm.rdc1.N170.E4.step <- step(lmm.rdc1.N170.E4, reduce.fixed = FALSE)
+if (!file.exists(file.rdc1.N170.E1)) {
+  # lmm.rdc1.N170.E1.step <- step(lmm.rdc1.N170.E1, reduce.fixed = FALSE)
   
-  lmm.rdc1.N170.E4 <- update(lmm.rdc1.N170.E4,
+  lmm.rdc1.N170.E1 <- update(lmm.rdc1.N170.E1,
                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
                           (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
@@ -1359,21 +1353,21 @@ if (!file.exists(file.rdc1.N170.E4)) {
                           verbose = FALSE)
   
 } else {
-  load(file.rdc1.N170.E4)
+  load(file.rdc1.N170.E1)
 }
 
-print(summary(lmm.rdc1.N170.E4), corr = FALSE)
+print(summary(lmm.rdc1.N170.E1), corr = FALSE)
 
 ```
 
 
 #### Model 3 (intact only)
 ```{r}
-df.erp.N170.E4.intact <- filter(df.erp.N170.E4, Type == "intact")
+df.erp.N170.E1.intact <- filter(df.erp.N170.E1, Type == "intact")
 
 if (saveCSV) {
-  output.erp.N170.E4.intact <- file.path(folder.nesi, "E204_erp_N170_intact.RData")
-  save(df.erp.N170.E4.intact, file = output.erp.N170.E4.intact)
+  output.erp.N170.E1.intact <- file.path(folder.nesi, "E204_erp_N170_intact.RData")
+  save(df.erp.N170.E1.intact, file = output.erp.N170.E1.intact)
 }
 ```
 
@@ -1382,25 +1376,25 @@ if (saveCSV) {
 
 #### The maximal model
 ```{r maximal lmm3 for E204 N170}
-file3.max.N170.E4 <- file.path(folder.nesi, "E204_N170_lmm3_max.RData")
+file3.max.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm3_max.RData")
 
 # fit the maximal model
-if (!file.exists(file3.max.N170.E4)) {
-  lmm3.max.N170.E4 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC + 
+if (!file.exists(file3.max.N170.E1)) {
+  lmm3.max.N170.E1 <- lmer(MeanAmp ~ Category * Duration * Hemisphere * ACC + 
                           (1 + Cate_D + Dura_D + Hemi_D + ACC_D + 
                              Cate_Dura + Cate_Hemi + Dura_Hemi + Cate_ACC + Dura_ACC + Hemi_ACC +
                              Cate_Dura_Hemi + Cate_Dura_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
                              Hemi_Cate_Dura_ACC | SubjCode),
-                        data = df.erp.N170.E4.intact,
+                        data = df.erp.N170.E1.intact,
                         REML = FALSE,
                         # verbose = TRUE,
                         control = lmerControl(optimizer = "Nelder_Mead",  # nloptwrap Nelder_Mead
                                               optCtrl = list(maxfun = 1e7)))
 } else {
-  load(file3.max.N170.E4)
+  load(file3.max.N170.E1)
 }
 
-print(summary(lmm3.max.N170.E4), corr = FALSE)
+print(summary(lmm3.max.N170.E1), corr = FALSE)
 
 ```
 
@@ -1408,7 +1402,7 @@ print(summary(lmm3.max.N170.E4), corr = FALSE)
 # Experiment 2 (205)
 ## Behavior results
 ```{r load behavioral results of 205}
-raw.beha.E5 <- {
+raw.beha.E2 <- {
   "E205_35_Behavior.csv" %>% 
     file.path(folder.data, .) %>% 
     read_csv() 
@@ -1417,8 +1411,8 @@ raw.beha.E5 <- {
 ```
 
 ```{r select certain rows and columns from the data, and calculate the Z value for reaction times (205)}
-clean.beha.E5 <- {
-  raw.beha.E5 %>%
+clean.beha.E2 <- {
+  raw.beha.E2 %>%
     filter(`Procedure[Trial]` == "expProc") %>% # remove rows for practice and countdown
     select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = `stimCategory[Trial]`, Category = `FH[Trial]`, Duration = `stimDuration[Trial]`, ACC = `Resp.ACC[Trial]`, Resp.RT = `Resp.RT[Trial]`, Resp = `Resp.RESP[Trial]`, Stimuli = `stimName[Trial]`) %>% # select and rename the columns (remove unuseful columns)
     mutate(
@@ -1439,24 +1433,24 @@ clean.beha.E5 <- {
 }
 
 # behavior.tidyup
-head(clean.beha.E5, 10)
+head(clean.beha.E2, 10)
 
 ```
 
 ```{r check the number of trials for 205}
 # check the number of trials for 205
-sum.count.E5 <- {
-  clean.beha.E5 %>% 
+sum.count.E2 <- {
+  clean.beha.E2 %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count_sum = n())
 }
 
-valid.count.E5 <- {
-  clean.beha.E5 %>% 
+valid.count.E2 <- {
+  clean.beha.E2 %>% 
     filter(RT > RT.min) %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count = n()) %>% 
-    right_join(sum.count.E5, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
+    right_join(sum.count.E2, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
     mutate(ratio = Count / Count_sum) %>% 
     filter(ratio > ratio.count) %$%
     SubjCode %>% 
@@ -1464,7 +1458,7 @@ valid.count.E5 <- {
 }
 
 # remove the participants
-clean.beha.E5 %<>% filter(SubjCode %in% valid.count.E5)
+clean.beha.E2 %<>% filter(SubjCode %in% valid.count.E2)
 
 ```
 
@@ -1473,7 +1467,7 @@ clean.beha.E5 %<>% filter(SubjCode %in% valid.count.E5)
 # remove participants whose performance in Key 1 and Key 5 conditions were lower than 90%
 
 valid.17 <- {
-  clean.beha.E5 %>%
+  clean.beha.E2 %>%
     filter(Type == "normal" & Duration == 17 & Resp == 1) %>% 
     group_by(SubjCode, Type, Duration, Resp) %>% 
     summarize(Accuracy = mean(ACC), Count = n()) %>% 
@@ -1481,20 +1475,43 @@ valid.17 <- {
     SubjCode
 }
 
-clean.beha.E5 %<>% filter(SubjCode %in% valid.17)
+clean.beha.E2 %<>% filter(SubjCode %in% valid.17)
 
 ```
 
 ### Participant demographic information
 ```{r participant information}
-subj.info.E5 <- {
-  clean.beha.E5 %>% 
+subj.info.E2 <- {
+  clean.beha.E2 %>% 
     select(SubjCode, Age, Sex, Handedness) %>% # select the columns of participant inforamtion
     distinct() # only keep the unique rows
 }
 
-subj.info.E5
+subj.info.E2
 ```
+
+### Response
+```{r}
+avg.acc.R.E2 <- {
+  subj.info.E2
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Questions and predictions {#prediction}
