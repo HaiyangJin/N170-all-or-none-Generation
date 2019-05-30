@@ -27,19 +27,31 @@ load("E204_erp_P1.RData")
 # message("Fitting the lmm.max.P1.E4 model...")
 # 
 # # lmm.max.P1 for mean amplitude
-# lmm.max.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC + 
-#                         (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D + 
-#                            Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-#                            Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-#                            Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-#                            Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-#                            Type_Cate_Dura_Hemi_ACC| SubjCode),
-#                       data = df.erp.P1.E4,
+# lmm.max.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere *  +
+#                         (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+#                            Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+#                            Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+#                            Type_Cate_Dura_Hemi +
+#                            Resp_C +
+#                            Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
+#                            Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp +
+#                            Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
+#                            Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
+#                            Type_Cate_Dura_Hemi_Resp
+#                          | SubjCode) +
+#                         (1 + Type_C + Dura_C + Hemi_C +
+#                            Type_Dura + Type_Hemi + Dura_Hemi +
+#                            Type_Dura_Hemi +
+#                            Resp_C +
+#                            Type_Resp + Dura_Resp + Hemi_Resp +
+#                            Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
+#                            Type_Hemi_Dura_Resp
+#                          | Stimuli),
+#                       data = df.erp.P1.E1,
 #                       REML = FALSE,
 #                       verbose = TRUE,
 #                       control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
 #                                             optCtrl = list(maxfun = 1e7)))
-# 
 # # Saving lmm.max.P1.E4
 # message("")
 # message("Saving the lmm.max.P1.E4")
@@ -53,33 +65,37 @@ message(paste0(strrep("#", 80)))
 message("Fitting the lmm.zcp.P1.E4 model...")
 
 # lmm.zcp.P1 for mean amplitude
-load("E204_P1_lmm_max.RData")
+lmm.zcp.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere *  +
+                        (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                           Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                           Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+                           Type_Cate_Dura_Hemi +
+                           Resp_C +
+                           Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
+                           Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp +
+                           Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
+                           Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
+                           Type_Cate_Dura_Hemi_Resp
+                         || SubjCode) +
+                        (1 + Type_C + Dura_C + Hemi_C +
+                           Type_Dura + Type_Hemi + Dura_Hemi +
+                           Type_Dura_Hemi +
+                           Resp_C +
+                           Type_Resp + Dura_Resp + Hemi_Resp +
+                           Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
+                           Type_Hemi_Dura_Resp
+                         || Stimuli),
+                      data = df.erp.P1.E1,
+                      REML = FALSE,
+                      verbose = TRUE,
+                      control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                            optCtrl = list(maxfun = 1e7)))
 
-lmm.zcp.P1.E4 <- update(lmm.max.P1.E4,
-                        formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-                             Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-                             Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-                             Type_Cate_Dura_Hemi_ACC || SubjCode))
-# lmm.zcp.P1.E4 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-#                         (1 + Type_D + Cate_D + Dura_D + Hemi_D + ACC_D +
-#                            Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Type_ACC + Cate_ACC + Dura_ACC + Hemi_ACC +
-#                            Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + Type_Cate_ACC + Type_Dura_ACC + Cate_Dura_ACC +
-#                            Type_Hemi_ACC + Cate_Hemi_ACC + Dura_Hemi_ACC +
-#                            Type_Cate_Dura_Hemi + Type_Cate_Dura_ACC + Type_Cate_Hemi_ACC + Type_Hemi_Dura_ACC + Hemi_Cate_Dura_ACC +
-#                            Type_Cate_Dura_Hemi_ACC || SubjCode),
-#                       data = df.erp.P1.E4,
-#                       REML = FALSE,
-#                       verbose = TRUE,
-#                       control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                             optCtrl = list(maxfun = 1e7)))
 
 # Saving lmm.zcp.P1
 message("")
 message("Saving the lmm.zcp.P1.E4")
-save(lmm.zcp.P1.E4, file = "E204_P1_lmm_zcp.RData")
+save(lmm.zcp.P1.E1, file = "E204_P1_lmm_zcp.RData")
 
 
 #############################  Obtaining (step) the lmm.zcp.P1.E4 for P1  ##############################
@@ -94,7 +110,7 @@ save(lmm.zcp.P1.E4, file = "E204_P1_lmm_zcp.RData")
 # # Saving lmm.zcp.P1.step
 # message("")
 # message("Saving the lmm.zcp.P1.E4.step")
-# save(lmm.zcp.P1.E4.step, file = "E204_P1_lmm_zcp_step.RData")
+# save(lmm.zcp.P1.E1.step, file = "E204_P1_lmm_zcp_step.RData")
 
 
 #############################  Fitting the lmm.rdc.P1.E4 for P1  ##############################
@@ -116,29 +132,29 @@ save(lmm.zcp.P1.E4, file = "E204_P1_lmm_zcp.RData")
 # # Saving lmm.rdc.P1
 # message("")
 # message("Saving the lmm.rdc.P1.E4")
-# save(lmm.rdc.P1.E4, file = "E204_P1_lmm_rdc.RData")
+# save(lmm.rdc.P1.E1, file = "E204_P1_lmm_rdc.RData")
 
 
 #############################  Fitting the lmm.rdc1.P1.E4 for P1  ##############################
-# fit the lmm.rdc1.P1 model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the lmm.rdc1.P1.E4 model...")
-
-# lmm.rdc1.P1 for mean amplitude
-load("E204_P1_lmm_rdc.RData")
-
-lmm.rdc1.P1.E4 <- update(lmm.rdc.P1.E4,
-                        formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                          (1 + Type_D + Dura_D + Hemi_D + 
-                             Type_Dura + Cate_Dura + Type_Hemi + Dura_Hemi +
-                             Type_Cate_Dura + Cate_Dura_Hemi + Dura_Hemi_ACC +
-                             Type_Cate_Dura_ACC || SubjCode))
-
-# Saving lmm.rdc1.P1
-message("")
-message("Saving the lmm.rdc1.P1.E4")
-save(lmm.rdc1.P1.E4, file = "E204_P1_lmm_rdc1.RData")
+# # fit the lmm.rdc1.P1 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm.rdc1.P1.E4 model...")
+# 
+# # lmm.rdc1.P1 for mean amplitude
+# load("E204_P1_lmm_rdc.RData")
+# 
+# lmm.rdc1.P1.E4 <- update(lmm.rdc.P1.E4,
+#                         formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
+#                           (1 + Type_D + Dura_D + Hemi_D + 
+#                              Type_Dura + Cate_Dura + Type_Hemi + Dura_Hemi +
+#                              Type_Cate_Dura + Cate_Dura_Hemi + Dura_Hemi_ACC +
+#                              Type_Cate_Dura_ACC || SubjCode))
+# 
+# # Saving lmm.rdc1.P1
+# message("")
+# message("Saving the lmm.rdc1.P1.E4")
+# save(lmm.rdc1.P1.E4, file = "E204_P1_lmm_rdc1.RData")
 
 
 # versions of packages used
