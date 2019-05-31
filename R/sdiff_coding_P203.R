@@ -20,7 +20,6 @@ sdif_coding_P203 <- function(df) {
 }
 
 
-
 sdif_coding_P203_erp <- function(df) {
   df %<>% 
     sdif_coding_P203() %>% 
@@ -37,8 +36,18 @@ sdif_coding_P203_erp <- function(df) {
       Cate_Dura_Hemi = Cate_C * Dura_C * Hemi_C,
       
       Type_Cate_Dura_Hemi = Type_C * Cate_C * Dura_C * Hemi_C,
-      
-      Resp_C = ifelse(urResponse == "RES1", -0.5, ifelse(urResponse == "RES0", 0.5, NaN)),
+    )
+  
+  contrasts(df$Hemisphere) <- MASS::contr.sdif(nlevels(df$Hemisphere)) 
+  
+  return(df)
+}
+
+sdif_coding_E204_erp <- function(df) {
+  df %<>%
+    sdif_coding_P203_erp() %>% 
+    mutate(
+      Resp_C = ifelse(Response == 0, -0.5, ifelse(Response == 1, 0.5, NaN)),
       
       Type_Resp = Type_C * Resp_C,
       Cate_Resp = Cate_C * Resp_C,
@@ -58,11 +67,63 @@ sdif_coding_P203_erp <- function(df) {
       Hemi_Cate_Dura_Resp = Hemi_C * Cate_C * Dura_C * Resp_C,
       
       Type_Cate_Dura_Hemi_Resp = Type_C * Cate_C * Dura_C * Hemi_C * Resp_C
+    )
+  contrasts(df$Response) <- MASS::contr.sdif(nlevels(df$Response)) 
+  
+  return(df)
+}
+
+sdif_coding_E205_erp <- function(df) {
+  
+  confidence.levels <- c("high", "low", "guess")
+  
+  df %<>%
+    sdif_coding_P203_erp() %>%
+    mutate(
+      ConLH_C = ifelse(Confidence == confidence.levels[1], -0.6666667, 0.3333333), # low - high
+      ConGL_C = ifelse(Confidence == confidence.levels[3], 0.6666667, -0.3333333), # guess - low
+
+      Type_ConLH = Type_C * ConLH_C,
+      Cate_ConLH = Cate_C * ConLH_C,
+      Dura_ConLH = Dura_C * ConLH_C,
+      Hemi_ConLH = Hemi_C * ConLH_C,
+
+      Type_Cate_ConLH = Type_C * Cate_C * ConLH_C,
+      Type_Dura_ConLH = Type_C * Dura_C * ConLH_C,
+      Cate_Dura_ConLH = Cate_C * Dura_C * ConLH_C,
+      Type_Hemi_ConLH = Type_C * Hemi_C * ConLH_C,
+      Cate_Hemi_ConLH = Cate_C * Hemi_C * ConLH_C,
+      Dura_Hemi_ConLH = Dura_C * Hemi_C * ConLH_C,
+
+      Type_Cate_Dura_ConLH = Type_C * Cate_C * Dura_C * ConLH_C,
+      Type_Cate_Hemi_ConLH = Type_C * Cate_C * Hemi_C * ConLH_C,
+      Type_Hemi_Dura_ConLH = Type_C * Hemi_C * Dura_C * ConLH_C,
+      Hemi_Cate_Dura_ConLH = Hemi_C * Cate_C * Dura_C * ConLH_C,
+
+      Type_Cate_Dura_Hemi_ConLH = Type_C * Cate_C * Dura_C * Hemi_C * ConLH_C,
       
+      Type_ConGL = Type_C * ConGL_C,
+      Cate_ConGL = Cate_C * ConGL_C,
+      Dura_ConGL = Dura_C * ConGL_C,
+      Hemi_ConGL = Hemi_C * ConGL_C,
+      
+      Type_Cate_ConGL = Type_C * Cate_C * ConGL_C,
+      Type_Dura_ConGL = Type_C * Dura_C * ConGL_C,
+      Cate_Dura_ConGL = Cate_C * Dura_C * ConGL_C,
+      Type_Hemi_ConGL = Type_C * Hemi_C * ConGL_C,
+      Cate_Hemi_ConGL = Cate_C * Hemi_C * ConGL_C,
+      Dura_Hemi_ConGL = Dura_C * Hemi_C * ConGL_C,
+      
+      Type_Cate_Dura_ConGL = Type_C * Cate_C * Dura_C * ConGL_C,
+      Type_Cate_Hemi_ConGL = Type_C * Cate_C * Hemi_C * ConGL_C,
+      Type_Hemi_Dura_ConGL = Type_C * Hemi_C * Dura_C * ConGL_C,
+      Hemi_Cate_Dura_ConGL = Hemi_C * Cate_C * Dura_C * ConGL_C,
+      
+      Type_Cate_Dura_Hemi_ConGL = Type_C * Cate_C * Dura_C * Hemi_C * ConGL_C
     )
   
-  contrasts(df$Hemisphere) <- MASS::contr.sdif(nlevels(df$Hemisphere)) 
-  contrasts(df$urResponse) <- MASS::contr.sdif(nlevels(df$urResponse)) 
-  
+  levels(df$Confidence) <- confidence.levels # reorder the levels
+  contrasts(df$Confidence) <- MASS::contr.sdif(nlevels(df$Confidence))
+
   return(df)
 }
