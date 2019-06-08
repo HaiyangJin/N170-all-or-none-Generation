@@ -79,6 +79,7 @@ sdif_coding_E205_erp <- function(df) {
   
   df %<>%
     sdif_coding_P203_erp() %>%
+    
     mutate(
       ConLH_C = ifelse(Confidence == confidence.levels[1], -0.6666667, 0.3333333), # low - high
       ConGL_C = ifelse(Confidence == confidence.levels[3], 0.6666667, -0.3333333), # guess - low

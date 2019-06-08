@@ -1,0 +1,62 @@
+Executing R ...
+Fitting model for P203_DataAnalysis.Rmd...
+The corresponding *.out file is 4375546.out
+Setting the current working directory...
+
+Loading the libraries...
+Loading required package: Matrix
+
+Attaching package: ‘lmerTest’
+
+The following object is masked from ‘package:lme4’:
+
+    lmer
+
+The following object is masked from ‘package:stats’:
+
+    step
+
+
+Loading the data file...
+
+################################################################################
+Fitting the lmm.etd2.P1.E2 model...
+start par. =  1 0 1 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 fn =  400327.1 
+At return
+eval: 1128 fn:      399255.59 par: 0.0607393 0.0391336 0.117998 0.332284 0.00929838 0.0618598 0.0576548 0.0915774 0.00688574 0.0264008 0.0796183 -0.0197553 0.0164426 0.0371848 0.0171208 -0.00999599 0.123728 -0.0672701 0.0164334 0.0471125 0.0504217 0.171245 -0.00463933 0.0207023 -0.0469883 0.0720849 0.119835 0.0171551  0.00000 0.0461411 0.0789866
+boundary (singular) fit: see ?isSingular
+Warning message:
+Model failed to converge with 1 negative eigenvalue: -1.4e+03 
+
+Saving the lmm.etd2.P1.E2
+R version 3.5.3 (2019-03-11)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /scale_wlg_persistent/filesets/opt_nesi/CS400_centos7_bdw/imkl/2018.4.274-gimpi-2018b/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] lmerTest_3.1-0 lme4_1.1-21    Matrix_1.2-16 
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.0        magrittr_1.5      bindr_0.1.1       splines_3.5.3    
+ [5] MASS_7.3-51.1     tidyselect_0.2.5  munsell_0.5.0     colorspace_1.4-0 
+ [9] lattice_0.20-38   R6_2.4.0          rlang_0.3.1       minqa_1.2.4      
+[13] plyr_1.8.4        dplyr_0.7.8       grid_3.5.3        gtable_0.2.0     
+[17] nlme_3.1-137      assertthat_0.2.0  lazyeval_0.2.1    tibble_2.0.1     
+[21] numDeriv_2016.8-1 crayon_1.3.4      bindrcpp_0.2.2    purrr_0.2.5      
+[25] nloptr_1.2.1      ggplot2_3.1.0     glue_1.3.0        compiler_3.5.3   
+[29] pillar_1.3.1      scales_1.0.0      boot_1.3-20       pkgconfig_2.0.2  
+R finished.
