@@ -1,0 +1,66 @@
+Executing R ...
+Fitting model for P203_DataAnalysis.Rmd...
+The corresponding *.out file is 4476575.out
+Setting the current working directory...
+
+Loading the libraries...
+Loading required package: Matrix
+
+Attaching package: ‘lmerTest’
+
+The following object is masked from ‘package:lme4’:
+
+    lmer
+
+The following object is masked from ‘package:stats’:
+
+    step
+
+
+Loading the data file...
+
+################################################################################
+Fitting the lmm.etd.P1.E2 model...
+start par. =  1 0 0 0 1 0 0 1 0 1 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 fn =  401176.7 
+At return
+eval: 8365 fn:      399219.77 par: 0.0358172 0.00407833 0.0265804 -0.0158783 0.0662185 -0.00565188 0.109874 0.0615598 0.0379972 0.112373 0.338434 0.00905511 -0.0177103 0.0631502 0.0587296 0.0785149 0.00692964 0.0232180 0.0270338 0.0841590 -0.0139677 -0.0200815 0.0149812 0.0209680 0.0307492 -0.0261824 -0.0126280 0.0457189 -0.0404243 0.138138 0.00467525 0.0237140 0.00844933 -0.0758695 0.120106 -0.0260873 0.0102928 0.0605403 -0.00739127 0.0282700 0.124586 0.00172431 -0.0145809 0.0292214 -0.00397574 0.0977106 0.0627834 0.0143208 0.0141840 0.108791 -0.0122450 0.0207781 0.0114336 0.0837310 0.000763370
+Warning messages:
+1: In checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge with max|grad| = 0.00264616 (tol = 0.002, component 1)
+2: Model failed to converge with 1 negative eigenvalue: -6.5e+00 
+start par. =  0.03581716 0.004078332 0.02658038 -0.01587826 0.06621847 -0.005651884 0.1098741 0.06155979 0.03799722 0.1123726 0.3384343 0.00905511 -0.01771027 0.06315015 0.05872956 0.07851487 0.00692964 0.023218 0.0270338 0.08415895 -0.01396769 -0.02008147 0.01498117 0.02096803 0.03074918 -0.02618239 -0.01262804 0.04571887 -0.0404243 0.1381378 0.004675248 0.02371405 0.008449329 -0.07586947 0.1201061 -0.02608728 0.01029276 0.06054029 -0.007391271 0.02827004 0.1245862 0.001724305 -0.01458094 0.02922137 -0.003975744 0.09771061 0.06278343 0.01432079 0.01418401 0.1087906 -0.012245 0.02077814 0.01143361 0.08373097 0.0007633703 fn =  399219.8 
+At return
+eval: 7787 fn:      399219.77 par: 0.0358172 0.00407857 0.0265805 -0.0158791 0.0662187 -0.00565175 0.109874 0.0615597 0.0379977 0.112374 0.338434 0.00905606 -0.0177110 0.0631508 0.0587250 0.0785162 0.00693062 0.0232174 0.0270352 0.0841591 -0.0139684 -0.0200799 0.0149775 0.0209686 0.0307519 -0.0261825 -0.0126258 0.0457179 -0.0404305 0.138133 0.00466604 0.0237113 0.00844511 -0.0758785 0.120105 -0.0260841 0.0102900 0.0605427 -0.00739456 0.0282658 0.124590 0.00173385 -0.0145802 0.0292223 -0.00397257 0.0977111 0.0627914 0.0143153 0.0141778 0.108787 -0.0122414 0.0207874 0.0114304 0.0837284 0.000207829
+
+Saving the lmm.etd.P1.E2
+R version 3.5.3 (2019-03-11)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /scale_wlg_persistent/filesets/opt_nesi/CS400_centos7_bdw/imkl/2018.4.274-gimpi-2018b/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] lmerTest_3.1-0 lme4_1.1-21    Matrix_1.2-16 
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.0        magrittr_1.5      bindr_0.1.1       splines_3.5.3    
+ [5] MASS_7.3-51.1     tidyselect_0.2.5  munsell_0.5.0     colorspace_1.4-0 
+ [9] lattice_0.20-38   R6_2.4.0          rlang_0.3.1       minqa_1.2.4      
+[13] plyr_1.8.4        dplyr_0.7.8       grid_3.5.3        gtable_0.2.0     
+[17] nlme_3.1-137      assertthat_0.2.0  lazyeval_0.2.1    tibble_2.0.1     
+[21] numDeriv_2016.8-1 crayon_1.3.4      bindrcpp_0.2.2    purrr_0.2.5      
+[25] nloptr_1.2.1      ggplot2_3.1.0     glue_1.3.0        compiler_3.5.3   
+[29] pillar_1.3.1      scales_1.0.0      boot_1.3-20       pkgconfig_2.0.2  
+R finished.

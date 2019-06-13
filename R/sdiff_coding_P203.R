@@ -73,7 +73,8 @@ sdif_coding_E204_erp <- function(df) {
   return(df)
 }
 
-sdif_coding_E205_erp <- function(df) {
+
+sdif_coding_E205_erp_17 <- function(df) {
   
   confidence.levels <- c("high", "low", "guess")
   
@@ -83,48 +84,56 @@ sdif_coding_E205_erp <- function(df) {
     mutate(
       ConLH_C = ifelse(Confidence == confidence.levels[1], -0.6666667, 0.3333333), # low - high
       ConGL_C = ifelse(Confidence == confidence.levels[3], 0.6666667, -0.3333333), # guess - low
-
-      Type_ConLH = Type_C * ConLH_C,
-      Cate_ConLH = Cate_C * ConLH_C,
-      Dura_ConLH = Dura_C * ConLH_C,
-      Hemi_ConLH = Hemi_C * ConLH_C,
-
-      Type_Cate_ConLH = Type_C * Cate_C * ConLH_C,
-      Type_Dura_ConLH = Type_C * Dura_C * ConLH_C,
-      Cate_Dura_ConLH = Cate_C * Dura_C * ConLH_C,
-      Type_Hemi_ConLH = Type_C * Hemi_C * ConLH_C,
-      Cate_Hemi_ConLH = Cate_C * Hemi_C * ConLH_C,
-      Dura_Hemi_ConLH = Dura_C * Hemi_C * ConLH_C,
-
-      Type_Cate_Dura_ConLH = Type_C * Cate_C * Dura_C * ConLH_C,
-      Type_Cate_Hemi_ConLH = Type_C * Cate_C * Hemi_C * ConLH_C,
-      Type_Hemi_Dura_ConLH = Type_C * Hemi_C * Dura_C * ConLH_C,
-      Hemi_Cate_Dura_ConLH = Hemi_C * Cate_C * Dura_C * ConLH_C,
-
-      Type_Cate_Dura_Hemi_ConLH = Type_C * Cate_C * Dura_C * Hemi_C * ConLH_C,
       
-      Type_ConGL = Type_C * ConGL_C,
+      Cate_ConLH = Cate_C * ConLH_C,
+      Hemi_ConLH = Hemi_C * ConLH_C,
+      
+      Cate_Hemi_ConLH = Cate_C * Hemi_C * ConLH_C,
+      
       Cate_ConGL = Cate_C * ConGL_C,
-      Dura_ConGL = Dura_C * ConGL_C,
       Hemi_ConGL = Hemi_C * ConGL_C,
       
-      Type_Cate_ConGL = Type_C * Cate_C * ConGL_C,
-      Type_Dura_ConGL = Type_C * Dura_C * ConGL_C,
-      Cate_Dura_ConGL = Cate_C * Dura_C * ConGL_C,
-      Type_Hemi_ConGL = Type_C * Hemi_C * ConGL_C,
-      Cate_Hemi_ConGL = Cate_C * Hemi_C * ConGL_C,
-      Dura_Hemi_ConGL = Dura_C * Hemi_C * ConGL_C,
+      Cate_Hemi_ConGL = Cate_C * Hemi_C * ConGL_C, 
       
-      Type_Cate_Dura_ConGL = Type_C * Cate_C * Dura_C * ConGL_C,
-      Type_Cate_Hemi_ConGL = Type_C * Cate_C * Hemi_C * ConGL_C,
-      Type_Hemi_Dura_ConGL = Type_C * Hemi_C * Dura_C * ConGL_C,
-      Hemi_Cate_Dura_ConGL = Hemi_C * Cate_C * Dura_C * ConGL_C,
-      
-      Type_Cate_Dura_Hemi_ConGL = Type_C * Cate_C * Dura_C * Hemi_C * ConGL_C
+      Confidence = as.factor(Confidence)
     )
   
   levels(df$Confidence) <- confidence.levels # reorder the levels
   contrasts(df$Confidence) <- MASS::contr.sdif(nlevels(df$Confidence))
+  
+  return(df)
+}
+
+sdif_coding_E205_erp <- function(df) {
+  
+  DuraConf.levels <- c("17_high", "17_low", "17_guess", "200_high")
+  
+  df %<>%
+    sdif_coding_P203_erp() %>%
+    
+    mutate(
+      ConLH_C = ifelse(Confidence == DuraConf.levels[1], -0.75, 0.25), # low - high (17)
+      ConGL_C = ifelse(Confidence %in% DuraConf.levels[1:2], -0.5, 0.5), # guess - low (17)
+      Con2G_C = ifelse(Confidence == DuraConf.levels[4], 0.75, -0.25), # 200_high - 17_guess
+
+      Cate_ConLH = Cate_C * ConLH_C,
+      Hemi_ConLH = Hemi_C * ConLH_C,
+
+      Cate_Hemi_ConLH = Cate_C * Hemi_C * ConLH_C,
+
+      Cate_ConGL = Cate_C * ConGL_C,
+      Hemi_ConGL = Hemi_C * ConGL_C,
+      
+      Cate_Hemi_ConGL = Cate_C * Hemi_C * ConLH_C,
+      
+      Cate_Con2G = Cate_C * Con2G_C,
+      Hemi_Con2G = Hemi_C * Con2G_C,
+      
+      Cate_Hemi_Con2G = Cate_C * Hemi_C * Con2G_C
+    )
+  
+  levels(df$DuraConf) <- DuraConf.levels # reorder the levels
+  contrasts(df$DuraConf) <- MASS::contr.sdif(nlevels(df$DuraConf))
 
   return(df)
 }

@@ -39,7 +39,7 @@ output:
     
     For 2. There are still two possibilities:
     2.1. For shorter durations, the amplitudes were (constantly) smaller for all the trials
-    2.2. For shorter durations with correct judgement, the amplitudes are larger. With incorrect judgement, the amplitudes are smaller. As a result, the amplitudes of the N170 are smaller. \
+    2.2. For shorter durations with correct judgement, the amplitudes are larger. With incorrect judgement, the amplitudes are smaller. As a result, the amplitudes of the N170 are smaller. 
     
     For 2.2, there are guessing involved. After guessing was excluded
     2.2.1, -> 2.1
@@ -529,8 +529,7 @@ df.erp.E1 <- sdif_coding_E204_erp(df.erp.E1)
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
 df.erp.P1.E1 <- {
   df.erp.E1 %>% 
-    filter(Component == "P1") %>% 
-    substr_Event() 
+    filter(Component == "P1") 
 }
 
 if (saveCSV) {
@@ -545,40 +544,40 @@ head(df.erp.P1.E1, 10)
 
 #### The maximal model
 ```{r maximal lmm for E204 p1}
-# file.max.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
-# 
-# # fit the maximal model
-# if (!file.exists(file.max.P1.E1)) {
-#   lmm.max.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                                Type_Cate_Dura_Hemi +
-#                                Resp_C + 
-#                                Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp + 
-#                                Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
-#                                Type_Cate_Dura_Hemi_Resp
-#                              | SubjCode) +
-#                             (1 + Type_C + Dura_C + Hemi_C + 
-#                                Type_Dura + Type_Hemi + Dura_Hemi +
-#                                Type_Dura_Hemi +
-#                                Resp_C + 
-#                                Type_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Hemi_Dura_Resp
-#                              | Stimuli),
-#                           data = df.erp.P1.E1,
-#                           REML = FALSE,
-#                           # verbose = TRUE,
-#                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                                 optCtrl = list(maxfun = 1e7)))
-# } else {
-#   load(file.max.P1.E1)
-# }
-# 
-# print(summary(lmm.max.P1.E1), corr = FALSE)
+file.max.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.P1.E1)) {
+  lmm.max.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
+                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                               Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+                               Type_Cate_Dura_Hemi +
+                               Resp_C +
+                               Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
+                               Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp +
+                               Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
+                               Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
+                               Type_Cate_Dura_Hemi_Resp
+                             | SubjCode) +
+                            (1 + Type_C + Dura_C + Hemi_C +
+                               Type_Dura + Type_Hemi + Dura_Hemi +
+                               Type_Dura_Hemi +
+                               Resp_C +
+                               Type_Resp + Dura_Resp + Hemi_Resp +
+                               Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
+                               Type_Hemi_Dura_Resp
+                             | Stimuli),
+                          data = df.erp.P1.E1,
+                          verbose = TRUE,
+                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                optCtrl = list(maxfun = 1e7),
+                                                calc.derivs = FALSE))
+} else {
+  load(file.max.P1.E1)
+}
+
+print(summary(lmm.max.P1.E1), corr = FALSE)
 
 ```
 
@@ -609,8 +608,7 @@ if (!file.exists(file.zcp.P1.E1)) {
                                Type_Hemi_Dura_Resp
                              || Stimuli),
                           data = df.erp.P1.E1,
-                          REML = FALSE,
-                          # verbose = TRUE,
+                          verbose = TRUE,
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                                 optCtrl = list(maxfun = 1e7)))
 } else {
@@ -637,8 +635,9 @@ if (!file.exists(file.rdc.P1.E1)) {
                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
                                Type_Cate + Type_Dura + Type_Hemi + Dura_Hemi +
                                Type_Cate_Dura +
+                               Resp_C +
                                Type_Resp + Cate_Resp + Dura_Resp + 
-                               Type_Dura_Resp +  
+                               Cate_Hemi_Resp + Type_Dura_Resp +  
                                Type_Cate_Dura_Resp
                              || SubjCode) +
                             (1 + Type_C + Dura_C + 
@@ -657,7 +656,7 @@ print(summary(lmm.rdc.P1.E1), corr = FALSE)
 
 
 ```{r}
-anova(lmm.rdc.P1.E1, lmm.zcp.P1.E1)
+anova(lmm.rdc.P1.E1, lmm.zcp.P1.E1, refit = FALSE)
 ```
 
 #### The extended model
@@ -672,8 +671,9 @@ if (!file.exists(file.etd.P1.E1)) {
                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
                                Type_Cate + Type_Dura + Type_Hemi + Dura_Hemi +
                                Type_Cate_Dura +
+                               Resp_C +
                                Type_Resp + Cate_Resp + Dura_Resp + 
-                               Type_Dura_Resp +  
+                               Cate_Hemi_Resp + Type_Dura_Resp +  
                                Type_Cate_Dura_Resp
                              | SubjCode) +
                             (1 + Type_C + Dura_C + 
@@ -729,8 +729,7 @@ print(summary(lmm.etd1.P1.E1), corr = FALSE)
 # only keep the data for amplitudes of the N170 (all erps)
 df.erp.N170.E1 <- {
   df.erp.E1 %>% 
-    filter(Component == "N170") %>% 
-    substr_Event() 
+    filter(Component == "N170")
 }
 
 if (saveCSV) {
@@ -746,40 +745,40 @@ head(df.erp.N170.E1, 10)
 #### The maximal model
 As the maximal model is too complex and cannot finish within 7 days, we will run the zcp model directly.
 ```{r maximal lmm for E1 N170}
-# file.max.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
-# 
-# # fit the maximal model
-# if (!file.exists(file.max.N170.E1)) {
-#   lmm.max.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                                Type_Cate_Dura_Hemi +
-#                                Resp_C + 
-#                                Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp + 
-#                                Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
-#                                Type_Cate_Dura_Hemi_Resp
-#                              | SubjCode) +
-#                             (1 + Type_C + Dura_C + Hemi_C + 
-#                                Type_Dura + Type_Hemi + Dura_Hemi +
-#                                Type_Dura_Hemi +
-#                                Resp_C + 
-#                                Type_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Hemi_Dura_Resp
-#                              | Stimuli),
-#                           data = df.erp.N170.E1,
-#                           REML = FALSE,
-#                           # verbose = TRUE,
-#                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                                 optCtrl = list(maxfun = 1e7)))
-# } else {
-#   load(file.max.N170.E1)
-# }
-# 
-# print(summary(lmm.max.N170.E1), corr = FALSE)
+file.max.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.N170.E1)) {
+  lmm.max.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
+                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                               Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+                               Type_Cate_Dura_Hemi +
+                               Resp_C +
+                               Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
+                               Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp +
+                               Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
+                               Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
+                               Type_Cate_Dura_Hemi_Resp
+                             | SubjCode) +
+                            (1 + Type_C + Dura_C + Hemi_C +
+                               Type_Dura + Type_Hemi + Dura_Hemi +
+                               Type_Dura_Hemi +
+                               Resp_C +
+                               Type_Resp + Dura_Resp + Hemi_Resp +
+                               Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
+                               Type_Hemi_Dura_Resp
+                             | Stimuli),
+                          data = df.erp.N170.E1,
+                          verbose = TRUE,
+                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                optCtrl = list(maxfun = 1e7),
+                                                calc.derivs = FALSE))
+} else {
+  load(file.max.N170.E1)
+}
+
+print(summary(lmm.max.N170.E1), corr = FALSE)
 
 ```
 
@@ -812,8 +811,7 @@ if (!file.exists(file.zcp.N170.E1)) {
                                Type_Hemi_Dura_Resp
                              || Stimuli),
                           data = df.erp.N170.E1,
-                          REML = FALSE,
-                          # verbose = TRUE,
+                          verbose = TRUE,
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                                 optCtrl = list(maxfun = 1e7)))
   
@@ -824,10 +822,6 @@ if (!file.exists(file.zcp.N170.E1)) {
 
 print(summary(lmm.zcp.N170.E1), corr = FALSE)
 
-```
-
-```{r}
-summary(rePCA(lmm.zcp.N170.E1))
 ```
 
 
@@ -872,7 +866,7 @@ print(summary(lmm.rdc.N170.E1), corr = FALSE)
 
 
 ```{r}
-anova(lmm.rdc.N170.E1, lmm.zcp.N170.E1)
+anova(lmm.rdc.N170.E1, lmm.zcp.N170.E1, refit = FALSE)
 ```
 
 #### The extended model
@@ -884,7 +878,7 @@ file.etd.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_etd.RData")
 if (!file.exists(file.etd.N170.E1)) {
   
   lmm.etd.N170.E1 <- update(lmm.rdc.N170.E1,
-                            formula =MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse + 
+                            formula = MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse + 
                               (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
                                  Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
                                  Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
@@ -899,7 +893,10 @@ if (!file.exists(file.etd.N170.E1)) {
                                  Resp_C + 
                                  Type_Resp + Dura_Resp + 
                                  Type_Dura_Resp
-                               | Stimuli))
+                               | Stimuli),
+                            control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                optCtrl = list(maxfun = 1e7),
+                                                calc.derivs = FALSE))
   
 } else {
   load(file.etd.N170.E1)
@@ -1004,7 +1001,7 @@ subj.info.E2 <- {
 subj.info.E2
 ```
 
-### Response
+### Responses
 ```{r}
 tmp.count <- {
   clean.beha.E2 %>% 
@@ -1110,6 +1107,66 @@ acc.ColuPlot.E2
 ```
 
 
+```{r}
+df.ratio.E2 <- {
+  clean.beha.E2 %>%
+    mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
+    group_by(Type, Duration, Resp) %>% 
+    summarize(ratio = mean(isFace), Count = n())
+}
+
+desc.ratio.E2 <- {
+  df.ratio.E2 %>%
+    group_by(Type, Duration, Resp) %>%
+    summarize(Mean = mean(ratio)
+              , N = n()
+              , SD = if_else(N > 1, sd(ratio), 0)
+              , SE = SD/sqrt(N)
+              , SE.lo = Mean - SE, SE.hi = Mean + SE
+              , CI = SE * qt(0.975,N)
+              , Median = median(ratio)
+              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
+              ) %>% 
+    ungroup()
+}
+
+```
+
+
+
+```{r}
+
+ratio.ColuPlot.E2 <- {
+  ggplot(data = desc.ratio.E2, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Type ~ Duration) +
+    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "Subjective Responses for E205", x = "Responses", y = "Response Rate") +  # set the names for main, x and y axises
+    scale_fill_grey() +  # set the color for columns
+    # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    plot_theme
+}
+
+ratio.ColuPlot.E2
+
+```
+
+
+```{r}
+# df.erp.SC.E2 %>%
+#   filter(Component == "N170", Hemisphere == "Right") %>% 
+#   group_by(SubjCode, Category, DuraConf) %>% 
+#   summarize(count = n()) %>% 
+#   mutate(conditions = paste(Category, DuraConf, sep = "_")) %>% 
+#   ungroup() %>% 
+#   select(SubjCode, conditions, count) %>% 
+#   spread(conditions, count)
+```
 
 ## ERP amplitude analysis
 ### Load mean amplitude for single trials
@@ -1147,8 +1204,7 @@ df.erp.E2.all <- sdif_coding_P203_erp(df.erp.E2)
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
 df.erp.P1.E2 <- {
   df.erp.E2.all %>% 
-    filter(Component == "P1") %>% 
-    substr_Event() 
+    filter(Component == "P1")
 }
 
 if (saveCSV) {
@@ -1178,8 +1234,7 @@ if (!file.exists(file.max.P1.E2)) {
                              Type_Dura_Hemi
                            | Stimuli),
                         data = df.erp.P1.E2,
-                        REML = FALSE,
-                        # verbose = TRUE,
+                        verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                               optCtrl = list(maxfun = 1e7)))
 } else {
@@ -1207,8 +1262,7 @@ if (!file.exists(file.zcp.P1.E2)) {
                              Type_Dura_Hemi 
                            || Stimuli),
                         data = df.erp.P1.E2,
-                        REML = FALSE,
-                        # verbose = TRUE,
+                        verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                                 optCtrl = list(maxfun = 1e7)))
 } else {
@@ -1239,8 +1293,8 @@ if (!file.exists(file.rdc.P1.E2)) {
                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
                                Type_Cate + Type_Dura + Cate_Dura + Dura_Hemi
                              || SubjCode) +
-                            (1 + Type_C + Dura_C + 
-                               Type_Dura
+                            (1 + Type_C + Dura_C +
+                               Type_Dura 
                              || Stimuli))
   
 } else {
@@ -1249,6 +1303,10 @@ if (!file.exists(file.rdc.P1.E2)) {
 
 print(summary(lmm.rdc.P1.E2), corr = FALSE)
 
+```
+
+```{r}
+anova(lmm.rdc.P1.E2, lmm.zcp.P1.E2, refit = FALSE)
 ```
 
 ##### The extended model
@@ -1268,122 +1326,30 @@ if (!file.exists(file.etd.P1.E2)) {
                                Type_Dura
                              | Stimuli))
   
+  lmm.etd.P1.E2.2 <- re_fit(lmm.etd.P1.E2)
+  
 } else {
   load(file.etd.P1.E2)
 }
 
-print(summary(lmm.etd.P1.E2), corr = FALSE)
+print(summary(lmm.etd.P1.E2.2), corr = FALSE)
 
 ```
 
 ```{r}
-summary(rePCA(lmm.etd.P1.E2))
+anova(lmm.etd.P1.E2.2, lmm.rdc.P1.E2, refit = FALSE)
 ```
 
-
-```{r }
-
-file.etd1.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_etd1.RData")
-
-# fit the etd1 model
-if (!file.exists(file.etd1.P1.E2)) {
-
-  lmm.etd1.P1.E2 <- update(lmm.etd.P1.E2,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                            (1 + Type_C + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Cate_Dura + Dura_Hemi
-                             | SubjCode) +
-                            (0 + Type_C + Dura_C + 
-                               Type_Dura
-                             | Stimuli))
-  
-} else {
-  load(file.etd1.P1.E2)
-}
-
-print(summary(lmm.etd1.P1.E2), corr = FALSE)
-
-```
-
-```{r}
-summary(rePCA(lmm.etd1.P1.E2))
-```
-
-
-```{r }
-
-file.etd2.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_etd2.RData")
-
-# fit the etd2 model
-if (!file.exists(file.etd2.P1.E2)) {
-
-  lmm.etd2.P1.E2 <- update(lmm.etd1.P1.E2,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                            (1 + Type_C + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Dura_Hemi
-                             | SubjCode) +
-                            (0 + Type_C + Dura_C + 
-                               Type_Dura
-                             | Stimuli))
-  
-} else {
-  load(file.etd2.P1.E2)
-}
-
-print(summary(lmm.etd2.P1.E2), corr = FALSE)
-
-```
-
-```{r}
-summary(rePCA(lmm.etd2.P1.E2))
-```
-
-
-```{r }
-
-file.etd3.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_etd3.RData")
-
-# fit the etd3 model
-if (!file.exists(file.etd3.P1.E2)) {
-
-  lmm.etd3.P1.E2 <- update(lmm.etd2.P1.E2,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                            (1 + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Dura_Hemi
-                             | SubjCode) +
-                            (0 + Type_C + Dura_C + 
-                               Type_Dura
-                             | Stimuli))
-  
-} else {
-  load(file.etd3.P1.E2)
-}
-
-print(summary(lmm.etd3.P1.E2), corr = FALSE)
-
-```
-
-```{r}
-anova(lmm.etd3.P1.E2, lmm.rdc.P1.E2)
-```
+The reduced model (`lmm.rdc.P1.E2`) explained the data better than the extended model (`lmm.rdc.P1.E2.2`).
 
 ##### The optimal model
 ```{r }
 
-file.opt.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_opt.RData")
+lmm.opt.P1.E2 <- lmm.rdc.P1.E2
 
-# fit the opt model
-if (!file.exists(file.opt.P1.E2)) {
+# print(summary(lmm.opt.P1.E2), corr = FALSE)
 
-  lmm.opt.P1.E2 <- update(lmm.rdc.P1.E2,
-                          REML = TRUE)
-  
-} else {
-  load(file.opt.P1.E2)
-}
-
-print(summary(lmm.opt.P1.E2), corr = FALSE)
-
+anova(lmm.opt.P1.E2)
 ```
 
 ##### Disgnostic plots
@@ -1394,7 +1360,7 @@ qqplot_lmer(lmm.opt.P1.E2)
 
 ##### Estimated marginal means
 ```{r}
-emm.P1.E2 <- emmeans(lmm.opt.P1.E2,  ~ c(Hemisphere, Duration, Category, Type) )
+emm.P1.E2 <- emmeans(lmm.opt.P1.E2, ~ Type + Duration | Hemisphere + Category )
 
 emm.P1.E2 %>% 
   as.data.frame() %>% 
@@ -1405,16 +1371,23 @@ emm.P1.E2 %>%
 
 ##### Plots
 ```{r}
-emmip(emm.P1.E2, Duration ~ Category | Hemisphere * Type, CIs = TRUE) + 
-  facet_grid(Type ~ Hemisphere)
+emmip(emm.P1.E2, Duration ~ Type | Hemisphere + Category, CIs = TRUE)
 
 ```
 
 ##### Contrast
 ```{r}
 # contrast(emm.P1.E2, simple = "each", combine = TRUE)
-contrast(emm.P1.E2, pairwise = "Category")
-pairs(emmeans(lmm.opt.P1.E2, "Category"))
+contrast(emm.P1.E2)
+
+# contrast(emmeans(lmm.opt.P1.E2, ~ Type + Duration))
+```
+
+```{r}
+contrast(emm.P1.E2, interaction = TRUE)
+
+# contrast(emmeans(lmm.opt.P1.E2, ~ Type + Duration | Hemisphere + Category), interaction = TRUE)
+
 ```
 
 
@@ -1423,8 +1396,7 @@ pairs(emmeans(lmm.opt.P1.E2, "Category"))
 # only keep the data for amplitudes of the N170 (all erps)
 df.erp.N170.E2 <- {
   df.erp.E2.all %>% 
-    filter(Component == "N170") %>% 
-    substr_Event() 
+    filter(Component == "N170") 
 }
 
 if (saveCSV) {
@@ -1454,8 +1426,7 @@ if (!file.exists(file.max.N170.E2)) {
                                Type_Dura_Hemi
                                | Stimuli),
                           data = df.erp.N170.E2,
-                          REML = FALSE,
-                          # verbose = TRUE,
+                          verbose = TRUE,
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                                 optCtrl = list(maxfun = 1e7)))
 } else {
@@ -1485,8 +1456,7 @@ if (!file.exists(file.zcp.N170.E2)) {
                                Type_Dura_Hemi 
                                || Stimuli),
                           data = df.erp.N170.E2,
-                          REML = FALSE,
-                          # verbose = TRUE,
+                          verbose = TRUE,
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
                                                 optCtrl = list(maxfun = 1e7)))
   
@@ -1534,7 +1504,7 @@ print(summary(lmm.rdc.N170.E2), corr = FALSE)
 ```
 
 ```{r}
-anova(lmm.rdc.N170.E2, lmm.zcp.N170.E2)
+anova(lmm.rdc.N170.E2, lmm.zcp.N170.E2, refit = FALSE)
 ```
 
 ##### The extended model
@@ -1611,7 +1581,7 @@ if (!file.exists(file.etd2.N170.E2)) {
                                   Type_Cate + Type_Dura + Dura_Hemi +
                                   Type_Cate_Dura + Type_Cate_Hemi
                                 | SubjCode) +
-                               (0 + Type_C + Dura_C + 
+                               (1 + Type_C + Dura_C + 
                                   Type_Dura
                                 | Stimuli))
   
@@ -1641,7 +1611,7 @@ if (!file.exists(file.etd3.N170.E2)) {
                                   Type_Cate + Type_Dura + Dura_Hemi +
                                   Type_Cate_Dura + Type_Cate_Hemi
                                 | SubjCode) +
-                               (0 + Type_C +
+                               (0 + Type_C + Dura_C + 
                                   Type_Dura
                                 | Stimuli))
   
@@ -1653,57 +1623,18 @@ print(summary(lmm.etd3.N170.E2), corr = FALSE)
 
 ```
 
-```{r}
-summary(rePCA(lmm.etd3.N170.E2))
-```
-
-
-```{r }
-
-file.etd4.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_etd4.RData")
-
-# fit the etd4 model
-if (!file.exists(file.etd4.N170.E2)) {
-
-  lmm.etd4.N170.E2 <- update(lmm.etd3.N170.E2,
-                             formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-                               (1 + Dura_C + Hemi_C +  
-                                  Type_Cate + Dura_Hemi +
-                                  Type_Cate_Dura + Type_Cate_Hemi
-                                | SubjCode) +
-                               (0 + Type_C +
-                                  Type_Dura
-                                | Stimuli))
-  
-} else {
-  load(file.etd4.N170.E2)
-}
-
-print(summary(lmm.etd4.N170.E2), corr = FALSE)
-
-```
-
 
 ```{r}
-anova(lmm.etd4.N170.E2, lmm.rdc.N170.E2)
+anova(lmm.etd3.N170.E2, lmm.rdc.N170.E2, refit = FALSE)
 ```
 
 ##### The optimal model
 ```{r }
 
-file.opt.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_opt.RData")
-
-# fit the opt model
-if (!file.exists(file.opt.N170.E2)) {
-
-  lmm.opt.N170.E2 <- update(lmm.rdc.N170.E2,
-                          REML = TRUE)
-  
-} else {
-  load(file.opt.N170.E2)
-}
+lmm.opt.N170.E2 <- lmm.rdc.N170.E2
 
 print(summary(lmm.opt.N170.E2), corr = FALSE)
+anova(lmm.opt.N170.E2)
 
 ```
 
@@ -1716,7 +1647,7 @@ qqplot_lmer(lmm.opt.N170.E2)
 
 ##### Estimated marginal means
 ```{r}
-emm.N170.E2 <- emmeans(lmm.opt.N170.E2,  ~ c(Hemisphere, Duration, Category, Type) )
+emm.N170.E2 <- emmeans(lmm.opt.N170.E2,  ~ Duration + Category | Hemisphere + Type )
 
 emm.N170.E2 %>% 
   as.data.frame() %>% 
@@ -1727,14 +1658,21 @@ emm.N170.E2 %>%
 
 ##### Plots
 ```{r}
-emmip(emm.N170.E2, Category * Type ~ Duration | Hemisphere) + 
-  facet_grid(. ~ Hemisphere)
+emmip(emm.N170.E2, Category ~ Duration | Type + Hemisphere, CIs = TRUE) + 
+  scale_y_continuous(trans = "reverse")
 
 ```
 
 ##### Contrast
 ```{r}
-contrast(emm.N170.E2, simple = "each", combine = TRUE)
+# contrast(emm.N170.E2, simple = "each", combine = TRUE)
+pairs(emm.N170.E2, simple = c("Duration"), adjust = "none")
+
+```
+
+```{r}
+contrast(emmeans(lmm.opt.N170.E2, ~ Category + Duration | Type + Hemisphere), interaction = TRUE)
+
 ```
 
 
@@ -1742,251 +1680,232 @@ contrast(emm.N170.E2, simple = "each", combine = TRUE)
 
 #### Converting response to subjective confidences
 ```{r}
-df.erp.E2.SC <- {
+df.erp.SC.E2 <- {
   df.erp.E2 %>% 
+    filter(Type == "intact") %>%  # only keep the intact trials
     mutate(Confidence = if_else(Response %in% c("11", "55"), "high", 
                                 if_else(Response %in% c("12", "54"), "low",
-                                        if_else(substring(Response, 2) == "3", "guess", "NA")) )) %>% 
-    filter(Confidence != "NA") %>% 
-    mutate(Confidence = as.factor(Confidence))
+                                        if_else(substring(Response, 2) == "3", "guess", "NA"))),
+           DuraConf = paste(Duration, Confidence, sep = "_")) %>% 
+    filter(Confidence != "NA",
+           !(DuraConf %in% c("200_guess", "200_low"))) %>% 
+    mutate(Confidence = as.factor(Confidence),
+           DuraConf = as.factor(DuraConf))
 }
 ```
 
 #### Set the successive difference coding
 ```{r set the successive difference coding for ERP data E2 SC}
 # successive difference coding
-df.erp.E2.SC <- sdif_coding_E205_erp(df.erp.E2.SC)
+df.erp.SC.E2 <- sdif_coding_E205_erp(df.erp.SC.E2)
 ```
 
 #### Amplitudes of the P1
 ```{r erp df for the P1 E2 SC}
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
-df.erp.P1.E2.SC <- {
-  df.erp.E2.SC %>% 
-    filter(Component == "P1") %>% 
-    substr_Event() 
+df.erp.P1.SC.E2 <- {
+  df.erp.SC.E2 %>% 
+    filter(Component == "P1") 
 }
 
 if (saveCSV) {
-  output.erp.P1.E2.SC <- file.path(folder.nesi, "E205_erp_P1_SC.RData")
-  save(df.erp.P1.E2.SC, file = output.erp.P1.E2.SC)
+  output.erp.P1.SC.E2 <- file.path(folder.nesi, "E205_erp_P1_SC.RData")
+  save(df.erp.P1.SC.E2, file = output.erp.P1.SC.E2)
 }
 
 # the structure of this dataset
-head(df.erp.P1.E2.SC, 10)
+head(df.erp.P1.SC.E2, 10)
 ```
+
 
 
 ##### The maximal model
 ```{r maximal lmm for P1 E2 SC}
-# file.max.P1.E2.SC <- file.path(folder.nesi, "E205_P1_SC_lmm_max.RData")
-# 
-# # fit the maximal model
-# if (!file.exists(file.max.P1.E2.SC)) {
-#   lmm.max.P1.E2.SC <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Confidence + 
-#                              (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                                 Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                 Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                                 Type_Cate_Dura_Hemi +
-#                                 
-#                                 ConLH_C + 
-#                                 Type_ConLH + Cate_ConLH + Dura_ConLH + Hemi_ConLH +
-#                                 Type_Cate_ConLH + Type_Dura_ConLH + Cate_Dura_ConLH + 
-#                                 Type_Hemi_ConLH + Cate_Hemi_ConLH + Dura_Hemi_ConLH +
-#                                 Type_Cate_Dura_ConLH + Type_Cate_Hemi_ConLH + Type_Hemi_Dura_ConLH + Hemi_Cate_Dura_ConLH +
-#                                 Type_Cate_Dura_Hemi_ConLH +
-#                                 
-#                                 ConGL_C +
-#                                 Type_ConGL + Cate_ConGL + Dura_ConGL + Hemi_ConGL +
-#                                 Type_Cate_ConGL + Type_Dura_ConGL + Cate_Dura_ConGL + 
-#                                 Type_Hemi_ConGL + Cate_Hemi_ConGL + Dura_Hemi_ConGL +
-#                                 Type_Cate_Dura_ConGL + Type_Cate_Hemi_ConGL + Type_Hemi_Dura_ConGL + Hemi_Cate_Dura_ConGL +
-#                                 Type_Cate_Dura_Hemi_ConGL 
-#                               | SubjCode) +
-#                              
-#                              (1 + Type_C + Dura_C + Hemi_C + 
-#                                 Type_Dura + Type_Hemi + Dura_Hemi +
-#                                 Type_Dura_Hemi +
-#                                 
-#                                 ConLH_C + 
-#                                 Type_ConLH + Dura_ConLH + Hemi_ConLH +
-#                                 Type_Dura_ConLH + Type_Hemi_ConLH + Dura_Hemi_ConLH +
-#                                 Type_Hemi_Dura_ConLH +
-#                                 
-#                                 ConGL_C +
-#                                 Type_ConGL + CDura_ConGL + Hemi_ConGL +
-#                                 Type_Dura_ConGL + Type_Hemi_ConGL + Dura_Hemi_ConGL +
-#                                 Type_Hemi_Dura_ConGL 
-#                               | Stimuli),
-#                            data = df.erp.P1.E2.SC,
-#                            REML = FALSE,
-#                            # verbose = TRUE,
-#                            control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                               optCtrl = list(maxfun = 1e7)))
-# } else {
-#   load(file.max.P1.E2.SC)
-# }
-# 
-# print(summary(lmm.max.P1.E2.SC), corr = FALSE)
+file.max.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_max.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.P1.SC.E2)) {
+  lmm.max.P1.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
+                                
+                                Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                
+                                Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                
+                              | SubjCode) +
+
+                             (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
+                                
+                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                              
+                              | Stimuli),
+                           
+                           data = df.erp.P1.SC.E2,
+                           verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file.max.P1.SC.E2)
+}
+
+print(summary(lmm.max.P1.SC.E2), corr = FALSE)
 
 ```
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2 SC}
-file.zcp.P1.E2.SC <- file.path(folder.nesi, "E205_P1_SC_lmm_zcp.RData")
+file.zcp.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_zcp.RData")
 
 # fit the zcp model
-if (!file.exists(file.zcp.P1.E2.SC)) {
-  lmm.zcp.P1.E2.SC <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Confidence + 
-                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-                                Type_Cate_Dura_Hemi +
-                                
-                                ConLH_C + 
-                                Type_ConLH + Cate_ConLH + Dura_ConLH + Hemi_ConLH +
-                                Type_Cate_ConLH + Type_Dura_ConLH + Cate_Dura_ConLH + 
-                                Type_Hemi_ConLH + Cate_Hemi_ConLH + Dura_Hemi_ConLH +
-                                Type_Cate_Dura_ConLH + Type_Cate_Hemi_ConLH + Type_Hemi_Dura_ConLH + Hemi_Cate_Dura_ConLH +
-                                Type_Cate_Dura_Hemi_ConLH +
-                                
-                                ConGL_C +
-                                Type_ConGL + Cate_ConGL + Dura_ConGL + Hemi_ConGL +
-                                Type_Cate_ConGL + Type_Dura_ConGL + Cate_Dura_ConGL + 
-                                Type_Hemi_ConGL + Cate_Hemi_ConGL + Dura_Hemi_ConGL +
-                                Type_Cate_Dura_ConGL + Type_Cate_Hemi_ConGL + Type_Hemi_Dura_ConGL + Hemi_Cate_Dura_ConGL +
-                                Type_Cate_Dura_Hemi_ConGL 
-                              || SubjCode) +
-                             
-                             (1 + Type_C + Dura_C + Hemi_C + 
-                                Type_Dura + Type_Hemi + Dura_Hemi +
-                                Type_Dura_Hemi +
-                                
-                                ConLH_C + 
-                                Type_ConLH + Dura_ConLH + Hemi_ConLH +
-                                Type_Dura_ConLH + Type_Hemi_ConLH + Dura_Hemi_ConLH +
-                                Type_Hemi_Dura_ConLH +
-                                
-                                ConGL_C +
-                                Type_ConGL + CDura_ConGL + Hemi_ConGL +
-                                Type_Dura_ConGL + Type_Hemi_ConGL + Dura_Hemi_ConGL +
-                                Type_Hemi_Dura_ConGL 
-                              || Stimuli),
-                           data = df.erp.P1.E2.SC,
-                           REML = FALSE,
-                           # verbose = TRUE,
-                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e7)))
+if (!file.exists(file.zcp.P1.SC.E2)) {
+  lmm.zcp.P1.SC.E2 <- update(lmm.max.P1.SC.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
+                                  Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                  Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                || SubjCode) +
+                               (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                                || Stimuli))
+  
 } else {
-  load(file.zcp.P1.E2.SC)
+  load(file.zcp.P1.SC.E2)
 }
 
-print(summary(lmm.zcp.P1.E2.SC), corr = FALSE)
+print(summary(lmm.zcp.P1.SC.E2), corr = FALSE)
 
 ```
 
 
 ##### The reduced model
 ```{r PCA analysis for zcp lmm for E2 P1 SC}
-summary(rePCA(lmm.zcp.P1.E2.SC))
+summary(rePCA(lmm.zcp.P1.SC.E2))
 ```
 
 
 ```{r }
 
-file.rdc.P1.E2.SC <- file.path(folder.nesi, "E205_P1_SC_lmm_rdc.RData")
+file.rdc.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_rdc.RData")
 
 # fit the rdc model
-if (!file.exists(file.rdc.P1.E2.SC)) {
+if (!file.exists(file.rdc.P1.SC.E2)) {
 
-  lmm.rdc.P1.E2.SC <- update(lmm.zcp.P1.E2.SC,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                            (1 + Type_D + Dura_D + Hemi_D + 
-                               Type_Dura + Cate_Dura + Type_Hemi + Dura_Hemi +
-                               Type_Cate_Dura + Cate_Dura_Hemi + Type_Cate_ACC + Cate_Dura_ACC + Dura_Hemi_ACC +
-                               Type_Cate_Dura_ACC || SubjCode),
-                          verbose = FALSE)
+  lmm.rdc.P1.SC.E2 <- update(lmm.zcp.P1.SC.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (0 + ConLH_C + Con2G_C + 
+                                  Cate_ConLH + 
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                                || SubjCode) +
+                               (0 + ConLH_C + ConGL_C + Con2G_C
+                                || Stimuli))
   
 } else {
-  load(file.rdc.P1.E2.SC)
+  load(file.rdc.P1.SC.E2)
 }
 
-print(summary(lmm.rdc.P1.E2.SC), corr = FALSE)
+print(summary(lmm.rdc.P1.SC.E2), corr = FALSE)
 
 ```
 
+```{r}
+summary(rePCA(lmm.rdc.P1.SC.E2))
+# anova(lmm.rdc.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
+```
+
+
+```{r }
+
+file.rdc1.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_rdc1.RData")
+
+# fit the rdc1 model
+if (!file.exists(file.rdc1.P1.SC.E2)) {
+
+  lmm.rdc1.P1.SC.E2 <- update(lmm.rdc.P1.SC.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (0 + Con2G_C + 
+                                  Cate_ConLH + 
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                                || SubjCode) +
+                               (0 + ConLH_C + ConGL_C + Con2G_C
+                                || Stimuli))
+  
+} else {
+  load(file.rdc1.P1.SC.E2)
+}
+
+print(summary(lmm.rdc1.P1.SC.E2), corr = FALSE)
+
+```
+
+```{r}
+summary(rePCA(lmm.rdc1.P1.SC.E2))
+```
+
+```{r}
+
+lmm.rdc1.P1.SC.E2.test <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
+                                 (0 + ConLH_C + ConGL_C + Con2G_C | SubjCode) ,
+                               data = df.erp.P1.SC.E2,
+                               verbose = TRUE,
+                               control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                     optCtrl = list(maxfun = 1e7)))
+
+summary(lmm.rdc1.P1.SC.E2.test)
+
+summary(rePCA(lmm.rdc1.P1.SC.E2.test))
+```
+
+
+
+```{r}
+anova(lmm.rdc1.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
+```
 
 
 #### Ampitudes of the N170
 ```{r erp df for the N170 E2 SC}
 # only keep the data for amplitudes of the N170 (all erps)
-df.erp.N170.E2.SC <- {
-  df.erp.E2.SC %>% 
-    filter(Component == "N170") %>% 
-    substr_Event() 
+df.erp.N170.SC.E2 <- {
+  df.erp.SC.E2 %>% 
+    filter(Component == "N170") 
 }
 
 if (saveCSV) {
-  output.erp.N170.E2.SC <- file.path(folder.nesi, "E205_erp_N170_SC.RData")
-  save(df.erp.N170.E2.SC, file = output.erp.N170.E2.SC)
+  output.erp.N170.SC.E2 <- file.path(folder.nesi, "E205_erp_N170_SC.RData")
+  save(df.erp.N170.SC.E2, file = output.erp.N170.SC.E2)
 }
 
 # the structure of this dataset
-head(df.erp.N170.E2.SC, 10)
+head(df.erp.N170.SC.E2, 10)
 ```
 
 
 ##### The maximal model
 ```{r maximal lmm for E2 N170 SC}
-# file.max.N170.E2.SC <- file.path(folder.nesi, "E205_N170_SC_lmm_max.RData")
-# 
-# # fit the maximal model
-# if (!file.exists(file.max.N170.E2.SC)) {
-#   lmm.max.N170.E2.SC <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Confidence + 
-#                              (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                                 Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                 Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                                 Type_Cate_Dura_Hemi +
-#                                 
-#                                 ConLH_C + 
-#                                 Type_ConLH + Cate_ConLH + Dura_ConLH + Hemi_ConLH +
-#                                 Type_Cate_ConLH + Type_Dura_ConLH + Cate_Dura_ConLH + 
-#                                 Type_Hemi_ConLH + Cate_Hemi_ConLH + Dura_Hemi_ConLH +
-#                                 Type_Cate_Dura_ConLH + Type_Cate_Hemi_ConLH + Type_Hemi_Dura_ConLH + Hemi_Cate_Dura_ConLH +
-#                                 Type_Cate_Dura_Hemi_ConLH +
-#                                 
-#                                 ConGL_C +
-#                                 Type_ConGL + Cate_ConGL + Dura_ConGL + Hemi_ConGL +
-#                                 Type_Cate_ConGL + Type_Dura_ConGL + Cate_Dura_ConGL + 
-#                                 Type_Hemi_ConGL + Cate_Hemi_ConGL + Dura_Hemi_ConGL +
-#                                 Type_Cate_Dura_ConGL + Type_Cate_Hemi_ConGL + Type_Hemi_Dura_ConGL + Hemi_Cate_Dura_ConGL +
-#                                 Type_Cate_Dura_Hemi_ConGL 
-#                               | SubjCode) +
-#                              
-#                              (1 + Type_C + Dura_C + Hemi_C + 
-#                                 Type_Dura + Type_Hemi + Dura_Hemi +
-#                                 Type_Dura_Hemi +
-#                                 
-#                                 ConLH_C + 
-#                                 Type_ConLH + Dura_ConLH + Hemi_ConLH +
-#                                 Type_Dura_ConLH + Type_Hemi_ConLH + Dura_Hemi_ConLH +
-#                                 Type_Hemi_Dura_ConLH +
-#                                 
-#                                 ConGL_C +
-#                                 Type_ConGL + CDura_ConGL + Hemi_ConGL +
-#                                 Type_Dura_ConGL + Type_Hemi_ConGL + Dura_Hemi_ConGL +
-#                                 Type_Hemi_Dura_ConGL 
-#                               | Stimuli),
-#                           data = df.erp.N170.E2.SC,
-#                           REML = FALSE,
-#                           # verbose = TRUE,
-#                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                                 optCtrl = list(maxfun = 1e7)))
-# } else {
-#   load(file.max.N170.E2.SC)
-# }
-# 
-# print(summary(lmm.max.N170.E2.SC), corr = FALSE)
+file.max.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_max.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.N170.SC.E2)) {
+  lmm.max.N170.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
+                                Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                              | SubjCode) +
+                             (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
+                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                              | Stimuli),
+                          data = df.erp.N170.SC.E2,
+                          verbose = TRUE,
+                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file.max.N170.SC.E2)
+}
+
+print(summary(lmm.max.N170.SC.E2), corr = FALSE)
 
 ```
 
@@ -1994,112 +1913,327 @@ head(df.erp.N170.E2.SC, 10)
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for E2 N170 SC}
 
-file.zcp.N170.E2.SC <- file.path(folder.nesi, "E205_N170_SC_lmm_zcp.RData")
+file.zcp.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_zcp.RData")
 
 # fit the zcp model
-if (!file.exists(file.zcp.N170.E2.SC)) {
-  lmm.zcp.N170.E2.SC <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Confidence + 
-                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-                                Type_Cate_Dura_Hemi +
-                                
-                                ConLH_C + 
-                                Type_ConLH + Cate_ConLH + Dura_ConLH + Hemi_ConLH +
-                                Type_Cate_ConLH + Type_Dura_ConLH + Cate_Dura_ConLH + 
-                                Type_Hemi_ConLH + Cate_Hemi_ConLH + Dura_Hemi_ConLH +
-                                Type_Cate_Dura_ConLH + Type_Cate_Hemi_ConLH + Type_Hemi_Dura_ConLH + Hemi_Cate_Dura_ConLH +
-                                Type_Cate_Dura_Hemi_ConLH +
-                                
-                                ConGL_C +
-                                Type_ConGL + Cate_ConGL + Dura_ConGL + Hemi_ConGL +
-                                Type_Cate_ConGL + Type_Dura_ConGL + Cate_Dura_ConGL + 
-                                Type_Hemi_ConGL + Cate_Hemi_ConGL + Dura_Hemi_ConGL +
-                                Type_Cate_Dura_ConGL + Type_Cate_Hemi_ConGL + Type_Hemi_Dura_ConGL + Hemi_Cate_Dura_ConGL +
-                                Type_Cate_Dura_Hemi_ConGL 
-                              || SubjCode) +
-                             
-                             (1 + Type_C + Dura_C + Hemi_C + 
-                                Type_Dura + Type_Hemi + Dura_Hemi +
-                                Type_Dura_Hemi +
-                                
-                                ConLH_C + 
-                                Type_ConLH + Dura_ConLH + Hemi_ConLH +
-                                Type_Dura_ConLH + Type_Hemi_ConLH + Dura_Hemi_ConLH +
-                                Type_Hemi_Dura_ConLH +
-                                
-                                ConGL_C +
-                                Type_ConGL + CDura_ConGL + Hemi_ConGL +
-                                Type_Dura_ConGL + Type_Hemi_ConGL + Dura_Hemi_ConGL +
-                                Type_Hemi_Dura_ConGL 
-                              || Stimuli),
-                          data = df.erp.N170.E2.SC,
-                          REML = FALSE,
-                          # verbose = TRUE,
-                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                optCtrl = list(maxfun = 1e7)))
+if (!file.exists(file.zcp.N170.SC.E2)) {
+  lmm.zcp.N170.SC.E2 <- update(lmm.max.N170.SC.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
+                                  Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                  Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                || SubjCode) +
+                               (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                                || Stimuli))
   
 } else {
-  load(file.zcp.N170.E2.SC)
+  load(file.zcp.N170.SC.E2)
 }
 
 
-print(summary(lmm.zcp.N170.E2.SC), corr = FALSE)
+print(summary(lmm.zcp.N170.SC.E2), corr = FALSE)
 
 ```
 
 ```{r compare max and zcp E2 N170 SC}
-# anova(lmm.max.N170.E2.SC, lmm.zcp.N170.E2.SC)
+# anova(lmm.max.N170.SC.E2, lmm.zcp.N170.SC.E2)
 ```
 
 ##### The reduced model
 ```{r PCA analysis for zcp lmm for E2 N170 SC}
-
-summary(rePCA(lmm.zcp.N170.E2.SC))
+summary(rePCA(lmm.zcp.N170.SC.E2))
 ```
-
 
 ```{r}
 
-file.rdc.N170.E2.SC <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc.RData")
+lmm.zcp.N170.SC.E2.step <- file.path(folder.nesi, "E205_N170_SC_lmm_zcp_step.RData")
 
 # fit the rdc model
-if (!file.exists(file.rdc.N170.E2.SC)) {
+if (!file.exists(lmm.zcp.N170.SC.E2.step)) {
 
-  lmm.rdc.N170.E2.SC <- update(lmm.rdc.N170.E2.SC,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * ACC +
-                          (1 + Type_D + Cate_D + Dura_D + Hemi_D + 
-                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi + Cate_ACC +
-                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_ACC || SubjCode),
-                          verbose = FALSE)
+  lmm.zcp.N170.SC.E2.step <- step(lmm.zcp.N170.SC.E2, reduce.fixed = FALSE)
+
   
 } else {
-  load(file.rdc.N170.E2.SC)
+  load(lmm.zcp.N170.SC.E2.step)
 }
 
-print(summary(lmm.rdc.N170.E2.SC), corr = FALSE)
+lmm.zcp.N170.SC.E2.step
+
+```
+
+
+```{r}
+
+file.rdc.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc.RData")
+
+# fit the rdc model
+if (!file.exists(file.rdc.N170.SC.E2)) {
+
+  lmm.rdc.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
+                               formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                                 (0 + ConLH_C + ConGL_C + Con2G_C + 
+                                    Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                    Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                    Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                  || SubjCode) +
+                                 (1 + ConLH_C  + Con2G_C
+                                  || Stimuli))
+  
+} else {
+  load(file.rdc.N170.SC.E2)
+}
+
+print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
+
+```
+
+
+```{r}
+summary(rePCA(lmm.rdc.N170.SC.E2))
+```
+
+
+```{r}
+
+file.rdc1.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc1.RData")
+
+# fit the rdc1 model
+if (!file.exists(file.rdc1.N170.SC.E2)) {
+
+  lmm.rdc1.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
+                               formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                                 (0 + ConLH_C + ConGL_C + Con2G_C + 
+                                    Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                    Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                    Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                  || SubjCode) +
+                                 (1 + Con2G_C
+                                  || Stimuli))
+  
+} else {
+  load(file.rdc1.N170.SC.E2)
+}
+
+print(summary(lmm.rdc1.N170.SC.E2), corr = FALSE)
 
 ```
 
 ```{r}
-anova(lmm.rdc.N170.E2.SC, lmm.zcp.N170.E2.SC)
+summary(rePCA(lmm.rdc1.N170.SC.E2))
 ```
 
 
 
+```{r}
+
+file.rdc2.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc2.RData")
+
+# fit the rdc2 model
+if (!file.exists(file.rdc2.N170.SC.E2)) {
+
+  lmm.rdc2.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
+                               formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                                 (0 + ConLH_C + ConGL_C + Con2G_C + 
+                                    Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                    Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                    Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                  || SubjCode) +
+                                 (0 + Con2G_C
+                                  | Stimuli))
+  
+} else {
+  load(file.rdc2.N170.SC.E2)
+}
+
+print(summary(lmm.rdc2.N170.SC.E2), corr = FALSE)
+
+```
+
+```{r}
+summary(rePCA(lmm.rdc2.N170.SC.E2))
+```
 
 
+```{r}
+anova(lmm.rdc.N170.SC.E2, lmm.zcp.N170.SC.E2, refit = FALSE)
+```
 
 
+### Linear mixed model with subjective confidences for 17ms
 
 
+```{r}
+df.erp.17.E2 <- {
+  df.erp.E2 %>% 
+    filter(Duration == "17", Type == "intact") %>% 
+    mutate(Confidence = if_else(Response %in% c("11", "55"), "high", 
+                                if_else(Response %in% c("12", "54"), "low",
+                                        if_else(substring(Response, 2) == "3", "guess", "NA")))) %>% 
+    filter(Confidence != "NA") %>% 
+    sdif_coding_E205_erp_17()
+}
 
 
+```
 
 
+#### Amplitudes of the P1
+```{r erp df for the P1 E2 17}
+# only keep the data for amplitudes of the P1 (correct and incorrect erps)
+df.erp.P1.17.E2 <- {
+  df.erp.17.E2 %>% 
+    filter(Component == "P1") 
+}
+
+if (saveCSV) {
+  output.erp.P1.17.E2 <- file.path(folder.nesi, "E205_erp_P1_17.RData")
+  save(df.erp.P1.17.E2, file = output.erp.P1.17.E2)
+}
+
+# the structure of this dataset
+head(df.erp.P1.17.E2, 10)
+```
 
 
+##### The maximal model
+```{r maximal lmm for P1 E2 17}
+file.max.P1.17.E2 <- file.path(folder.nesi, "E205_P1_17_lmm_max.RData")
 
+# fit the maximal model
+if (!file.exists(file.max.P1.17.E2)) {
+  lmm.max.P1.17.E2 <- lmer(MeanAmp ~ Category * Hemisphere * Confidence +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + 
+                                Cate_ConLH + Hemi_ConLH +
+                                Cate_Hemi_ConLH +
+                                Cate_ConGL + Hemi_ConGL + 
+                                Cate_Hemi_ConGL  
+                              | SubjCode) +
+                             
+                             (1 + Hemi_C + ConLH_C + ConGL_C + 
+                                Hemi_ConLH +
+                                Hemi_ConGL 
+                              | Stimuli),
+                           
+                           data = df.erp.P1.17.E2,
+                           verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                 optCtrl = list(maxfun = 1e5)))
+} else {
+  load(file.max.P1.17.E2)
+}
+
+print(summary(lmm.max.P1.17.E2), corr = FALSE)
+
+```
+
+##### The zero-correlation-parameter model
+```{r zcp lmm for P1 E2 17}
+file.zcp.P1.17.E2 <- file.path(folder.nesi, "E205_P1_17_lmm_zcp.RData")
+
+# fit the zcp model
+if (!file.exists(file.zcp.P1.17.E2)) {
+  lmm.zcp.P1.17.E2 <- update(lmm.max.P1.17.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * Confidence +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + 
+                                Cate_ConLH + Hemi_ConLH +
+                                Cate_Hemi_ConLH +
+                                Cate_ConGL + Hemi_ConGL + 
+                                Cate_Hemi_ConGL  
+                              || SubjCode) +
+                             
+                             (1 + Hemi_C + ConLH_C + ConGL_C + 
+                                Hemi_ConLH +
+                                Hemi_ConGL 
+                              || Stimuli))
+  
+} else {
+  load(file.zcp.P1.17.E2)
+}
+
+print(summary(lmm.zcp.P1.17.E2), corr = FALSE)
+
+```
+
+
+#### Ampitudes of the N170
+```{r erp df for the N170 E2 17}
+# only keep the data for amplitudes of the N170 (all erps)
+df.erp.N170.17.E2 <- {
+  df.erp.17.E2 %>% 
+    filter(Component == "N170") 
+}
+
+if (saveCSV) {
+  output.erp.N170.17.E2 <- file.path(folder.nesi, "E205_erp_N170_17.RData")
+  save(df.erp.N170.17.E2, file = output.erp.N170.17.E2)
+}
+
+# the structure of this dataset
+head(df.erp.N170.17.E2, 10)
+```
+
+
+##### The maximal model
+```{r maximal lmm for E2 N170 17}
+file.max.N170.17.E2 <- file.path(folder.nesi, "E205_N170_17_lmm_max.RData")
+
+# fit the maximal model
+if (!file.exists(file.max.N170.17.E2)) {
+  lmm.max.N170.17.E2 <- lmer(MeanAmp ~ Category * Hemisphere * Confidence +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + 
+                                Cate_ConLH + Hemi_ConLH +
+                                Cate_Hemi_ConLH +
+                                Cate_ConGL + Hemi_ConGL + 
+                                Cate_Hemi_ConGL  
+                              | SubjCode) +
+                             
+                             (1 + Hemi_C + ConLH_C + ConGL_C + 
+                                Hemi_ConLH +
+                                Hemi_ConGL 
+                              | Stimuli),
+                             
+                          data = df.erp.N170.17.E2,
+                          verbose = TRUE,
+                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                optCtrl = list(maxfun = 1e7)))
+} else {
+  load(file.max.N170.17.E2)
+}
+
+print(summary(lmm.max.N170.17.E2), corr = FALSE)
+
+```
+
+
+##### The zero-correlation-parameter model
+```{r zcp lmm for E2 N170 17}
+
+file.zcp.N170.17.E2 <- file.path(folder.nesi, "E205_N170_17_lmm_zcp.RData")
+
+# fit the zcp model
+if (!file.exists(file.zcp.N170.17.E2)) {
+  lmm.zcp.N170.17.E2 <- update(lmm.max.N170.17.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
+                                  Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
+                                  Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
+                                || SubjCode) +
+                               (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
+                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
+                                || Stimuli))
+  
+} else {
+  load(file.zcp.N170.17.E2)
+}
+
+
+print(summary(lmm.zcp.N170.17.E2), corr = FALSE)
+
+```
 
 
 

@@ -20,32 +20,31 @@ message("Loading the data file...")
 load("E205_erp_N170.RData")
 
 #############################  Fitting the lmm.max.N170 for N170  ##############################
-# # fit the lmm.max.N170 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm.max.N170.E2 model...")
-# 
-# # lmm.max.N170 for mean amplitude
-# lmm.max.N170.E2 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                           (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                              Type_Cate_Dura_Hemi 
-#                            | SubjCode) +
-#                           (1 + Type_C + Dura_C + Hemi_C + 
-#                              Type_Dura + Type_Hemi + Dura_Hemi +
-#                              Type_Dura_Hemi 
-#                            | Stimuli),
-#                         data = df.erp.N170.E2,
-#                         REML = FALSE,
-#                         verbose = TRUE,
-#                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                               optCtrl = list(maxfun = 1e7)))
-# 
-# # Saving lmm.max.N170.E2
-# message("")
-# message("Saving the lmm.max.N170.E2")
-# save(lmm.max.N170.E2, file = "E205_N170_lmm_max.RData")
+# fit the lmm.max.N170 model
+message("")
+message(paste0(strrep("#", 80)))
+message("Fitting the lmm.max.N170.E2 model...")
+
+# lmm.max.N170 for mean amplitude
+lmm.max.N170.E2 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere +
+                          (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                             Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
+                             Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+                             Type_Cate_Dura_Hemi
+                           | SubjCode) +
+                          (1 + Type_C + Dura_C + Hemi_C +
+                             Type_Dura + Type_Hemi + Dura_Hemi +
+                             Type_Dura_Hemi
+                           | Stimuli),
+                        data = df.erp.N170.E2,
+                        verbose = TRUE,
+                        control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                              optCtrl = list(maxfun = 1e7)))
+
+# Saving lmm.max.N170.E2
+message("")
+message("Saving the lmm.max.N170.E2")
+save(lmm.max.N170.E2, file = "E205_N170_lmm_max.RData")
 
 
 # #############################  Fitting the lmm.zcp.N170 for N170  ##############################
@@ -55,18 +54,17 @@ load("E205_erp_N170.RData")
 # message("Fitting the lmm.zcp.N170.E2 model...")
 # 
 # # lmm.zcp.N170 for mean amplitude
-# lmm.zcp.N170.E2 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                           (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
+# lmm.zcp.N170.E2 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere +
+#                           (1 + Type_C + Cate_C + Dura_C + Hemi_C +
 #                              Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                              Type_Cate_Dura_Hemi 
+#                              Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
+#                              Type_Cate_Dura_Hemi
 #                            || SubjCode) +
-#                           (1 + Type_C + Dura_C + Hemi_C + 
+#                           (1 + Type_C + Dura_C + Hemi_C +
 #                              Type_Dura + Type_Hemi + Dura_Hemi +
-#                              Type_Dura_Hemi 
+#                              Type_Dura_Hemi
 #                            || Stimuli),
 #                         data = df.erp.N170.E2,
-#                         REML = FALSE,
 #                         verbose = TRUE,
 #                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
 #                                               optCtrl = list(maxfun = 1e7)))
@@ -85,12 +83,12 @@ load("E205_erp_N170.RData")
 # # lmm.rdc.N170 for mean amplitude
 # load("E205_N170_lmm_zcp.RData")
 # lmm.rdc.N170.E2 <- update(lmm.zcp.N170.E2,
-#                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
+#                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere +
+#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +
 #                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
 #                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi
 #                              || SubjCode) +
-#                             (1 + Type_C + Dura_C + 
+#                             (1 + Type_C + Dura_C +
 #                                Type_Dura
 #                              || Stimuli))
 # 
@@ -109,12 +107,12 @@ load("E205_erp_N170.RData")
 # # lmm.etd.N170 for mean amplitude
 # load("E205_N170_lmm_rdc.RData")
 # lmm.etd.N170.E2 <- update(lmm.rdc.N170.E2,
-#                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
+#                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere +
+#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +
 #                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
 #                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi
 #                              | SubjCode) +
-#                             (1 + Type_C + Dura_C + 
+#                             (1 + Type_C + Dura_C +
 #                                Type_Dura
 #                              | Stimuli))
 # 
@@ -133,12 +131,12 @@ load("E205_erp_N170.RData")
 # # lmm.etd1.N170 for mean amplitude
 # load("E205_N170_lmm_etd.RData")
 # lmm.etd1.N170.E2 <- update(lmm.etd.N170.E2,
-#                            formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                              (1 + Type_C + Dura_C + Hemi_C +  
+#                            formula = MeanAmp ~ Type * Category * Duration * Hemisphere +
+#                              (1 + Type_C + Dura_C + Hemi_C +
 #                                 Type_Cate + Type_Dura + Type_Hemi + Dura_Hemi +
 #                                 Type_Cate_Dura + Type_Cate_Hemi
 #                               | SubjCode) +
-#                              (1 + Type_C + Dura_C + 
+#                              (1 + Type_C + Dura_C +
 #                                 Type_Dura
 #                               | Stimuli))
 # 
@@ -162,7 +160,7 @@ load("E205_erp_N170.RData")
 #                                 Type_Cate + Type_Dura + Dura_Hemi +
 #                                 Type_Cate_Dura + Type_Cate_Hemi
 #                               | SubjCode) +
-#                              (0 + Type_C + Dura_C + 
+#                              (1 + Type_C + Dura_C + 
 #                                 Type_Dura
 #                               | Stimuli))
 # 
@@ -186,55 +184,13 @@ load("E205_erp_N170.RData")
 #                                 Type_Cate + Type_Dura + Dura_Hemi +
 #                                 Type_Cate_Dura + Type_Cate_Hemi
 #                               | SubjCode) +
-#                              (0 + Type_C +
+#                              (0 + Type_C + Dura_C + 
 #                                 Type_Dura
 #                               | Stimuli))
-# 
 # # Saving lmm.etd3.N170.E2
 # message("")
 # message("Saving the lmm.etd3.N170.E2")
 # save(lmm.etd3.N170.E2, file = "E205_N170_lmm_etd3.RData")
-
-
-############################  Fitting the lmm.etd4.N170 for N170  ##############################
-# # fit the lmm.etd4.N170 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm.etd4.N170.E2 model...")
-# 
-# # lmm.etd4.N170 for mean amplitude
-# load("E205_N170_lmm_etd3.RData")
-# lmm.etd4.N170.E2 <- update(lmm.etd3.N170.E2,
-#                            formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                              (1 + Dura_C + Hemi_C +  
-#                                 Type_Cate + Dura_Hemi +
-#                                 Type_Cate_Dura + Type_Cate_Hemi
-#                               | SubjCode) +
-#                              (0 + Type_C +
-#                                 Type_Dura
-#                               | Stimuli))
-# 
-# # Saving lmm.etd4.N170.E2
-# message("")
-# message("Saving the lmm.etd4.N170.E2")
-# save(lmm.etd4.N170.E2, file = "E205_N170_lmm_etd4.RData")
-
-
-############################  Fitting the lmm.opt.N170 for N170  ##############################
-# fit the lmm.opt.N170 model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the lmm.opt.N170.E2 model...")
-
-# lmm.opt.N170 for mean amplitude
-load("E205_N170_lmm_rdc.RData")
-lmm.opt.N170.E2 <- update(lmm.rdc.N170.E2,
-                           REML = TRUE)
-
-# Saving lmm.opt.N170.E2
-message("")
-message("Saving the lmm.opt.N170.E2")
-save(lmm.opt.N170.E2, file = "E205_N170_lmm_opt.RData")
 
 
 # versions of packages used

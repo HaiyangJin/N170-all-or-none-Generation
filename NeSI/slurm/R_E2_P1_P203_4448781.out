@@ -1,0 +1,62 @@
+Executing R ...
+Fitting model for P203_DataAnalysis.Rmd...
+The corresponding *.out file is 4448781.out
+Setting the current working directory...
+
+Loading the libraries...
+Loading required package: Matrix
+
+Attaching package: ‘lmerTest’
+
+The following object is masked from ‘package:lme4’:
+
+    lmer
+
+The following object is masked from ‘package:stats’:
+
+    step
+
+
+Loading the data file...
+
+################################################################################
+Fitting the lmm.max.P1.E2 model...
+start par. =  1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0 0 1 0 1 fn =  402849.4 
+At return
+eval: 57005 fn:      399168.13 par: 0.0359320 0.00362949 0.0270233 0.00654256 -0.0165307 -0.0123689 0.00564993 -0.0236757 0.0673315 -0.00504244 0.00146501 0.110504 0.0196971 0.00757912 0.0546519 0.0620856 0.00447931 0.0376495 0.00756047 0.00540015 0.0339235 0.00482367 -0.113897 0.0110867 -0.00386493 -0.0116046 6.17950e-06 3.78880e-06 9.71103e-07 1.31402e-05 9.73786e-08 -1.39099e-07 -7.32254e-07 2.19168e-07 8.27359e-07 2.04647e-06 0.338583 0.00887735 -0.0200987 0.0632466 0.0605512 0.103881 0.00671431 0.0282386 0.000756777 4.18554e-05 0.0229219 0.109890 -0.000398264 -0.0446328 0.00381605 0.0296108 0.0846615 -0.0145037 -0.0201795 0.0153407 0.0276910 0.0310887 -0.0242524 0.0221652 0.0149406 -0.0125160 0.0343899 -0.0348118 0.0442295 -0.0308028 -0.114976 0.0508209 -0.0388374 0.131563 -0.0130220 0.0199498 0.00937055 -0.00220148 0.0113483 -0.0582437 -0.0635519 -0.00611049 0.0516426 0.00660768 0.0636648 0.120804 -0.0292817 0.0155145 0.0588801 -0.00485363 0.00123340 -0.00131649 0.0339809 0.0264456 0.0212666 0.00793705 0.0121693 0.0554796 0.125974 -0.0123484 -0.00985281 0.0228450 -0.0257279 -0.0164338 -0.0116545 -0.0676359 0.0256132 0.0130331 -0.0460234 -0.0681903 0.109552 0.0639516 0.0142538 -0.0275054 -0.00313508 0.00910857 0.0389659 0.0749097 -0.0132963 -0.0173962 0.0343167 0.111255 -0.0130214 -0.00834762 0.00104207 0.0191369 -0.000473644 0.0118243 0.0137619 0.00268897 0.0276721 0.0192681 0.0152921 -0.0100321 0.0972908 -0.0171007 0.000906658 0.0361067 0.0340956 0.0464557 0.000248633 -9.20136e-05 0.00135491 -0.000127915 -0.000117235 0.000499345 0.000594927 0.000727521 1.69657e-05 -0.000146628 4.54377e-05 6.32634e-06 -3.22891e-05 -5.82898e-05 -5.58399e-05 3.15378e-07 1.09107e-05 -6.22802e-06 -6.30217e-07 -1.24316e-08 -6.08923e-06 1.44198e-07 -1.00765e-05 1.38045e-06 -3.63546e-06 -3.13752e-05 8.59110e-08 -7.12988e-07 -4.25847e-06 -2.02813e-05 3.56127e-06 4.90103e-07 2.52287e-05 1.62960e-06 7.21277e-06 4.92999e-06
+boundary (singular) fit: see ?isSingular
+Warning message:
+Model failed to converge with 3 negative eigenvalues: -3.5e+03 -6.4e+03 -3.2e+04 
+
+Saving the lmm.max.P1.E2
+R version 3.5.3 (2019-03-11)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /scale_wlg_persistent/filesets/opt_nesi/CS400_centos7_bdw/imkl/2018.4.274-gimpi-2018b/compilers_and_libraries_2018.5.274/linux/mkl/lib/intel64_lin/libmkl_gf_lp64.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] lmerTest_3.1-0 lme4_1.1-21    Matrix_1.2-16 
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.0        magrittr_1.5      bindr_0.1.1       splines_3.5.3    
+ [5] MASS_7.3-51.1     tidyselect_0.2.5  munsell_0.5.0     colorspace_1.4-0 
+ [9] lattice_0.20-38   R6_2.4.0          rlang_0.3.1       minqa_1.2.4      
+[13] plyr_1.8.4        dplyr_0.7.8       grid_3.5.3        gtable_0.2.0     
+[17] nlme_3.1-137      assertthat_0.2.0  lazyeval_0.2.1    tibble_2.0.1     
+[21] numDeriv_2016.8-1 crayon_1.3.4      bindrcpp_0.2.2    purrr_0.2.5      
+[25] nloptr_1.2.1      ggplot2_3.1.0     glue_1.3.0        compiler_3.5.3   
+[29] pillar_1.3.1      scales_1.0.0      boot_1.3-20       pkgconfig_2.0.2  
+R finished.

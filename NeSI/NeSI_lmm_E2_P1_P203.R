@@ -13,6 +13,7 @@ message("")
 message("Loading the libraries...")
 library(lme4)
 library(lmerTest)
+source("get_pars.R")
 
 # load the data file
 message("")
@@ -26,18 +27,17 @@ load("E205_erp_P1.RData")
 # message("Fitting the lmm.max.P1.E2 model...")
 # 
 # # lmm.max.P1 for mean amplitude
-# lmm.max.P1.E2 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                         (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
+# lmm.max.P1.E2 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere +
+#                         (1 + Type_C + Cate_C + Dura_C + Hemi_C +
 #                            Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                            Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
+#                            Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
 #                            Type_Cate_Dura_Hemi
 #                          | SubjCode) +
-#                         (1 + Type_C + Dura_C + Hemi_C + 
+#                         (1 + Type_C + Dura_C + Hemi_C +
 #                            Type_Dura + Type_Hemi + Dura_Hemi +
-#                            Type_Dura_Hemi 
+#                            Type_Dura_Hemi
 #                          | Stimuli),
 #                       data = df.erp.P1.E2,
-#                       REML = FALSE,
 #                       verbose = TRUE,
 #                       control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
 #                                             optCtrl = list(maxfun = 1e7)))
@@ -66,7 +66,6 @@ load("E205_erp_P1.RData")
 #                            Type_Dura_Hemi
 #                          || Stimuli),
 #                       data = df.erp.P1.E2,
-#                       REML = FALSE,
 #                       verbose = TRUE,
 #                       control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
 #                                             optCtrl = list(maxfun = 1e7)))
@@ -86,11 +85,11 @@ load("E205_erp_P1.RData")
 # # lmm.rdc.P1 for mean amplitude
 # load("E205_P1_lmm_zcp.RData")
 # lmm.rdc.P1.E2 <- update(lmm.zcp.P1.E2,
-#                         formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                           (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
+#                         formula = MeanAmp ~ Type * Category * Duration * Hemisphere +
+#                           (1 + Type_C + Cate_C + Dura_C + Hemi_C +
 #                              Type_Cate + Type_Dura + Cate_Dura + Dura_Hemi
 #                            || SubjCode) +
-#                           (1 + Type_C + Dura_C + 
+#                           (1 + Type_C + Dura_C +
 #                              Type_Dura
 #                            || Stimuli))
 # 
@@ -101,26 +100,28 @@ load("E205_erp_P1.RData")
 
 
 ############################  Fitting the lmm.etd.P1 for P1  ##############################
-# # fit the lmm.etd.P1 model
-# message("")
-# message(paste0(strrep("#", 80)))
-# message("Fitting the lmm.etd.P1.E2 model...")
-# 
-# # lmm.etd.P1 for mean amplitude
-# load("E205_P1_lmm_rdc.RData")
-# lmm.etd.P1.E2 <- update(lmm.rdc.P1.E2,
-#                         formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
-#                           (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                              Type_Cate + Type_Dura + Cate_Dura + Dura_Hemi
-#                            | SubjCode) +
-#                           (1 + Type_C + Dura_C + 
-#                              Type_Dura
-#                            | Stimuli))
-# 
-# # Saving lmm.etd.P1
-# message("")
-# message("Saving the lmm.etd.P1.E2")
-# save(lmm.etd.P1.E2, file = "E205_P1_lmm_etd.RData")
+# fit the lmm.etd.P1 model
+message("")
+message(paste0(strrep("#", 80)))
+message("Fitting the lmm.etd.P1.E2 model...")
+
+# lmm.etd.P1 for mean amplitude
+load("E205_P1_lmm_rdc.RData")
+lmm.etd.P1.E2 <- update(lmm.rdc.P1.E2,
+                        formula = MeanAmp ~ Type * Category * Duration * Hemisphere +
+                          (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                             Type_Cate + Type_Dura + Cate_Dura + Dura_Hemi
+                           | SubjCode) +
+                          (1 + Type_C + Dura_C +
+                             Type_Dura
+                           | Stimuli))
+
+lmm.etd.P1.E2.2 <- re_fit(lmm.etd.P1.E2)
+
+# Saving lmm.etd.P1
+message("")
+message("Saving the lmm.etd.P1.E2")
+save(lmm.etd.P1.E2, lmm.etd.P1.E2.2, file = "E205_P1_lmm_etd.RData")
 
 
 ############################  Fitting the lmm.etd1.P1 for P1  ##############################
@@ -193,20 +194,20 @@ load("E205_erp_P1.RData")
 
 
 ############################  Fitting the lmm.opt.P1 for P1  ##############################
-# fit the lmm.opt.P1 model
-message("")
-message(paste0(strrep("#", 80)))
-message("Fitting the lmm.opt.P1.E2 model...")
-
-# lmm.opt.P1 for mean amplitude
-load("E205_P1_lmm_rdc.RData")
-lmm.opt.P1.E2 <- update(lmm.rdc.P1.E2,
-                        REML = TRUE)
-
-# Saving lmm.opt.P1
-message("")
-message("Saving the lmm.opt.P1.E2")
-save(lmm.opt.P1.E2, file = "E205_P1_lmm_opt.RData")
+# # fit the lmm.opt.P1 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm.opt.P1.E2 model...")
+# 
+# # lmm.opt.P1 for mean amplitude
+# load("E205_P1_lmm_rdc.RData")
+# lmm.opt.P1.E2 <- update(lmm.rdc.P1.E2,
+#                         REML = TRUE)
+# 
+# # Saving lmm.opt.P1
+# message("")
+# message("Saving the lmm.opt.P1.E2")
+# save(lmm.opt.P1.E2, file = "E205_P1_lmm_opt.RData")
 
 
 
