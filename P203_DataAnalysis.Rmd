@@ -1666,7 +1666,7 @@ emmip(emm.N170.E2, Category ~ Duration | Type + Hemisphere, CIs = TRUE) +
 ##### Contrast
 ```{r}
 # contrast(emm.N170.E2, simple = "each", combine = TRUE)
-pairs(emm.N170.E2, simple = c("Duration"), adjust = "none")
+pairs(emm.N170.E2, simple = c("Duration"), by = c("Category", "Hemisphere"), adjust = "none")
 
 ```
 
@@ -1694,6 +1694,7 @@ df.erp.SC.E2 <- {
 }
 ```
 
+
 #### Set the successive difference coding
 ```{r set the successive difference coding for ERP data E2 SC}
 # successive difference coding
@@ -1718,61 +1719,28 @@ head(df.erp.P1.SC.E2, 10)
 ```
 
 
-
 ##### The maximal model
 ```{r maximal lmm for P1 E2 SC}
-file.max.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_max.RData")
 
-# fit the maximal model
-if (!file.exists(file.max.P1.SC.E2)) {
-  lmm.max.P1.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
-                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
-                                
-                                Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                
-                                Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                                
-                              | SubjCode) +
-
-                             (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
-                                
-                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
-                              
-                              | Stimuli),
-                           
-                           data = df.erp.P1.SC.E2,
-                           verbose = TRUE,
-                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                              optCtrl = list(maxfun = 1e7)))
-} else {
-  load(file.max.P1.SC.E2)
-}
+lmm.max.P1.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
+                           (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                           (1 + Hemi_C | Stimuli),
+                         data = df.erp.P1.SC.E2,
+                         verbose = TRUE,
+                         control = lmerControl(optimizer = "bobyqa"))  # nloptwrap Nelder_Mead
 
 print(summary(lmm.max.P1.SC.E2), corr = FALSE)
 
 ```
 
+
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2 SC}
-file.zcp.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_zcp.RData")
 
-# fit the zcp model
-if (!file.exists(file.zcp.P1.SC.E2)) {
-  lmm.zcp.P1.SC.E2 <- update(lmm.max.P1.SC.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                               (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
-                                  Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                  Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                                || SubjCode) +
-                               (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
-                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
-                                || Stimuli))
-  
-} else {
-  load(file.zcp.P1.SC.E2)
-}
+lmm.zcp.P1.SC.E2 <- update(lmm.max.P1.SC.E2,
+                           formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                             (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                             (1 + Hemi_C || Stimuli))
 
 print(summary(lmm.zcp.P1.SC.E2), corr = FALSE)
 
@@ -1787,81 +1755,65 @@ summary(rePCA(lmm.zcp.P1.SC.E2))
 
 ```{r }
 
-file.rdc.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_rdc.RData")
+lmm.rdc.P1.SC.E2 <- update(lmm.zcp.P1.SC.E2,
+                           formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                             (1 + Cate_C + Hemi_C || SubjCode) +
+                             (1 | Stimuli))
 
-# fit the rdc model
-if (!file.exists(file.rdc.P1.SC.E2)) {
-
-  lmm.rdc.P1.SC.E2 <- update(lmm.zcp.P1.SC.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                               (0 + ConLH_C + Con2G_C + 
-                                  Cate_ConLH + 
-                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
-                                || SubjCode) +
-                               (0 + ConLH_C + ConGL_C + Con2G_C
-                                || Stimuli))
-  
-} else {
-  load(file.rdc.P1.SC.E2)
-}
 
 print(summary(lmm.rdc.P1.SC.E2), corr = FALSE)
 
 ```
 
 ```{r}
-summary(rePCA(lmm.rdc.P1.SC.E2))
-# anova(lmm.rdc.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
+anova(lmm.rdc.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
 ```
 
 
+##### The extended model
 ```{r }
 
-file.rdc1.P1.SC.E2 <- file.path(folder.nesi, "E205_P1_SC_lmm_rdc1.RData")
 
-# fit the rdc1 model
-if (!file.exists(file.rdc1.P1.SC.E2)) {
+lmm.etd.P1.SC.E2 <- update(lmm.rdc.P1.SC.E2,
+                           formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                             (1 + Cate_C + Hemi_C | SubjCode) +
+                             (1 | Stimuli))
 
-  lmm.rdc1.P1.SC.E2 <- update(lmm.rdc.P1.SC.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                               (0 + Con2G_C + 
-                                  Cate_ConLH + 
-                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
-                                || SubjCode) +
-                               (0 + ConLH_C + ConGL_C + Con2G_C
-                                || Stimuli))
-  
-} else {
-  load(file.rdc1.P1.SC.E2)
-}
 
-print(summary(lmm.rdc1.P1.SC.E2), corr = FALSE)
+print(summary(lmm.etd.P1.SC.E2), corr = FALSE)
+
+```
+
+
+```{r}
+anova(lmm.rdc.P1.SC.E2, lmm.etd.P1.SC.E2, refit = FALSE)
+```
+
+##### The optimal model
+```{r }
+
+lmm.opt.P1.SC.E2 <- lmm.etd.P1.SC.E2
+
+# print(summary(lmm.opt.P1.SC.E2), corr = FALSE)
+anova(lmm.opt.P1.SC.E2)
 
 ```
 
 ```{r}
-summary(rePCA(lmm.rdc1.P1.SC.E2))
+emm.P1.SC.E2 <- emmeans(lmm.opt.P1.SC.E2, ~ DuraConf | Category + Hemisphere)
+
+emm.P1.SC.E2
 ```
 
 ```{r}
-
-lmm.rdc1.P1.SC.E2.test <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
-                                 (0 + ConLH_C + ConGL_C + Con2G_C | SubjCode) ,
-                               data = df.erp.P1.SC.E2,
-                               verbose = TRUE,
-                               control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                     optCtrl = list(maxfun = 1e7)))
-
-summary(lmm.rdc1.P1.SC.E2.test)
-
-summary(rePCA(lmm.rdc1.P1.SC.E2.test))
+emmip(emm.P1.SC.E2, Category ~ DuraConf | Hemisphere, CIs = TRUE)
 ```
-
 
 
 ```{r}
-anova(lmm.rdc1.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
+pairs(emmeans(lmm.opt.P1.SC.E2, ~ DuraConf | Category + Hemisphere))
 ```
+
 
 
 #### Ampitudes of the N170
@@ -1884,26 +1836,13 @@ head(df.erp.N170.SC.E2, 10)
 
 ##### The maximal model
 ```{r maximal lmm for E2 N170 SC}
-file.max.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_max.RData")
 
-# fit the maximal model
-if (!file.exists(file.max.N170.SC.E2)) {
-  lmm.max.N170.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
-                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
-                                Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                              | SubjCode) +
-                             (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
-                                Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
-                              | Stimuli),
-                          data = df.erp.N170.SC.E2,
-                          verbose = TRUE,
-                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                optCtrl = list(maxfun = 1e7)))
-} else {
-  load(file.max.N170.SC.E2)
-}
+lmm.max.N170.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
+                             (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                             (1 + Hemi_C | Stimuli),
+                           data = df.erp.N170.SC.E2,
+                           verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa"))  # nloptwrap Nelder_Mead
 
 print(summary(lmm.max.N170.SC.E2), corr = FALSE)
 
@@ -1913,32 +1852,19 @@ print(summary(lmm.max.N170.SC.E2), corr = FALSE)
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for E2 N170 SC}
 
-file.zcp.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_zcp.RData")
 
-# fit the zcp model
-if (!file.exists(file.zcp.N170.SC.E2)) {
-  lmm.zcp.N170.SC.E2 <- update(lmm.max.N170.SC.E2,
+lmm.zcp.N170.SC.E2 <- update(lmm.max.N170.SC.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                               (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + Con2G_C + 
-                                  Cate_Hemi + Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                  Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                                || SubjCode) +
-                               (1 + Hemi_C + ConLH_C + ConGL_C + Con2G_C +
-                                  Hemi_ConLH + Hemi_ConGL + Hemi_Con2G 
-                                || Stimuli))
+                               (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                               (1 + Hemi_C || Stimuli))
   
-} else {
-  load(file.zcp.N170.SC.E2)
-}
-
 
 print(summary(lmm.zcp.N170.SC.E2), corr = FALSE)
 
 ```
 
 ```{r compare max and zcp E2 N170 SC}
-# anova(lmm.max.N170.SC.E2, lmm.zcp.N170.SC.E2)
+anova(lmm.max.N170.SC.E2, lmm.zcp.N170.SC.E2, refit = FALSE)
 ```
 
 ##### The reduced model
@@ -1946,45 +1872,15 @@ print(summary(lmm.zcp.N170.SC.E2), corr = FALSE)
 summary(rePCA(lmm.zcp.N170.SC.E2))
 ```
 
-```{r}
-
-lmm.zcp.N170.SC.E2.step <- file.path(folder.nesi, "E205_N170_SC_lmm_zcp_step.RData")
-
-# fit the rdc model
-if (!file.exists(lmm.zcp.N170.SC.E2.step)) {
-
-  lmm.zcp.N170.SC.E2.step <- step(lmm.zcp.N170.SC.E2, reduce.fixed = FALSE)
-
-  
-} else {
-  load(lmm.zcp.N170.SC.E2.step)
-}
-
-lmm.zcp.N170.SC.E2.step
-
-```
-
 
 ```{r}
 
-file.rdc.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc.RData")
 
-# fit the rdc model
-if (!file.exists(file.rdc.N170.SC.E2)) {
+lmm.rdc.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                               (1 | Stimuli))
 
-  lmm.rdc.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
-                               formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                                 (0 + ConLH_C + ConGL_C + Con2G_C + 
-                                    Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                    Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                    Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                                  || SubjCode) +
-                                 (1 + ConLH_C  + Con2G_C
-                                  || Stimuli))
-  
-} else {
-  load(file.rdc.N170.SC.E2)
-}
 
 print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
 
@@ -1992,79 +1888,294 @@ print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
 
 
 ```{r}
-summary(rePCA(lmm.rdc.N170.SC.E2))
-```
-
-
-```{r}
-
-file.rdc1.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc1.RData")
-
-# fit the rdc1 model
-if (!file.exists(file.rdc1.N170.SC.E2)) {
-
-  lmm.rdc1.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
-                               formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                                 (0 + ConLH_C + ConGL_C + Con2G_C + 
-                                    Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                    Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                    Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                                  || SubjCode) +
-                                 (1 + Con2G_C
-                                  || Stimuli))
-  
-} else {
-  load(file.rdc1.N170.SC.E2)
-}
-
-print(summary(lmm.rdc1.N170.SC.E2), corr = FALSE)
-
-```
-
-```{r}
-summary(rePCA(lmm.rdc1.N170.SC.E2))
-```
-
-
-
-```{r}
-
-file.rdc2.N170.SC.E2 <- file.path(folder.nesi, "E205_N170_SC_lmm_rdc2.RData")
-
-# fit the rdc2 model
-if (!file.exists(file.rdc2.N170.SC.E2)) {
-
-  lmm.rdc2.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
-                               formula = MeanAmp ~ Category * Hemisphere * DuraConf +
-                                 (0 + ConLH_C + ConGL_C + Con2G_C + 
-                                    Cate_ConLH + Cate_ConGL + Cate_Con2G +
-                                    Hemi_ConLH + Hemi_ConGL + Hemi_Con2G +
-                                    Cate_Hemi_ConLH + Cate_Hemi_ConGL + Cate_Hemi_Con2G
-                                  || SubjCode) +
-                                 (0 + Con2G_C
-                                  | Stimuli))
-  
-} else {
-  load(file.rdc2.N170.SC.E2)
-}
-
-print(summary(lmm.rdc2.N170.SC.E2), corr = FALSE)
-
-```
-
-```{r}
-summary(rePCA(lmm.rdc2.N170.SC.E2))
-```
-
-
-```{r}
 anova(lmm.rdc.N170.SC.E2, lmm.zcp.N170.SC.E2, refit = FALSE)
 ```
 
+##### The extended model
+```{r}
+
+lmm.etd.N170.SC.E2 <- update(lmm.rdc.N170.SC.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraConf +
+                               (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                               (1 | Stimuli))
+
+
+print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
+
+```
+
+```{r}
+anova(lmm.rdc.N170.SC.E2, lmm.etd.N170.SC.E2, refit = FALSE)
+```
+
+##### The optimal model
+```{r }
+
+lmm.opt.N170.SC.E2 <- lmm.etd.N170.SC.E2
+
+print(summary(lmm.opt.N170.SC.E2), corr = FALSE)
+anova(lmm.opt.N170.SC.E2)
+
+```
+
+```{r}
+emm.N170.SC.E2 <- emmeans(lmm.opt.N170.SC.E2, ~ Category + DuraConf | Hemisphere)
+
+emm.N170.SC.E2
+```
+
+
+```{r}
+emmip(emm.N170.SC.E2, Category ~ DuraConf | Hemisphere, CIs = TRUE) + 
+  scale_y_continuous(trans = "reverse")
+```
+
+```{r}
+pairs(emm.N170.SC.E2, simple = "DuraConf", by = c("Category", "Hemisphere"))
+```
+
+
+### Linear mixed model with high subjective confidences 
+```{r}
+df.erp.high.E2 <- {
+  df.erp.SC.E2 %>% 
+    filter(Confidence == "high") %>% 
+    mutate(DuraBlock = paste(Duration, Block_ST_table, sep = "_")) %>% 
+    sdif_coding_E205_erp_conf()
+}
+
+```
+
+
+#### Amplitudes of the P1
+```{r erp df for the P1 E2 high}
+# only keep the data for amplitudes of the P1 (correct and incorrect erps)
+df.erp.P1.high.E2 <- {
+  df.erp.high.E2 %>% 
+    filter(Component == "P1")
+}
+
+if (saveCSV) {
+  output.erp.P1.high.E2 <- file.path(folder.nesi, "E205_erp_P1_high.RData")
+  save(df.erp.P1.high.E2, file = output.erp.P1.high.E2)
+}
+
+# the structure of this dataset
+head(df.erp.P1.high.E2, 10)
+```
+
+
+##### The maximal model
+```{r maximal lmm for P1 E2 high}
+
+lmm.max.P1.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
+                             (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                             (1 + Hemi_C | Stimuli),
+                           data = df.erp.P1.high.E2,
+                           verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                 optCtrl = list(maxfun = 1e5)))
+
+print(summary(lmm.max.P1.high.E2), corr = FALSE)
+
+```
+
+##### The zero-correlation-parameter model
+```{r zcp lmm for P1 E2 high}
+
+lmm.zcp.P1.high.E2 <- update(lmm.max.P1.high.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                               (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                               (1 + Hemi_C || Stimuli))
+  
+
+print(summary(lmm.zcp.P1.high.E2), corr = FALSE)
+
+```
+ 
+ 
+##### The reduced model
+```{r}
+summary(rePCA(lmm.zcp.P1.high.E2))
+```
+
+
+```{r}
+lmm.rdc.P1.high.E2 <- update(lmm.zcp.P1.high.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                             (1 + Cate_C + Hemi_C || SubjCode) +
+                             (1 | Stimuli))
+
+print(summary(lmm.rdc.P1.high.E2), corr = FALSE)
+```
+
+```{r}
+anova(lmm.rdc.P1.high.E2, lmm.zcp.P1.high.E2, refit = FALSE)
+```
+
+##### The extended model
+
+```{r}
+lmm.etd.P1.high.E2 <- update(lmm.rdc.P1.high.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                             (1 + Cate_C + Hemi_C | SubjCode) +
+                             (1 | Stimuli))
+
+print(summary(lmm.etd.P1.high.E2), corr = FALSE)
+```
+
+```{r}
+anova(lmm.etd.P1.high.E2, lmm.rdc.P1.high.E2, refit = FALSE)
+```
+
+##### The optimal model
+
+```{r}
+lmm.opt.P1.high.E2 <- lmm.etd.P1.high.E2
+
+summary(lmm.opt.P1.high.E2)
+```
+
+
+```{r}
+qqplot_lmer(lmm.opt.P1.high.E2)
+```
+
+
+
+###### Estimated marginal means
+
+```{r}
+emm.P1.high.E2 <- emmeans(lmm.opt.P1.high.E2, ~ DuraBlock | Category + Hemisphere)
+
+emm.P1.high.E2
+```
+
+
+```{r}
+emmip(emm.P1.high.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE)
+```
+
+##### Contrast
+```{r}
+pairs(emmeans(lmm.opt.P1.high.E2, ~ DuraBlock | Category + Hemisphere))
+```
+
+
+
+#### Amplitudes of the N170
+```{r erp df for the N170 E2 high}
+# only keep the data for amplitudes of the N170 (correct and incorrect erps)
+df.erp.N170.high.E2 <- {
+  df.erp.high.E2 %>% 
+    filter(Component == "N170")
+}
+
+if (saveCSV) {
+  output.erp.N170.high.E2 <- file.path(folder.nesi, "E205_erp_N170_high.RData")
+  save(df.erp.N170.high.E2, file = output.erp.N170.high.E2)
+}
+
+# the structure of this dataset
+head(df.erp.N170.high.E2, 10)
+```
+
+
+##### The maximal model
+```{r maximal lmm for N170 E2 high}
+
+lmm.max.N170.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
+                               (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                               (1 + Hemi_C | Stimuli),
+                             data = df.erp.N170.high.E2,
+                             verbose = TRUE,
+                             control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                   optCtrl = list(maxfun = 1e5)))
+
+print(summary(lmm.max.N170.high.E2), corr = FALSE)
+
+```
+
+##### The zero-correlation-parameter model
+```{r zcp lmm for N170 E2 high}
+
+lmm.zcp.N170.high.E2 <- update(lmm.max.N170.high.E2,
+                               formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                                 (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                             (1 + Hemi_C || Stimuli))
+  
+print(summary(lmm.zcp.N170.high.E2), corr = FALSE)
+
+```
+ 
+ 
+##### The reduced model
+```{r}
+summary(rePCA(lmm.zcp.N170.high.E2))
+```
+
+```{r}
+lmm.rdc.N170.high.E2 <- update(lmm.zcp.N170.high.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                             (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                             (1 | Stimuli))
+
+print(summary(lmm.rdc.N170.high.E2), corr = FALSE)
+```
+
+```{r}
+anova(lmm.rdc.N170.high.E2, lmm.zcp.N170.high.E2, refit = FALSE)
+```
+
+##### The extended model
+```{r}
+lmm.etd.N170.high.E2 <- update(lmm.rdc.N170.high.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                             (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                             (1 | Stimuli))
+
+print(summary(lmm.etd.N170.high.E2), corr = FALSE)
+```
+
+```{r}
+anova(lmm.etd.N170.high.E2, lmm.rdc.N170.high.E2, refit = FALSE)
+```
+
+##### The optimal model
+```{r}
+lmm.opt.N170.high.E2 <- lmm.etd.N170.high.E2
+
+summary(lmm.opt.N170.high.E2)
+```
+
+
+```{r}
+qqplot_lmer(lmm.opt.N170.high.E2)
+```
+
+
+##### Estimated marginal means
+```{r}
+emm.N170.high.E2 <- emmeans(lmm.opt.N170.high.E2, ~ DuraBlock | Category + Hemisphere)
+
+emm.N170.high.E2
+```
+
+```{r}
+emmip(emm.N170.high.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
+  scale_y_continuous(trans = "reverse")
+
+```
+
+
+##### Contrast
+```{r}
+pairs(emmeans(lmm.opt.N170.high.E2, ~ DuraBlock | Category + Hemisphere))
+```
+
+
 
 ### Linear mixed model with subjective confidences for 17ms
-
-
 ```{r}
 df.erp.17.E2 <- {
   df.erp.E2 %>% 
@@ -2156,6 +2267,71 @@ if (!file.exists(file.zcp.P1.17.E2)) {
 print(summary(lmm.zcp.P1.17.E2), corr = FALSE)
 
 ```
+
+```{r}
+summary(rePCA(lmm.zcp.P1.17.E2))
+```
+
+```{r rdc lmm for P1 E2 17}
+file.rdc.P1.17.E2 <- file.path(folder.nesi, "E205_P1_17_lmm_rdc.RData")
+
+# fit the rdc model
+if (!file.exists(file.rdc.P1.17.E2)) {
+  lmm.rdc.P1.17.E2 <- update(lmm.zcp.P1.17.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * Confidence +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + 
+                                Cate_ConGL 
+                              || SubjCode) +
+                             
+                             (1 + ConLH_C + ConGL_C || Stimuli))
+  
+} else {
+  load(file.rdc.P1.17.E2)
+}
+
+print(summary(lmm.rdc.P1.17.E2), corr = FALSE)
+
+```
+
+
+```{r}
+anova(lmm.rdc.P1.17.E2, lmm.zcp.P1.17.E2, refit = FALSE)
+```
+
+
+
+```{r etd lmm for P1 E2 17}
+file.etd.P1.17.E2 <- file.path(folder.nesi, "E205_P1_17_lmm_etd.RData")
+
+# fit the etd model
+if (!file.exists(file.etd.P1.17.E2)) {
+  lmm.etd.P1.17.E2 <- update(lmm.zcp.P1.17.E2,
+                             formula = MeanAmp ~ Category * Hemisphere * Confidence +
+                             (1 + Cate_C + Hemi_C + ConLH_C + ConGL_C + 
+                                Cate_ConGL 
+                              | SubjCode) +
+                             
+                             (1 + ConLH_C + ConGL_C | Stimuli))
+  
+} else {
+  load(file.etd.P1.17.E2)
+}
+
+print(summary(lmm.etd.P1.17.E2), corr = FALSE)
+
+```
+
+```{r}
+anova(lmm.etd.P1.17.E2, lmm.rdc.P1.17.E2, refit = FALSE)
+```
+
+
+```{r}
+lmm.opt.P1.17.E2 <- lmm.etd.P1.17.E2
+
+```
+
+
 
 
 #### Ampitudes of the N170

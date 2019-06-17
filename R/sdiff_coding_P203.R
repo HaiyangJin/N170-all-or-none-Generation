@@ -74,9 +74,46 @@ sdif_coding_E204_erp <- function(df) {
 }
 
 
-sdif_coding_E205_erp_17 <- function(df) {
+
+sdif_coding_E205_erp <- function(df) {
   
-  confidence.levels <- c("high", "low", "guess")
+  DuraConf.levels <- c("17_guess", "17_low", "17_high", "200_high")
+  
+  df %<>%
+    sdif_coding_P203_erp() %>%
+    
+    mutate(
+      ConLG_C = ifelse(Confidence == DuraConf.levels[1], -0.75, 0.25), # low - guess (17)
+      ConHL_C = ifelse(Confidence %in% DuraConf.levels[1:2], -0.5, 0.5), # guess - low (17)
+      Con2H_C = ifelse(Confidence == DuraConf.levels[4], 0.75, -0.25), # 200_high - 17_guess
+
+      Cate_ConLH = Cate_C * ConLG_C,
+      Hemi_ConLH = Hemi_C * ConLG_C,
+
+      Cate_Hemi_ConLH = Cate_C * Hemi_C * ConLG_C,
+
+      Cate_ConGL = Cate_C * ConHL_C,
+      Hemi_ConGL = Hemi_C * ConHL_C,
+      
+      Cate_Hemi_ConGL = Cate_C * Hemi_C * ConHL_C,
+      
+      Cate_Con2G = Cate_C * Con2H_C,
+      Hemi_Con2G = Hemi_C * Con2H_C,
+      
+      Cate_Hemi_Con2G = Cate_C * Hemi_C * Con2H_C
+    )
+  
+  df$DuraConf <- factor(df$DuraConf, DuraConf.levels) # reorder the levels
+  contrasts(df$DuraConf) <- MASS::contr.sdif(nlevels(df$DuraConf))
+
+  return(df)
+}
+
+
+sdif_coding_E205_erp_conf <- function(df) {
+  
+  confidence.levels <- c("guess", "low", "high")
+  DuraBlock.levels <- c("17_1", "17_2", "200_2")
   
   df %<>%
     sdif_coding_P203_erp() %>%
@@ -95,45 +132,28 @@ sdif_coding_E205_erp_17 <- function(df) {
       
       Cate_Hemi_ConGL = Cate_C * Hemi_C * ConGL_C, 
       
-      Confidence = as.factor(Confidence)
+      Confidence = as.factor(Confidence),
+      
+      
+      Block21_C = ifelse(DuraBlock == DuraBlock.levels[1], -0.6666667, 0.3333333), # low - high
+      Block22_C = ifelse(DuraBlock == DuraBlock.levels[3], 0.6666667, -0.3333333),
+      
+      Cate_ConLH = Cate_C * Block21_C,
+      Hemi_ConLH = Hemi_C * Block21_C,
+      
+      Cate_Hemi_ConLH = Cate_C * Hemi_C * Block21_C,
+      
+      Cate_ConGL = Cate_C * Block22_C,
+      Hemi_ConGL = Hemi_C * Block22_C,
+      
+      Cate_Hemi_ConGL = Cate_C * Hemi_C * Block22_C, 
     )
   
-  levels(df$Confidence) <- confidence.levels # reorder the levels
+  df$Confidence <- factor(df$Confidence, confidence.levels) # reorder the levels
   contrasts(df$Confidence) <- MASS::contr.sdif(nlevels(df$Confidence))
   
-  return(df)
-}
-
-sdif_coding_E205_erp <- function(df) {
+  df$DuraBlock <- factor(df$DuraBlock, DuraBlock.levels)
+  contrasts(df$DuraBlock) <- MASS::contr.sdif(nlevels(df$DuraBlock))
   
-  DuraConf.levels <- c("17_high", "17_low", "17_guess", "200_high")
-  
-  df %<>%
-    sdif_coding_P203_erp() %>%
-    
-    mutate(
-      ConLH_C = ifelse(Confidence == DuraConf.levels[1], -0.75, 0.25), # low - high (17)
-      ConGL_C = ifelse(Confidence %in% DuraConf.levels[1:2], -0.5, 0.5), # guess - low (17)
-      Con2G_C = ifelse(Confidence == DuraConf.levels[4], 0.75, -0.25), # 200_high - 17_guess
-
-      Cate_ConLH = Cate_C * ConLH_C,
-      Hemi_ConLH = Hemi_C * ConLH_C,
-
-      Cate_Hemi_ConLH = Cate_C * Hemi_C * ConLH_C,
-
-      Cate_ConGL = Cate_C * ConGL_C,
-      Hemi_ConGL = Hemi_C * ConGL_C,
-      
-      Cate_Hemi_ConGL = Cate_C * Hemi_C * ConLH_C,
-      
-      Cate_Con2G = Cate_C * Con2G_C,
-      Hemi_Con2G = Hemi_C * Con2G_C,
-      
-      Cate_Hemi_Con2G = Cate_C * Hemi_C * Con2G_C
-    )
-  
-  levels(df$DuraConf) <- DuraConf.levels # reorder the levels
-  contrasts(df$DuraConf) <- MASS::contr.sdif(nlevels(df$DuraConf))
-
   return(df)
 }
