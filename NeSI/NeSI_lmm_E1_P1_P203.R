@@ -160,34 +160,88 @@ load("E204_erp_P1.RData")
 
 
 ###########################  Fitting the lmm.etd1.P1 for P1  ##############################
-# fit the lmm.etd1.P1 model
+# # fit the lmm.etd1.P1 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm.etd1.P1.E1 model...")
+# 
+# # lmm.etd1.P1 for mean amplitude
+# load("E204_P1_lmm_etd.RData")
+# lmm.etd1.P1.E1 <- update(lmm.etd.P1.E1,
+#                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
+#                            (1 + Hemi_C +  
+#                               Type_Dura + 
+#                               Type_Cate_Dura +
+#                               Type_Resp + Cate_Resp + Dura_Resp + 
+#                               Type_Dura_Resp +  
+#                               Type_Cate_Dura_Resp
+#                             | SubjCode) +
+#                            (1 + Type_C + Dura_C + 
+#                               Type_Dura +
+#                               Resp_C + 
+#                               Type_Resp + Dura_Resp + 
+#                               Type_Dura_Resp
+#                             | Stimuli))
+# 
+# # Saving lmm.etd1.P1
+# message("")
+# message("Saving the lmm.etd1.P1.E1")
+# save(lmm.etd1.P1.E1, file = "E204_P1_lmm_etd1.RData")
+
+
+###########################  Fitting the lmm.etd2.P1 for P1  ##############################
+# # fit the lmm.etd2.P1 model
+# message("")
+# message(paste0(strrep("#", 80)))
+# message("Fitting the lmm.etd2.P1.E1 model...")
+# 
+# # lmm.etd2.P1 for mean amplitude
+# load("E204_P1_lmm_etd.RData")
+# lmm.etd2.P1.E1 <- update(lmm.etd.P1.E1,
+#                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
+#                            (1 + Hemi_C +  
+#                               Type_Dura + 
+#                               Type_Resp + 
+#                               Type_Dura_Resp +  
+#                               Type_Cate_Dura_Resp
+#                             | SubjCode) +
+#                            (0 + Type_C +  
+#                               Type_Dura +
+#                               Type_Resp + Dura_Resp + 
+#                               Type_Dura_Resp
+#                             | Stimuli))
+# 
+# # Saving lmm.etd2.P1
+# message("")
+# message("Saving the lmm.etd2.P1.E1")
+# save(lmm.etd2.P1.E1, file = "E204_P1_lmm_etd2.RData")
+
+
+###########################  Fitting the lmm.etd3.P1 for P1  ##############################
+# fit the lmm.etd3.P1 model
 message("")
 message(paste0(strrep("#", 80)))
-message("Fitting the lmm.etd1.P1.E1 model...")
+message("Fitting the lmm.etd3.P1.E1 model...")
 
-# lmm.etd1.P1 for mean amplitude
-load("E204_P1_lmm_etd.RData")
-lmm.etd1.P1.E1 <- update(lmm.etd.P1.E1,
-                         formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
+# lmm.etd3.P1 for mean amplitude
+load("E204_P1_lmm_etd2.RData")
+lmm.etd3.P1.E1 <- update(lmm.etd2.P1.E1,
+                         formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
                            (1 + Hemi_C +  
-                              Type_Dura + 
-                              Type_Cate_Dura +
-                              Type_Resp + Cate_Resp + Dura_Resp + 
+                              Type_Resp + 
                               Type_Dura_Resp +  
                               Type_Cate_Dura_Resp
                             | SubjCode) +
-                           (1 + Type_C + Dura_C + 
+                           (0 +  
                               Type_Dura +
-                              Resp_C + 
                               Type_Resp + Dura_Resp + 
                               Type_Dura_Resp
                             | Stimuli))
 
-# Saving lmm.etd1.P1
+# Saving lmm.etd3.P1
 message("")
-message("Saving the lmm.etd1.P1.E1")
-save(lmm.etd1.P1.E1, file = "E204_P1_lmm_etd1.RData")
-
+message("Saving the lmm.etd3.P1.E1")
+save(lmm.etd3.P1.E1, file = "E204_P1_lmm_etd3.RData")
 
 
 # versions of packages used

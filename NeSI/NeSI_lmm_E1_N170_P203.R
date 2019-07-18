@@ -105,7 +105,7 @@ load("E204_erp_N170.RData")
 # # lmm.rdc.N170 for mean amplitude
 # load("E204_N170_lmm_zcp.RData")
 # lmm.rdc.N170.E1 <- update(lmm.zcp.N170.E1,
-#                           formula =MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse +
+#                           formula =MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
 #                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +
 #                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
 #                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
@@ -137,20 +137,20 @@ message("Fitting the lmm.etd.N170.E1 model...")
 # lmm.etd.N170 for mean amplitude
 load("E204_N170_lmm_rdc.RData")
 lmm.etd.N170.E1 <- update(lmm.rdc.N170.E1,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * urResponse +
-                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +
+                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
+                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
-                               Resp_C +
+                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
+                               Resp_C + 
                                Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-                               Type_Cate_Resp + Cate_Dura_Resp +
+                               Type_Cate_Resp + Cate_Dura_Resp + 
                                Cate_Hemi_Resp +
-                               Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp
+                               Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp 
                              | SubjCode) +
                             (1 + Type_C + Dura_C +
-                               Type_Dura +
-                               Resp_C +
-                               Type_Resp + Dura_Resp +
+                               Type_Dura + 
+                               Resp_C + 
+                               Type_Resp + Dura_Resp + 
                                Type_Dura_Resp
                              | Stimuli),
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
