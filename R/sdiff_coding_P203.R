@@ -1,3 +1,22 @@
+sdif_coding_P203_resp <- function(df) {
+  df %<>%
+    mutate(
+      Type_C = ifelse(Type == "intact", -.5, ifelse(Type == "scrambled", .5, NaN)),
+      Dura_C = ifelse(Duration == 17, -.5, ifelse(Duration == 200, .5, NaN)),
+      
+      Type_Dura = Type_C * Dura_C
+
+    )
+  
+  contrasts(df$Type) <- MASS::contr.sdif(nlevels(df$Type)) 
+  contrasts(df$Duration) <- MASS::contr.sdif(nlevels(df$Duration)) 
+  contrasts(df$Resp) <- MASS::contr.sdif(nlevels(df$Resp))
+  
+  return(df)
+}
+
+
+
 sdif_coding_P203 <- function(df) {
   df %<>%
     mutate(

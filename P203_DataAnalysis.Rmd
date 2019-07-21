@@ -27,10 +27,10 @@ output:
     + Stimulus Type (`NS`: *intact* vs. *scrambled*)
     + Stimulus Category (`FH`: *faces* vs. *houses*)
     + Hemisphere (`Hemisphere`: *left* vs. *right*)
-    + Durations (`Durations`: *17*, *50*, *100* vs. *200*)
+    + Durations (`Durations`: *17* vs. *200*)
 
 * **Dependent variables**:
-    + Gaussian -- *mean* (`MeanAmp`)
+    + *mean* (`MeanAmp`)
     
     Hypothesis to be tested:
     Previous results showed the amplitudes of the N170 for faces with shorter duration are smaller. Two possible reasons:
@@ -102,992 +102,14 @@ erp_theme <- {
 }
 
 ylimit.p1 <- c(3.5, -0.5)
-ylimit.n170 <- c(2, -5.5)  # y axis for plotting N170 amplitude
+ylimit.n170 <- c(1.5, -5.5)  # y axis for plotting N170 amplitude
+
+resp.labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "sure houses")
 
 ```
 
 
-# Experiment 1 (E204)
-## Behavioral results
-```{r load behavioral results of 204}
-raw.beha.E1 <- {
-  "E204_Incorrect_Behavior.csv" %>% 
-    file.path(folder.data, .) %>% 
-    read_csv() 
-}
-
-```
-
-
-```{r remove some trials for P426 and P428}
-# locate the trials for P426 and P428
-raw.beha.E1 <- {
-  raw.beha.E1 %>%
-    mutate(isBad426428 = ((Subject == 426) & Block == 6) | (Subject == 428 & Session == 2 & scrambleVar == "S"))  # remove some trials for 426 and 428. (Something wrong happened for the two participants during recording EEG, therefore they have two parts of behavioral data)
-}
-
-head(raw.beha.E1)
-```
-
-```{r select certain rows and columns from the data, and calculate the Z value for reaction times (204)}
-clean.beha.E1 <- {
-  raw.beha.E1 %>%
-    filter(`Procedure[Trial]` %in% c("faceProc", "houseProc") & !isBad426428) %>% # select the rows (remove the practice trials and bad trials for 426 and 428)
-    select(ExperimentName, SubjCode = Subject, Block, Trial, Age, Sex, Handedness, Type = scrambleVar, Category = FH, Duration = stimDuration, ACC = Resp.ACC, Resp.RT, Resp = Resp.RESP, stimName) %>% # select and rename the columns (remove unuseful columns)
-    mutate(
-      SubjCode = factor(paste("P", SubjCode, sep = "")), # save SubjCode as factor
-      Type = recode_factor(Type, "N" = "intact", "S" = "scrambled"), # rename the levels of Type
-      Category = recode(Category, "hosue" = "house", "house" = "house", "face" = "face", .default = "face"), # rename "hosue" as "house"
-      Stimuli = substr(stimName, 2, 6),
-      Duration = as_factor(Duration), # save Duration as factor
-      Category = as_factor(Category),
-      Type = as_factor(Type)
-      ) %>% 
-    group_by(SubjCode, Type, Category, Duration, ACC) %>% # divide the data based on these conditions
-    mutate(
-      RT = Resp.RT + as.numeric(levels(Duration))[Duration],
-      RT.Z = scale(RT), # calculate the Z value for reaction times within each group
-      RT.Within3Z = ifelse(RT.Z <= 3 & RT.Z >= -3, 1, ifelse(RT.Z < -3 | RT.Z > 3, 0, NaN)) # if the Z values are between -3 and 3, will be marked as 1
-      ) %>% 
-    ungroup() # ungroup the data 
-     
-}
-
-# behavior.tidyup
-head(clean.beha.E1, 10)
-
-```
-
-```{r check the number of trials for 204}
-# check the number of trials for 204
-sum.count.E1 <- {
-  clean.beha.E1 %>% 
-    group_by(SubjCode, Type, Category, Duration) %>% 
-    summarize(Count_sum = n())
-}
-
-valid.count.E1 <- {
-  clean.beha.E1 %>% 
-    filter(RT > RT.min) %>% 
-    group_by(SubjCode, Type, Category, Duration) %>% 
-    summarize(Count = n()) %>% 
-    right_join(sum.count.E1, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
-    mutate(ratio = Count / Count_sum) %>% 
-    filter(ratio > ratio.count) %$%
-    SubjCode %>% 
-    unique()
-}
-
-
-# remove the participants
-clean.beha.E1 %<>% filter(SubjCode %in% valid.count.E1)
-
-```
-
-
-### Participant demographic information
-```{r participant information E204}
-subj.info.E1 <- {
-  clean.beha.E1 %>% 
-    select(SubjCode, Age, Sex, Handedness) %>% # select the columns of participant inforamtion
-    distinct() # only keep the unique rows
-}
-
-subj.info.E1
-```
-There are `r nrow(subj.info.E1)` participants in total in this experiment.  \
-The averaged age of this group is `r round(mean(subj.info.E1$Age), 3)` and the standard deviation of age is `r round(sd(subj.info.E1$Age))`. \
-The number of female and male participants are `r sum(subj.info.E1$Sex == "female")` and `r sum(subj.info.E1$Sex == "male")` respectively. \
-`r sum(subj.info.E1$Handedness == "right")` of them are right handed.
-
-### Set the back difference coding
-```{r bd coding for acc E1}
-# set the bd coding manually 
-clean.beha.E1 <- sdif_coding_P203(clean.beha.E1)
-
-if (saveCSV) {
-  output.beha.E1 <- file.path(folder.nesi, "E204_beha.RData")
-  save(clean.beha.E1, file = output.beha.E1)
-}
-```
-
-### Behavioral responses
-#### Accuracy
-```{r calculate the accuracy (E1)}
-# accuracy data
-avg.acc.R.E1 <- {
-  clean.beha.E1 %>%
-    group_by(SubjCode, Type, Duration) %>%
-    summarize(Accuracy = mean(ACC)) %>%
-    ungroup() 
-}
-
-# descriptive statistics of accuracy for plotting
-desc.acc.R.E1 <- {
-  avg.acc.R.E1 %>%
-    group_by(Type, Duration) %>%
-    summarize(Mean = mean(Accuracy)
-              , N = n()
-              , SD = sd(Accuracy)
-              , SE = SD/sqrt(N)
-              , SE.lo = Mean - SE, SE.hi = Mean + SE
-              , CI = SE * qt(0.975,N)
-              , Median = median(Accuracy)
-              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-              )  
-}
-
-# accuracy data for SPSS analysis
-avg.acc.SPSS.E1 <- {
-  avg.acc.R.E1 %>%
-    mutate(Conditions = paste(Type, Duration, sep = ".")) %>%
-    select(SubjCode, Conditions, Accuracy) %>%
-    spread(Conditions, Accuracy)
-}
-
-# save the data as *.csv
-if (saveCSV) {
-  output.acc.SPSS.E1 <- file.path(folder.output, "E204_acc.csv")
-  write.csv(avg.acc.SPSS.E1, output.acc.SPSS.E1, row.names = FALSE)
-} 
-
-```
-
-
-##### RainClound plot of accuracy
-```{r rainclound plot of accuracy E1, warning=FALSE}
-# print(sum.acc.R, width = Inf)
-knitr::kable(desc.acc.R.E1, digits = 4)
-
-acc.RainPlot.E1 <- {
-  ggplot(data = avg.acc.R.E1, aes(y = Accuracy, x = Type, fill = Duration)) + 
-    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
-    geom_point(aes(color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
-    geom_boxplot(width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.acc.R.E1, aes(y = Mean, x = Type, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.acc.R.E1, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
-    # scale_colour_grey() + # start = .1, end = .6, color for the contour
-    # scale_fill_grey() + # start = .3, end = .6, color for the fill
-    # scale_color_brewer(palette = "Set1") +
-    # scale_fill_brewer(palette = "Set1") +
-    labs(title = "Accuracy for E204", x = "Stimulus Type", y = "Accuracy", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
-    coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
-    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) + # add the line for 0.5 and 1 (y)
-    theme_bw() + # the backgroud color
-    plot_theme
-}
-
-```
-
-&nbsp;
-
-```{r display the RainCloud plot of accuracy}
-acc.RainPlot.E1
-```
-
-
-##### Column plot of accuracy
-```{r Plot of accuracy of behavioral data E1, warning = FALSE}
-
-acc.ColuPlot.E1 = {
-  ggplot(data = desc.acc.R.E1, aes(y = Mean, x = Type, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5, 
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
-    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Accuracy for E204", x = "Stimulus Type", y = "Accuracy", fill = "Durations(ms)") +  # set the names for main, x and y axises
-    scale_fill_grey() +  # set the color for columns
-    geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
-    theme_bw() +
-    plot_theme
-}
-
-acc.ColuPlot.E1
-```
-
-
-#### Hits
-```{r calculate the hits (and save the data into csv) E1}
-
-# hit data for R analysis
-sum.hit.R.E1 <- {
-  clean.beha.E1 %>%
-    group_by(SubjCode, Type, Category, Duration) %>%
-    summarize(Hit = mean(ACC), count = n()) %>%
-    ungroup()
-}
-
-# descriptive statistics of hits for plotting
-desc.hit.R.E1 <- {
-  sum.hit.R.E1 %>% 
-    group_by(Type, Category, Duration) %>% 
-    summarize(Mean = mean(Hit), N = n(), SD = sd(Hit), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(Hit), Lower = Mean - SD, Upper = Mean + SD)
-}
-
-# hit data for SPSS analysis
-sum.hit.SPSS.E1 <- {
-  sum.hit.R.E1 %>%
-    mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
-    select(SubjCode, Conditions, Hit) %>%
-    spread(Conditions, Hit)
-}
-
-# save the data as *.csv
-if (saveCSV) {
-  output.hit.SPSS.E1 <- file.path(folder.output, "E204_hit.csv")
-  write.csv(sum.hit.SPSS.E1, output.hit.SPSS.E1, row.names = FALSE)
-} 
-
-```
-
-
-##### RainClound plot of hits
-```{r rainclound plot of hits E1}
-knitr::kable(desc.hit.R.E1, digits = 4)
-
-hit.RainPlot.E1 <- {
-  ggplot(data = sum.hit.R.E1, aes(y = Hit, x = Category, fill = Duration)) + 
-    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
-    geom_point(aes(y = Hit, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
-    geom_boxplot(aes(y = Hit), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.hit.R.E1, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.hit.R.E1, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
-    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
-    # scale_colour_grey() + # start = .1, end = .6, color for the contour
-    # scale_fill_grey() + # start = .3, end = .6, color for the fill
-    # scale_color_brewer(palette = "Set1") + # palette = "RdBu"
-    # scale_fill_brewer(palette = "Set1") + # palette = "RdBu"
-    labs(title = "Hits for E204", x = "Stimulus Type", y = "Hit Rate", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
-    coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
-    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) + # add the line for 0.5 and 1 (y)
-    theme_bw() + # the backgroud color
-    plot_theme
-}
-
-```
-
-&nbsp;
-
-```{r display the RainCloud plot of hits E1}
-hit.RainPlot.E1
-```
-
-##### Column plot of hits
-```{r Plot of hits for behavioral data E1, warning=FALSE}
-
-hit.ColuPlot.E1 = {
-  ggplot(data = desc.hit.R.E1, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5, 
-                  position = position_dodge(width=0.9)) +
-    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
-    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Hits for E204", x = "Stimulus Type", y = "Hit Rate", fill = "Durations(ms)") +  # set the names for main, x and y axises
-    scale_fill_grey() +  # set the color for columns
-    # scale_fill_manual(values=c(faceColors, houseColors)) +  # set the color for columns and the label names for legend  , name = "xxx"
-    geom_text(label = c("***", "***", "***", "***", "*", "", "", ""), color = rep("red", 8), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 4)) + # add starts to the significant columns
-    theme_bw() +
-    plot_theme
-}
-
-hit.ColuPlot.E1
-```
-
-
-### Correct response times
-```{r calculate the correct RT E1}
-df.rt.E1 <- {
-  clean.beha.E1 %>%
-    filter((ACC == 1 | Type == "scrambled")
-           & RT.Within3Z == 1 # remove the RT outsides 3Z
-           )
-}
-
-sum.rt.R.E1 <- {
-   df.rt.E1 %>% # only include the correct responses for normal trials but all trial for scrambled
-    select(SubjCode, Type, Category, Duration, RT) %>% # select the columns
-    group_by(SubjCode, Type, Category, Duration) %>% # divide data into groups to get the mean
-    summarize(RT = mean(RT), count = n()) %>%  # calculate the mean of RT
-    ungroup()
-}
-
-desc.rt.R.E1 <- {
-  sum.rt.R.E1 %>% 
-    group_by(Type, Category, Duration) %>% 
-    summarize(Mean = mean(RT), N = n(), SD = sd(RT), SE = SD/sqrt(N), SE.hi = Mean + SE, SE.lo = Mean - SE, CI = SE * qt(0.975,N), Median = median(RT), Lower = Mean - SD, Upper = Mean + SD)
-}
-
-sum.rt.SPSS.E1 <- {
-  sum.rt.R.E1 %>% 
-    mutate(Conditions = paste(Type, Category, Duration, sep = ".")) %>%
-    select(-c(Type, Category, Duration, count)) %>%
-    spread(Conditions, RT)
-}
-
- # save the data into *.csv
-if (saveCSV) {
-  output.rt.E1 <- file.path(folder.nesi, "E204_beha_RT.RData")
-  save(df.rt.E1, file = output.rt.E1)
-  output.rt.SPSS.E1 <- file.path(folder.output, "E204_RT.csv")
-  write.csv(sum.rt.SPSS.E1, output.rt.SPSS.E1, row.names = FALSE)
-}
-```
-
-#### RainClound plot of the response times 
-```{r rainclound plot of the RT data E204, warning = FALSE}
-knitr::kable(desc.rt.R.E1, digits = 4)
-
-rt.RainPlot.E1 <- {
-  ggplot(data = sum.rt.R.E1, aes(y = RT, x = Category, fill = Duration)) + 
-    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
-    geom_point(aes(y = RT, color = Duration), position = position_jitter(width = .15), size = .5, alpha = .8) +
-    geom_boxplot(aes(y = RT), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.rt.R.E1, aes(y = Mean, x = Category, color = Duration), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.rt.R.E1, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
-    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
-    # scale_colour_grey() + # start = .1, end = .6, color for the contour
-    # scale_fill_grey() + # start = .3, end = .6, color for the fill
-    # scale_color_brewer(palette = "Set1") + # palette = "RdBu"
-    # scale_fill_brewer(palette = "Set1") + # palette = "RdBu"
-    labs(title = "Reaction times for E204", x = "Stimulus Type", y = "Reaction times (ms)", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
-    # coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
-    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    theme_bw() + # the backgroud color
-    plot_theme
-}
-
-```
-
-&nbsp;
-
-```{r display the RainCloud plot for reaction times}
-rt.RainPlot.E1
-```
-
-
-#### Column plot of the response times
-```{r Plot of RT data}
-
-rt.ColuPlot.E1 = {
-  ggplot(data = desc.rt.R.E1, aes(y = Mean, x = Category, fill = Duration )) +  # set the data, varialbes for x and y axises, and the variable for dividing data
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5, 
-                  position = position_dodge(width=0.9)) +
-    facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
-    coord_cartesian(ylim = c(0, 850)) +  # set the limit for y axis
-    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Reaction times for E204", x = "Stimulus Type", y = "Reaction times (ms)", fill = "Durations(ms)") +  # set the names for main, x and y axises
-    scale_fill_grey() +  # set the color for columns
-    # geom_text(label = c("*", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
-    theme_bw() +
-    plot_theme
-}
-
-rt.ColuPlot.E1
-```
-
-
-
-## ERP amplitude analysis
-### Load mean amplitude for single trials
-The raw mean amplitude of each trial for all participants were loaded.
-```{r load trial mean amplitude E1, message = FALSE}
-# read the trial mean amplitude data
-df.erp.E1 <- {
-  "E204_MeanAmp.csv" %>% 
-    file.path(folder.data, .) %>% 
-    read_csv() %>% 
-    substr_Event() %>% 
-    mutate(SubjCode = as.factor(SubjCode),
-           Hemisphere = as.factor(Hemisphere),
-           Response = as.factor(Response),
-           Stimuli = substr(stimName, 2, 6))
-}
-
-
-df.erp.E1 %>% 
-  group_by(SubjCode, Stimuli, Hemisphere, Type, Category, Duration) %>% 
-  summarize(count = n())
-
-```
-
-### Set the successive difference coding
-```{r set the dummy coding for ERP data E1}
-# dummy coding
-df.erp.E1 <- sdif_coding_E204_erp(df.erp.E1)
-
-```
-
-### Amplitudes of the P1
-```{r erp df for the P1 E1}
-# only keep the data for amplitudes of the P1 (correct and incorrect erps)
-df.erp.P1.E1 <- {
-  df.erp.E1 %>% 
-    filter(Component == "P1") 
-}
-
-if (saveCSV) {
-  output.erp.P1.E1 <- file.path(folder.nesi, "E204_erp_P1.RData")
-  save(df.erp.P1.E1, file = output.erp.P1.E1)
-}
-
-# the structure of this dataset
-head(df.erp.P1.E1, 10)
-```
-
-
-#### The maximal model
-```{r maximal lmm for E204 p1}
-# file.max.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_max.RData")
-# 
-# # fit the maximal model
-# if (!file.exists(file.max.P1.E1)) {
-#   lmm.max.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
-#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +
-#                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
-#                                Type_Cate_Dura_Hemi +
-#                                Resp_C +
-#                                Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp +
-#                                Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
-#                                Type_Cate_Dura_Hemi_Resp
-#                              | SubjCode) +
-#                             (1 + Type_C + Dura_C + Hemi_C +
-#                                Type_Dura + Type_Hemi + Dura_Hemi +
-#                                Type_Dura_Hemi +
-#                                Resp_C +
-#                                Type_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Hemi_Dura_Resp
-#                              | Stimuli),
-#                           data = df.erp.P1.E1,
-#                           verbose = TRUE,
-#                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                                 optCtrl = list(maxfun = 1e7),
-#                                                 calc.derivs = FALSE))
-# } else {
-#   load(file.max.P1.E1)
-# }
-# 
-# print(summary(lmm.max.P1.E1), corr = FALSE)
-
-```
-
-#### The zero-correlation-parameter model
-```{r zcp lmm for E1 p1}
-file.zcp.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_zcp.RData")
-
-# fit the zcp model
-if (!file.exists(file.zcp.P1.E1)) {
-  lmm.zcp.P1.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-                               Type_Cate_Dura_Hemi +
-                               Resp_C + 
-                               Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-                               Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp + 
-                               Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
-                               Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
-                               Type_Cate_Dura_Hemi_Resp
-                             || SubjCode) +
-                            (1 + Type_C + Dura_C + Hemi_C + 
-                               Type_Dura + Type_Hemi + Dura_Hemi +
-                               Type_Dura_Hemi +
-                               Resp_C + 
-                               Type_Resp + Dura_Resp + Hemi_Resp +
-                               Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
-                               Type_Hemi_Dura_Resp
-                             || Stimuli),
-                          data = df.erp.P1.E1,
-                          verbose = TRUE,
-                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                optCtrl = list(maxfun = 1e7)))
-} else {
-  load(file.zcp.P1.E1)
-}
-
-print(summary(lmm.zcp.P1.E1), corr = FALSE)
-
-```
-
-
-#### The reduced model
-```{r PCA analysis for zcp lmm for E1 P1}
-summary(rePCA(lmm.zcp.P1.E1))
-```
-
-```{r}
-file.rdc.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_rdc.RData")
-
-# fit the rdc model
-if (!file.exists(file.rdc.P1.E1)) {
-  lmm.rdc.P1.E1 <- update(lmm.zcp.P1.E1,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Type_Hemi + Dura_Hemi +
-                               Type_Cate_Dura +
-                               Resp_C +
-                               Type_Resp + Cate_Resp + Dura_Resp + 
-                               Cate_Hemi_Resp + Type_Dura_Resp +  
-                               Type_Cate_Dura_Resp
-                             || SubjCode) +
-                            (1 + Type_C + Dura_C + 
-                               Type_Dura +
-                               Resp_C + 
-                               Type_Resp + Dura_Resp + 
-                               Type_Dura_Resp
-                             || Stimuli))
-} else {
-  load(file.rdc.P1.E1)
-}
-
-print(summary(lmm.rdc.P1.E1), corr = FALSE)
-
-```
-
-
-```{r}
-anova(lmm.rdc.P1.E1, lmm.zcp.P1.E1, refit = FALSE)
-```
-
-#### The extended model
-
-```{r}
-file.etd.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_etd.RData")
-
-# fit the etd model
-if (!file.exists(file.etd.P1.E1)) {
-  lmm.etd.P1.E1 <- update(lmm.zcp.P1.E1,
-                          formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Type_Hemi + Dura_Hemi +
-                               Type_Cate_Dura +
-                               Resp_C +
-                               Type_Resp + Cate_Resp + Dura_Resp + 
-                               Cate_Hemi_Resp + Type_Dura_Resp +  
-                               Type_Cate_Dura_Resp
-                             | SubjCode) +
-                            (1 + Type_C + Dura_C + 
-                               Type_Dura +
-                               Resp_C + 
-                               Type_Resp + Dura_Resp + 
-                               Type_Dura_Resp
-                             | Stimuli))
-} else {
-  load(file.etd.P1.E1)
-}
-
-print(summary(lmm.etd.P1.E1), corr = FALSE)
-```
-
-
-```{r}
-summary(rePCA(lmm.etd.P1.E1))
-```
-
-
-
-```{r}
-file.etd1.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_etd1.RData")
-
-# fit the etd1 model
-if (!file.exists(file.etd1.P1.E1)) {
-  lmm.etd1.P1.E1 <- update(lmm.etd.P1.E1,
-                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                             (1 + Hemi_C +  
-                                Type_Dura + 
-                                Type_Cate_Dura +
-                                Type_Resp + Cate_Resp + Dura_Resp + 
-                                Type_Dura_Resp +  
-                                Type_Cate_Dura_Resp
-                              | SubjCode) +
-                             (1 + Type_C + Dura_C + 
-                                Type_Dura +
-                                Resp_C + 
-                                Type_Resp + Dura_Resp + 
-                                Type_Dura_Resp
-                              | Stimuli))
-} else {
-  load(file.etd1.P1.E1)
-}
-
-print(summary(lmm.etd1.P1.E1), corr = FALSE)
-``` 
-
-```{r}
-summary(rePCA(lmm.etd1.P1.E1))
-```
-
-```{r}
-file.etd2.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_etd2.RData")
-
-# fit the etd2 model
-if (!file.exists(file.etd2.P1.E1)) {
-  lmm.etd2.P1.E1 <- update(lmm.etd1.P1.E1,
-                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                             (1 + Hemi_C +  
-                                Type_Dura + 
-                                Type_Resp + 
-                                Type_Dura_Resp +  
-                                Type_Cate_Dura_Resp
-                              | SubjCode) +
-                             (0 + Type_C +  
-                                Type_Dura +
-                                Type_Resp + Dura_Resp + 
-                                Type_Dura_Resp
-                              | Stimuli))
-} else {
-  load(file.etd2.P1.E1)
-}
-
-print(summary(lmm.etd2.P1.E1), corr = FALSE)
-``` 
-
-```{r}
-summary(rePCA(lmm.etd2.P1.E1))
-```
-
-
-
-```{r}
-file.etd3.P1.E1 <- file.path(folder.nesi, "E204_P1_lmm_etd3.RData")
-
-# fit the etd3 model
-if (!file.exists(file.etd3.P1.E1)) {
-  lmm.etd3.P1.E1 <- update(lmm.etd2.P1.E1,
-                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                             (1 + Hemi_C +  
-                                Type_Resp + 
-                                Type_Dura_Resp +  
-                                Type_Cate_Dura_Resp
-                              | SubjCode) +
-                             (0 +  
-                                Type_Dura +
-                                Type_Resp + Dura_Resp + 
-                                Type_Dura_Resp
-                              | Stimuli))
-} else {
-  load(file.etd3.P1.E1)
-}
-
-print(summary(lmm.etd3.P1.E1), corr = FALSE)
-``` 
-
-
-```{r}
-anova(lmm.rdc.P1.E1, lmm.etd1.P1.E1, refit = FALSE)
-```
-
-#### The optimal model
-```{r}
-
-lmm.opt.P1.E1 <- lmm.rdc.P1.E1
-
-anova(lmm.opt.P1.E1)
-# summary(lmm.opt.P1.E1, corr = FALSE)
-```
-
-#### Diagnostic plot
-```{r}
-qqplot_lmer(lmm.opt.P1.E1)
-```
-
-#### Estimated marginal means
-```{r}
-emm.P1.E1 <- emmeans(lmm.opt.P1.E1, ~ Category + Response | Type + Duration + Hemisphere)
-
-emm.P1.E1
-```
-
-```{r}
-emmip(emm.P1.E1, Category ~ Duration | Type + Hemisphere, CIs = TRUE)
-```
-
-
-```{r}
-pairs(emm.P1.E1, simple = "Category")
-```
-
-
-### Ampitudes of the N170
-```{r erp df for the N170 E1}
-# only keep the data for amplitudes of the N170 (all erps)
-df.erp.N170.E1 <- {
-  df.erp.E1 %>% 
-    filter(Component == "N170")
-}
-
-if (saveCSV) {
-  output.erp.N170.E1 <- file.path(folder.nesi, "E204_erp_N170.RData")
-  save(df.erp.N170.E1, file = output.erp.N170.E1)
-}
-
-# the structure of this dataset
-head(df.erp.N170.E1, 10)
-```
-
-```{r}
-df.erp.N170.E1.long <- {
-  df.erp.N170.E1 %>% 
-    group_by(SubjCode, Type, Category, Duration, Hemisphere) %>% 
-    summarize(mean = mean(MeanAmp), count = n()) %>% 
-    filter(count > 20) %>% 
-    ungroup()
-}
-
-E1.N170.anova <- aov_4(mean ~ Type * Category * Hemisphere * Duration  + (Type * Category * Hemisphere * Duration | SubjCode), df.erp.N170.E1.long)
-
-
-em <- emmeans(E1.N170.anova, ~ Type * Category * Hemisphere * Duration)
-
-emmip(em, Category ~ Duration | Type + Hemisphere, CIs = TRUE) + 
-  scale_y_continuous(trans = "reverse")
-
-pairs(em, simple = "Duration")
-
-```
-
-
-```{r}
-df.N170.E1.long.resp <- {
-  df.erp.N170.E1 %>% 
-    filter(Type == "intact") %>% 
-    group_by(SubjCode, Category, Duration, Hemisphere, Response) %>% 
-    summarize(mean = mean(MeanAmp), count = n()) %>% 
-    filter(count > 20) %>% 
-    mutate(DuraResp = paste(Duration, Response, sep = "_")) %>% 
-    filter(DuraResp != "200_0") %>% 
-    ungroup()
-}
-
-df.N170.E1.subj.resp <- {
-  df.N170.E1.long.resp %>%
-    mutate(conditions = paste(Category, Hemisphere, DuraResp, sep = "-")) %>%
-    select(SubjCode, conditions, mean) %>%
-    spread(conditions, mean)  %>% 
-    filter(!is.na(`face-Left-17_0`), !is.na(`house-Left-17_0`)) %$%
-    SubjCode
-}
-
-df.N170.E1.long.resp %<>% filter(SubjCode %in% df.N170.E1.subj.resp)
-
-E1.N170.anova.resp <- aov_4(mean ~ Category * Hemisphere * DuraResp + (Category * Hemisphere * DuraResp | SubjCode), df.N170.E1.long.resp)
-
-
-em.resp <- emmeans(E1.N170.anova.resp, ~ Category * Hemisphere * DuraResp)
-
-emmip(em.resp, Category ~ DuraResp | Hemisphere, CIs = TRUE) + 
-  scale_y_continuous(trans = "reverse")
-
-pairs(em.resp, simple = "DuraResp")
-
-```
-
-
-#### The maximal model
-As the maximal model is too complex and cannot finish within 7 days, we will run the zcp model directly.
-```{r maximal lmm for E1 N170}
-# file.max.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_max.RData")
-# 
-# # fit the maximal model
-# if (!file.exists(file.max.N170.E1)) {
-#   lmm.max.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response +
-#                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +
-#                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
-#                                Type_Cate_Dura_Hemi +
-#                                Resp_C +
-#                                Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp +
-#                                Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
-#                                Type_Cate_Dura_Hemi_Resp
-#                              | SubjCode) +
-#                             (1 + Type_C + Dura_C + Hemi_C +
-#                                Type_Dura + Type_Hemi + Dura_Hemi +
-#                                Type_Dura_Hemi +
-#                                Resp_C +
-#                                Type_Resp + Dura_Resp + Hemi_Resp +
-#                                Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
-#                                Type_Hemi_Dura_Resp
-#                              | Stimuli),
-#                           data = df.erp.N170.E1,
-#                           verbose = TRUE,
-#                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                                 optCtrl = list(maxfun = 1e7),
-#                                                 calc.derivs = FALSE))
-# } else {
-#   load(file.max.N170.E1)
-# }
-# 
-# print(summary(lmm.max.N170.E1), corr = FALSE)
-
-```
-
-
-#### The zero-correlation-parameter model
-```{r zcp lmm for E1 N170}
-
-file.zcp.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_zcp.RData")
-
-# fit the zcp model
-if (!file.exists(file.zcp.N170.E1)) {
-  lmm.zcp.N170.E1 <- lmer(MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                            (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                               Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                               Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-                               Type_Cate_Dura_Hemi +
-                               Resp_C + 
-                               Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-                               Type_Cate_Resp + Type_Dura_Resp + Cate_Dura_Resp + 
-                               Type_Hemi_Resp + Cate_Hemi_Resp + Dura_Hemi_Resp +
-                               Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp + Type_Hemi_Dura_Resp + Hemi_Cate_Dura_Resp +
-                               Type_Cate_Dura_Hemi_Resp
-                             || SubjCode) +
-                            (1 + Type_C + Dura_C + Hemi_C + 
-                               Type_Dura + Type_Hemi + Dura_Hemi +
-                               Type_Dura_Hemi +
-                               Resp_C + 
-                               Type_Resp + Dura_Resp + Hemi_Resp +
-                               Type_Dura_Resp + Type_Hemi_Resp + Dura_Hemi_Resp +
-                               Type_Hemi_Dura_Resp
-                             || Stimuli),
-                          data = df.erp.N170.E1,
-                          verbose = TRUE,
-                          control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                optCtrl = list(maxfun = 1e7)))
-  
-} else {
-  load(file.zcp.N170.E1)
-}
-
-
-print(summary(lmm.zcp.N170.E1), corr = FALSE)
-
-```
-
-
-#### The reduced model
-```{r PCA analysis for zcp lmm for E1 N170}
-summary(rePCA(lmm.zcp.N170.E1))
-```
-
-
-```{r rdc lmm for E1 N170}
-
-file.rdc.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_rdc.RData")
-
-# fit the rdc model
-if (!file.exists(file.rdc.N170.E1)) {
-  lmm.rdc.N170.E1 <- update(lmm.zcp.N170.E1,
-                            formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-                              (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-                                 Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-                                 Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-                                 Resp_C + 
-                                 Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-                                 Type_Cate_Resp + Cate_Dura_Resp + 
-                                 Cate_Hemi_Resp +
-                                 Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp 
-                               || SubjCode) +
-                              (1 + Type_C + Dura_C +
-                                 Type_Dura + 
-                                 Resp_C + 
-                                 Type_Resp + Dura_Resp + 
-                                 Type_Dura_Resp
-                               || Stimuli))
-  
-} else {
-  load(file.rdc.N170.E1)
-}
-
-
-print(summary(lmm.rdc.N170.E1), corr = FALSE)
-
-```
-
-
-```{r}
-anova(lmm.rdc.N170.E1, lmm.zcp.N170.E1, refit = FALSE)
-```
-
-#### The extended model
-```{r etd lmm for E1 N170}
-
-# file.etd.N170.E1 <- file.path(folder.nesi, "E204_N170_lmm_etd.RData")
-# 
-# # fit the etd model
-# if (!file.exists(file.etd.N170.E1)) {
-# 
-#   lmm.etd.N170.E1 <- update(lmm.rdc.N170.E1,
-#                             formula = MeanAmp ~ Type * Category * Duration * Hemisphere * Response + 
-#                               (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
-#                                  Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
-#                                  Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
-#                                  Resp_C + 
-#                                  Type_Resp + Cate_Resp + Dura_Resp + Hemi_Resp +
-#                                  Type_Cate_Resp + Cate_Dura_Resp + 
-#                                  Cate_Hemi_Resp +
-#                                  Type_Cate_Dura_Resp + Type_Cate_Hemi_Resp 
-#                                | SubjCode) +
-#                               (1 + Type_C + Dura_C +
-#                                  Type_Dura + 
-#                                  Resp_C + 
-#                                  Type_Resp + Dura_Resp + 
-#                                  Type_Dura_Resp
-#                                | Stimuli),
-#                             control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-#                                                 optCtrl = list(maxfun = 1e7),
-#                                                 calc.derivs = FALSE))
-# 
-# } else {
-#   load(file.etd.N170.E1)
-# }
-# 
-# print(summary(lmm.etd.N170.E1), corr = FALSE)
-
-```
-
-
-#### The optimal model
-```{r}
-lmm.opt.N170.E1 <- lmm.rdc.N170.E1
-
-# anova(lmm.opt.N170.E1)
-print(summary(lmm.rdc.N170.E1), corr = FALSE)
-```
-
-```{r}
-emm.N170.E1 <- emmeans(lmm.opt.N170.E1, ~ Category  | Type + Duration + Hemisphere)
-```
-
-
-```{r}
-emmip(emm.N170.E1, Category ~ Response + Duration | Type + Hemisphere, CIs = TRUE) + 
-  scale_y_continuous(trans = "reverse")
-```
-
-```{r}
-pairs(emm.N170.E1, simple = "Duration")
-# pairs(emm.N170.E1, simple = "Duration")
-```
-
-
-
-
-# Experiment 2 (E205)
+# Experiment 205
 
 ## Behavior results
 ```{r load behavioral results of 205}
@@ -1156,8 +178,8 @@ clean.beha.205 %<>% filter(SubjCode %in% valid.count.205)
 ```
 
 
-```{r remove participants whose performance in Key 1 was lower than 90%}
-# remove participants whose performance in Key 1 was lower than 90%
+```{r remove participants whose performance in Key 1 was lower than 95%}
+# remove participants whose performance in Key 1 was lower than 95%
 
 valid.17 <- {
   clean.beha.205 %>%
@@ -1168,7 +190,18 @@ valid.17 <- {
     SubjCode
 }
 
+
+# clean.beha.205 %>%
+#   filter(Duration == 17, Resp == 1) %>% # Type == "intact",
+#   group_by(SubjCode, Duration, Resp) %>% # Type, 
+#   summarize(Accuracy = mean(ACC), Count = n()) %>% 
+#   filter(Accuracy < 0.95) %>% 
+#   ungroup() %>% 
+#   summarize(mean(Accuracy), min(Accuracy), max(Accuracy))  
+  
 clean.beha.205 %<>% filter(SubjCode %in% valid.17)
+
+  
 
 ```
 
@@ -1201,7 +234,7 @@ tmp.count <- {
 }
 
 
-avg.resp.long.205 <- {
+avg.dist.long.205 <- {
   clean.beha.205 %>% 
     # mutate(RespRateFace = if_else(Category == "face", ACC, if_else(Category == "house", as.numeric(!ACC), NaN))) %>% 
     group_by(SubjCode, Type, Category, Duration, Resp) %>% 
@@ -1214,25 +247,26 @@ avg.resp.long.205 <- {
 
 
 # descriptive statistics of accuracy for plotting
-desc.resp.205 <- {
-  avg.resp.long.205 %>%
+desc.dist.205 <- {
+  avg.dist.long.205 %>%
     group_by(Type, Category, Duration, Resp) %>%
     summarize(Mean = mean(RespRate)
               , N = n()
               , SD = if_else(N > 1, sd(RespRate), 0)
               , SE = SD/sqrt(N)
               , SE.lo = Mean - SE, SE.hi = Mean + SE
-              , CI = SE * qt(0.975,N)
+              , CI_lo = Mean - SE * 1.96
+              , CI_hi = Mean + SE * 1.96
               , Median = median(RespRate)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
               ) %>% 
     ungroup() %>% 
     add_row(Type = "intact", Category = "house", Duration = 200, Resp = 2, Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
-            SE.hi = 0, CI = 0, Median = 0, Lower = 0, Upper = 0)
+            SE.hi = 0, CI_lo = 0, CI_hi = 0, Median = 0, Lower = 0, Upper = 0)
 }
 
-avg.resp.wide.205 <- {
-  avg.resp.long.205 %>% 
+avg.dist.wide.205 <- {
+  avg.dist.long.205 %>% 
     mutate(Conditions = paste(Type, Category, Duration, Resp, sep = "_")) %>% 
     select(SubjCode, Conditions, RespRate) %>% 
     spread(Conditions, RespRate)
@@ -1243,15 +277,296 @@ avg.resp.wide.205 <- {
 
 
 ```{r rainclound plot of the RT data E205, warning = FALSE}
-knitr::kable(desc.resp.205, digits = 4)
+knitr::kable(desc.dist.205, digits = 4)
 
-rt.RainPlot.205 <- {
-  ggplot(data = avg.resp.long.205, aes(y = RespRate, x = as.factor(Resp), fill = Category)) + 
+dist.RainPlot.205 <- {
+  ggplot(data = avg.dist.long.205, aes(y = RespRate, x = as.factor(Resp), fill = Category)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(y = RespRate, color = Category), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(aes(y = RespRate), width = .2, outlier.shape = NA, alpha = .7) +
-    geom_point(data = desc.resp.205, aes(y = Mean, x = Resp, color = Category), position = position_nudge(x = 0.3), size = 2.5) +
-    geom_errorbar(data = desc.resp.205, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    geom_point(data = desc.dist.205, aes(y = Mean, x = Resp, color = Category), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.dist.205, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
+    facet_grid(Type ~ Duration) +
+
+    # facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
+    # scale_colour_grey() + # start = .1, end = .6, color for the contour
+    # scale_fill_grey() + # start = .3, end = .6, color for the fill
+    # scale_color_brewer(palette = "Set1") + # palette = "RdBu"
+    # scale_fill_brewer(palette = "Set1") + # palette = "RdBu"
+    labs(title = "Reaction times for 205", x = "Stimulus Type", y = "Reaction times (ms)", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
+    # scale_x_discrete(labels=resp.labels) +
+    # coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    theme_bw() + # the backgroud color
+    plot_theme
+}
+
+```
+
+&nbsp;
+
+```{r display the RainCloud plot for reaction times}
+dist.RainPlot.205
+```
+
+
+```{r}
+
+dura.labels <- c("17ms", "200ms")
+names(dura.labels) <- c(17, 200)
+
+dist.ColuPlot.205 <- {
+  ggplot(data = desc.resp.205, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Type ~ Duration, 
+               labeller = labeller(Duration = dura.labels)) +
+    geom_errorbar(mapping = aes(ymin = CI_lo, ymax = CI_hi), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Responses", y = "Percentage", fill = "Category") +  # set the names for main, x and y axises Subjective Responses for E205
+    scale_fill_grey() +  # set the color for columns
+    # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    erp_theme 
+}
+
+dist.ColuPlot.205
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+df.ratio.205 <- {
+  clean.beha.205 %>%
+    mutate(isFace = if_else(Category == "face", 1, 0)) %>%
+    group_by(SubjCode, Type, Duration, Resp) %>%
+    summarize(ratio = mean(isFace), Count = n())
+}
+
+desc.ratio.205 <- {
+  df.ratio.205 %>%
+    group_by(Type, Duration, Resp) %>%
+    summarize(Mean = mean(ratio)
+              , N = n()
+              , SD = if_else(N > 1, sd(ratio), 0)
+              , SE = SD/sqrt(N)
+              , SE.lo = Mean - SE, SE.hi = Mean + SE
+              , CI_lo = Mean - SE * 1.96
+              , CI_hi = Mean + SE * 1.96
+              , Median = median(ratio)
+              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
+              ) %>%
+    ungroup()
+}
+
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+
+# rate.ColuPlot.205 <- {
+#   ggplot(data = desc.ratio.205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+#     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+#     facet_grid(Type ~ Duration) +
+#     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
+#                   show.legend = FALSE, width = 0.25, alpha = .5,
+#                   position = position_dodge(width=0.9)) +
+#     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+#     coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+#     scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+#     labs(title = "", x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
+#     scale_fill_grey() +  # set the color for columns
+#     # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+#     plot_theme
+# }
+# 
+# rate.ColuPlot.205
+
+```
+
+
+
+
+```{r}
+# df.erp.SC.205 %>%
+#   filter(Component == "N170", Hemisphere == "Right") %>%
+#   group_by(SubjCode, Category, DuraConf) %>%
+#   summarize(count = n()) %>%
+#   mutate(conditions = paste(Category, DuraConf, sep = "_")) %>%
+#   ungroup() %>%
+#   select(SubjCode, conditions, count) %>%
+#   spread(conditions, count)
+```
+
+#### LMM for responses
+```{r}
+df.ratio.205 %<>% sdif_coding_P203_resp 
+```
+
+##### The maximal model
+```{r}
+
+lmm.max.resp <- lmer(ratio ~ Type * Duration * Resp + (1 + Type_C + Dura_C + Type_Dura | SubjCode), 
+                     df.ratio.205)
+
+print(summary(lmm.max.resp), corr = FALSE)
+
+```
+
+##### The zero-correlation-parameter model
+```{r}
+
+lmm.zcp.resp <- update(lmm.max.resp, 
+                       formula = ratio ~ Type * Duration * Resp + 
+                         (1 + Type_C + Dura_C + Type_Dura || SubjCode))
+
+print(summary(lmm.zcp.resp), corr = FALSE)
+
+```
+
+##### The reduced model
+```{r}
+summary(rePCA(lmm.zcp.resp))
+
+
+lmm.rdc.resp <- update(lmm.zcp.resp,
+                       formula = ratio ~ Type * Duration * Resp + 
+                         (0 + Dura_C + Type_Dura || SubjCode))
+
+anova(lmm.rdc.resp, lmm.zcp.resp, refit = FALSE)
+
+```
+
+##### The extended model
+```{r}
+
+lmm.etd.resp <- update(lmm.zcp.resp,
+                       formula = ratio ~ Type * Duration * Resp + 
+                         (0 + Dura_C + Type_Dura | SubjCode))
+
+summary(lmm.etd.resp)
+
+```
+
+
+```{r}
+
+lmm.etd1.resp <- update(lmm.etd.resp,
+                        formula = ratio ~ Type * Duration * Resp + 
+                          (0 + Type_Dura | SubjCode))
+
+summary(lmm.etd1.resp)
+
+```
+
+
+```{r}
+anova(lmm.etd1.resp, lmm.rdc.resp, refit = FALSE)
+```
+
+##### The optimal model
+```{r}
+lmm.opt.resp <- lmm.etd1.resp 
+
+summary(lmm.opt.resp)
+```
+
+#### Estimated marginal means
+```{r}
+emm.resp <- emmeans(lmm.opt.resp, ~ Resp + Duration + Type)
+
+as.data.frame(emm.resp) %>% 
+  select(Type, Duration, Resp , everything())
+```
+
+#### Plots
+```{r}
+
+resp.ColuPlot.205 <- {
+  ggplot(data = as.data.frame(emm.resp), aes(y = emmean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Type ~ Duration, 
+               labeller = labeller(Duration = dura.labels)) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    # coord_cartesian(ylim = c(0,1.12) ) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.1, 1.15), breaks = seq(0, 1, 0.25)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
+    scale_fill_grey() +  # set the color for columns
+    # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    plot_theme
+}
+
+resp.ColuPlot.205
+
+```
+
+
+#### Contrasts
+```{r}
+contra.resp <- contrast(emm.resp, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+
+contra.resp
+confint(contra.resp)
+```
+
+#### One-sample t-test
+```{r}
+test(emm.resp, null = 0.5)
+
+```
+
+
+### Correct response times
+```{r}
+
+avg.rt.long.205 <- {
+  clean.beha.205 %>% 
+    # mutate(RespRateFace = if_else(Category == "face", ACC, if_else(Category == "house", as.numeric(!ACC), NaN))) %>% 
+    group_by(SubjCode, Type, Category, Duration, Resp) %>% 
+    summarize(CRT = mean(RT)) 
+
+}
+
+
+# descriptive statistics of accuracy for plotting
+desc.rt.205 <- {
+  avg.rt.long.205 %>%
+    group_by(Type, Category, Duration, Resp) %>%
+    summarize(Mean = mean(CRT)
+              , N = n()
+              , SD = if_else(N > 1, sd(CRT), 0)
+              , SE = SD/sqrt(N)
+              , SE.lo = Mean - SE, SE.hi = Mean + SE
+              , CI_lo = Mean - SE * 1.96
+              , CI_hi = Mean + SE * 1.96
+              , Median = median(CRT)
+              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
+              ) %>% 
+    ungroup() %>% 
+    add_row(Type = "intact", Category = "house", Duration = 200, Resp = 2, Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
+            SE.hi = 0, CI_lo = 0, CI_hi = 0, Median = 0, Lower = 0, Upper = 0)
+}
+
+
+```
+
+
+```{r rainclound plot of the CRT data E205, warning = FALSE}
+knitr::kable(desc.rt.205, digits = 4)
+
+rt.RainPlot.205 <- {
+  ggplot(data = avg.rt.long.205, aes(y = CRT, x = as.factor(Resp), fill = Category)) + 
+    geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
+    geom_point(aes(y = CRT, color = Category), position = position_jitter(width = .15), size = .5, alpha = .8) +
+    geom_boxplot(aes(y = CRT), width = .2, outlier.shape = NA, alpha = .7) +
+    geom_point(data = desc.rt.205, aes(y = Mean, x = Resp, color = Category), position = position_nudge(x = 0.3), size = 2.5) +
+    geom_errorbar(data = desc.rt.205, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(Type ~ Duration) +
 
     # facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
@@ -1268,96 +583,137 @@ rt.RainPlot.205 <- {
 
 ```
 
-&nbsp;
 
-```{r display the RainCloud plot for reaction times}
+```{r}
 rt.RainPlot.205
 ```
 
 
 ```{r}
 
-acc.ColuPlot.205 <- {
-  ggplot(data = desc.resp.205, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+rt.ColuPlot.205 <- {
+  ggplot(data = desc.rt.205, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Type ~ Duration) +
-    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
+    facet_grid(Type ~ Duration, 
+               labeller = labeller(Duration = dura.labels)) +
+    geom_errorbar(mapping = aes(ymin = CI_lo, ymax = CI_hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+    coord_cartesian(ylim = c(0,1750)) +  # set the limit for y axis
     scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Subjective Responses for E205", x = "Responses", y = "Response Rate", fill = "Category") +  # set the names for main, x and y axises
+    labs(title = "", x = "Responses", y = "Response times (ms)", fill = "Category") +  # set the names for main, x and y axises Subjective Responses for E205
     scale_fill_grey() +  # set the color for columns
     # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
-    plot_theme
+    erp_theme
 }
 
-acc.ColuPlot.205
+rt.ColuPlot.205
 
 ```
 
-
+#### LMM for correct responses
 ```{r}
-df.ratio.205 <- {
-  clean.beha.205 %>%
-    mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
-    group_by(SubjCode, Type, Duration, Resp) %>% 
-    summarize(ratio = mean(isFace), Count = n())
-}
+clean.beha.205 %<>% sdif_coding_P203 
+```
 
-desc.ratio.205 <- {
-  df.ratio.205 %>%
-    group_by(Type, Duration, Resp) %>%
-    summarize(Mean = mean(ratio)
-              , N = n()
-              , SD = if_else(N > 1, sd(ratio), 0)
-              , SE = SD/sqrt(N)
-              , SE.lo = Mean - SE, SE.hi = Mean + SE
-              , CI = SE * qt(0.975,N)
-              , Median = median(ratio)
-              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-              ) %>% 
-    ungroup()
-}
+##### The maximal model
+```{r}
+
+lmm.max.rt <- lmer(RT ~ Type * Category * Duration * Resp + 
+                     (1 + Type_C + Cate_C + Dura_C +
+                        Type_Cate + Type_Dura + Cate_Dura + 
+                        Type_Cate_Dura 
+                      | SubjCode), 
+                   clean.beha.205)
+
+print(summary(lmm.max.rt), corr = FALSE)
+
 
 ```
 
-
+Category was removed from the fixed effects due to the rank deficient warning. Also, no significant differences of any effects on Category were observed in the summary of previous model. 
 
 ```{r}
 
-ratio.ColuPlot.205 <- {
-  ggplot(data = desc.ratio.205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Type ~ Duration) +
-    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
-    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Subjective Responses for E205", x = "Responses", y = "Response Rate") +  # set the names for main, x and y axises
-    scale_fill_grey() +  # set the color for columns
-    # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
-    plot_theme
-}
+lmm.max.rt <- lmer(RT ~ Type * Duration * Resp + Category +
+                     (1 + Type_C + Cate_C + Dura_C +
+                        Type_Cate + Type_Dura + Cate_Dura + 
+                        Type_Cate_Dura 
+                      | SubjCode), 
+                   clean.beha.205)
 
-ratio.ColuPlot.205
+print(summary(lmm.max.rt), corr = FALSE)
+```
+
+##### The zero-correlation-parameter model
+```{r}
+
+lmm.zcp.rt <- lmer(RT ~ Type * Duration * Resp + Category +
+                     (1 + Type_C + Cate_C + Dura_C +
+                        Type_Cate + Type_Dura + Cate_Dura + 
+                        Type_Cate_Dura 
+                      || SubjCode), 
+                   clean.beha.205)
+
+print(summary(lmm.zcp.rt), corr = FALSE)
 
 ```
+
+##### The reduced model
+```{r}
+summary(rePCA(lmm.zcp.rt))
+
+
+lmm.rdc.rt <- update(lmm.zcp.rt,
+                     formula = RT ~ Type * Duration * Resp + Category +
+                       (1 + Type_C + Cate_C + Dura_C +
+                          Type_Cate + Type_Dura + Cate_Dura + 
+                          Type_Cate_Dura 
+                        || SubjCode))
+
+# summary(lmm.rdc.)
+anova(lmm.rdc.rt, lmm.zcp.rt, refit = FALSE)
+
+```
+
+##### The extended model
+```{r}
+
+lmm.etd.rt <- update(lmm.zcp.rt,
+                      formula = RT ~ Type * Duration * Resp + Category +
+                       (1 + Dura_C | SubjCode))
+
+summary(lmm.etd.rt)
+
+```
+
 
 
 ```{r}
-# df.erp.SC.205 %>%
-#   filter(Component == "N170", Hemisphere == "Right") %>% 
-#   group_by(SubjCode, Category, DuraConf) %>% 
-#   summarize(count = n()) %>% 
-#   mutate(conditions = paste(Category, DuraConf, sep = "_")) %>% 
-#   ungroup() %>% 
-#   select(SubjCode, conditions, count) %>% 
-#   spread(conditions, count)
+anova(lmm.etd.rt, lmm.rdc.rt, refit = FALSE)
 ```
+
+##### The optimal model
+```{r}
+lmm.opt.rt <- lmm.etd.rt 
+
+summary(lmm.opt.rt)
+```
+
+#### Estimated marginal means
+```{r}
+emm.rt <- emmeans(lmm.opt.rt, ~ Resp + Duration + Type)
+
+as.data.frame(emm.rt) %>% 
+  select(Type, Duration, Resp , everything())
+```
+
+#### Contrasts
+```{r}
+contrast(emm.rt, "pairwise", simple = "each", combine = TRUE)
+```
+
 
 ## ERP amplitude analysis
 ### Load mean amplitude for single trials
@@ -1541,7 +897,7 @@ lmm.opt.P1.E205 <- lmm.rdc.P1.E2
 
 # print(summary(lmm.opt.P1.E2), corr = FALSE)
 
-anova(lmm.opt.P1.E205)
+summary(lmm.opt.P1.E205)
 ```
 
 ##### Diagnostic plots
@@ -1580,15 +936,15 @@ p1.all.LinePlot = {
     scale_linetype_manual(values=c("solid", "dashed")) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
-    facet_grid(Type ~ Hemisphere, switch = "x", 
+    facet_grid(Type ~ Hemisphere, # switch = "x", 
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Hemisphere and Duration", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(title = "", x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
-    plot_theme 
+    erp_theme 
 }
 
 p1.all.LinePlot
@@ -1884,15 +1240,15 @@ n170.all.LinePlot = {
     scale_linetype_manual(values=c("solid", "dashed")) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
-    facet_grid(Type ~ Hemisphere,  switch = "x",
+    facet_grid(Type ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.n170) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Hemisphere and Duration", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(title = "", x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
-    plot_theme 
+    erp_theme 
 }
 
 n170.all.LinePlot
@@ -1906,14 +1262,14 @@ confint(contra.all.N170)
 ```
 
 ```{r}
-contrast(emmeans(lmm.opt.N170.E2, ~ Category + Duration | Type + Hemisphere), interaction = TRUE)
+contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration | Type + Hemisphere), interaction = TRUE)
 
 ```
 
 
-### Linear mixed model with subjective confidences
+### Linear mixed model with subjective confidence
 
-#### Converting response to subjective confidences
+#### Converting response to subjective confidence
 ```{r}
 df.erp.SC.E2 <- {
   df.erp.E2 %>% 
@@ -2027,36 +1383,63 @@ anova(lmm.rdc.P1.SC.E2, lmm.etd.P1.SC.E2, refit = FALSE)
 ##### The optimal model
 ```{r }
 
-lmm.opt.P1.SC.E2 <- lmm.etd.P1.SC.E2
+lmm.opt.P1.SC.E205 <- lmm.etd.P1.SC.E2
 
 # print(summary(lmm.opt.P1.SC.E2), corr = FALSE)
-anova(lmm.opt.P1.SC.E2)
+summary(lmm.opt.P1.SC.E205)
 
 ```
 
 
 ##### Diagnostic plots
 ```{r}
-qqplot_lmer(lmm.opt.P1.SC.E2)
+qqplot_lmer(lmm.opt.P1.SC.E205)
 ```
 
 
 ##### Estimated marginal means
 ```{r}
-emm.P1.SC.E2 <- emmeans(lmm.opt.P1.SC.E2, ~ DuraConf | Category + Hemisphere)
+emm.P1.SC.E205 <- emmeans(lmm.opt.P1.SC.E2, ~ DuraConf | Category + Hemisphere)
 
-emm.P1.SC.E2
+emm.P1.SC.E205
 ```
 
 
 ##### Plots
 ```{r}
-emmip(emm.P1.SC.E2, Category ~ DuraConf | Hemisphere, CIs = TRUE)
+# emmip(emm.P1.SC.E205, Category ~ DuraConf | Hemisphere, CIs = TRUE)
 ```
+
+```{r p1.conf.LinePlot}
+
+duraconf.labels = c("17ms\nguess", "17ms\nlow", "17ms\nhigh", "200ms\nhigh")
+
+p1.conf.LinePlot = {
+  ggplot(data = data.frame(emm.P1.SC.E205), aes(y = emmean, x = DuraConf, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(size = 2) +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(Hemisphere ~ ., # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
+    scale_x_discrete(labels = duraconf.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme
+}
+
+p1.conf.LinePlot
+```
+
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.P1.SC.E2, ~ DuraConf | Category + Hemisphere))
+pairs(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Category + Hemisphere))
 ```
 
 
@@ -2155,37 +1538,61 @@ anova(lmm.rdc.N170.SC.E2, lmm.etd.N170.SC.E2, refit = FALSE)
 ##### The optimal model
 ```{r }
 
-lmm.opt.N170.SC.E2 <- lmm.etd.N170.SC.E2
+lmm.opt.N170.SC.E205 <- lmm.etd.N170.SC.E2
 
-print(summary(lmm.opt.N170.SC.E2), corr = FALSE)
-anova(lmm.opt.N170.SC.E2)
+print(summary(lmm.opt.N170.SC.E205), corr = FALSE)
 
 ```
 
 ##### Diagnostic plots
 ```{r}
-qqplot_lmer(lmm.opt.N170.SC.E2)
+qqplot_lmer(lmm.opt.N170.SC.E205)
 ```
 
 ##### Estimated marginal means
 ```{r}
-emm.N170.SC.E2 <- emmeans(lmm.opt.N170.SC.E2, ~ Category + DuraConf | Hemisphere)
+emm.N170.SC.E205 <- emmeans(lmm.opt.N170.SC.E2, ~ Category + DuraConf | Hemisphere)
 
-emm.N170.SC.E2
+emm.N170.SC.E205
 ```
 
 
 ##### Plots
 ```{r}
-emmip(emm.N170.SC.E2, Category ~ DuraConf | Hemisphere, CIs = TRUE) + 
-  scale_y_continuous(trans = "reverse")
+# emmip(emm.N170.SC.E205, Category ~ DuraConf | Hemisphere, CIs = TRUE) + 
+#   scale_y_continuous(trans = "reverse")
 ```
 
+```{r N170.conf.LinePlot}
+
+duraconf.labels = c("17ms\nguess", "17ms\nlow", "17ms\nhigh", "200ms\nhigh")
+
+n170.conf.LinePlot = {
+  ggplot(data = data.frame(emm.N170.SC.E205), aes(y = emmean, x = DuraConf, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(size = 2) +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(Hemisphere ~ ., # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_x_discrete(labels = duraconf.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme
+}
+
+n170.conf.LinePlot
+```
 
 ##### Contrast
 ```{r}
 # pairs(emm.N170.SC.E2, simple = "DuraConf", by = c("Category", "Hemisphere"))
-pairs(emmeans(lmm.opt.N170.SC.E2, ~ DuraConf | Category + Hemisphere), adjust = "none")
+pairs(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Category + Hemisphere), adjust = "none")
 ```
 
 
@@ -2193,14 +1600,14 @@ pairs(emmeans(lmm.opt.N170.SC.E2, ~ DuraConf | Category + Hemisphere), adjust = 
 
 ```{r}
 tmpBlock.count <- {
-  clean.beha.E2 %>% 
+  clean.beha.205 %>% 
     filter(Type == "intact") %>% 
     group_by(SubjCode, Category, Duration, blockID) %>% 
     summarize(Count_sum = n())
 }
 
-avg.resp.long.E2.Block <- {
-  clean.beha.E2 %>% 
+avg.resp.long.E205.Block <- {
+  clean.beha.205 %>% 
     filter(Type == "intact") %>% 
     group_by(SubjCode, Category, Duration, blockID, Resp) %>% 
     summarize(Count = n()) %>% 
@@ -2211,8 +1618,8 @@ avg.resp.long.E2.Block <- {
 }
 
 # descriptive statistics of accuracy for plotting
-desc.resp.E2.Block <- {
-  avg.resp.long.E2.Block %>%
+desc.resp.E205.Block <- {
+  avg.resp.long.E205.Block %>%
     group_by(blockID, Category, Duration, Resp) %>%
     summarize(Mean = mean(RespRate)
               , N = n()
@@ -2228,8 +1635,8 @@ desc.resp.E2.Block <- {
             SE.hi = 0, CI = 0, Median = 0, Lower = 0, Upper = 0)
 }
 
-avg.resp.wide.E2.Block <- {
-  avg.resp.long.E2.Block %>% 
+avg.resp.wide.E205.Block <- {
+  avg.resp.long.E205.Block %>% 
     mutate(Conditions = paste(blockID, Category, Duration, Resp, sep = "_")) %>% 
     select(SubjCode, Conditions, RespRate) %>% 
     spread(Conditions, RespRate)
@@ -2240,10 +1647,10 @@ avg.resp.wide.E2.Block <- {
 
 
 ```{r rainclound plot of the RT data E205 block, warning = FALSE}
-knitr::kable(desc.resp.E2.Block, digits = 4)
+knitr::kable(desc.resp.E205.Block, digits = 4)
 
-rt.RainPlot.E2.Block <- {
-  ggplot(data = avg.resp.long.E2.Block, aes(y = RespRate, x = as.factor(Resp), fill = Category)) + 
+rt.RainPlot.E205.Block <- {
+  ggplot(data = avg.resp.long.E205.Block, aes(y = RespRate, x = as.factor(Resp), fill = Category)) + 
     geom_flat_violin(position = position_nudge(x = .2, y = 0), alpha = .7) +
     geom_point(aes(y = RespRate, color = Category), position = position_jitter(width = .15), size = .5, alpha = .8) +
     geom_boxplot(aes(y = RespRate), width = .2, outlier.shape = NA, alpha = .7) +
@@ -2268,14 +1675,14 @@ rt.RainPlot.E2.Block <- {
 &nbsp;
 
 ```{r display the RainCloud plot for reaction times}
-rt.RainPlot.E2.Block
+rt.RainPlot.E205.Block
 ```
 
 
 ```{r}
 
-acc.ColuPlot.E2.Block <- {
-  ggplot(data = desc.resp.E2.Block, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+acc.ColuPlot.E205.Block <- {
+  ggplot(data = desc.resp.E205.Block, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Duration ~ blockID) +
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
@@ -2290,22 +1697,22 @@ acc.ColuPlot.E2.Block <- {
     plot_theme
 }
 
-acc.ColuPlot.E2.Block
+acc.ColuPlot.E205.Block
 
 ```
 
 
 ```{r}
-df.ratio.E2.Block <- {
-  clean.beha.E2 %>%
+df.ratio.E205.Block <- {
+  clean.beha.205 %>%
     filter(Type == "intact") %>% 
     mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
     group_by(SubjCode, blockID, Duration, Resp) %>% 
     summarize(ratio = mean(isFace), Count = n())
 }
 
-desc.ratio.E2.Block <- {
-  df.ratio.E2.Block %>%
+desc.ratio.E205.Block <- {
+  df.ratio.E205.Block %>%
     group_by(blockID, Duration, Resp) %>%
     summarize(Mean = mean(ratio)
               , N = n()
@@ -2325,8 +1732,8 @@ desc.ratio.E2.Block <- {
 
 ```{r}
 
-ratio.ColuPlot.E2.Block <- {
-  ggplot(data = desc.ratio.E2.Block, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+ratio.ColuPlot.E205.Block <- {
+  ggplot(data = desc.ratio.E205.Block, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Duration ~ blockID) +
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
@@ -2341,7 +1748,7 @@ ratio.ColuPlot.E2.Block <- {
     plot_theme
 }
 
-ratio.ColuPlot.E2.Block
+ratio.ColuPlot.E205.Block
 
 ```
 
@@ -2441,14 +1848,14 @@ anova(lmm.etd.P1.high.E2, lmm.rdc.P1.high.E2, refit = FALSE)
 ##### The optimal model
 
 ```{r}
-lmm.opt.P1.high.E2 <- lmm.etd.P1.high.E2
+lmm.opt.P1.high.E205 <- lmm.etd.P1.high.E2
 
-summary(lmm.opt.P1.high.E2)
+summary(lmm.opt.P1.high.E205)
 ```
 
 ##### Diagnostic plots
 ```{r}
-qqplot_lmer(lmm.opt.P1.high.E2)
+qqplot_lmer(lmm.opt.P1.high.E205)
 ```
 
 
@@ -2456,19 +1863,47 @@ qqplot_lmer(lmm.opt.P1.high.E2)
 ##### Estimated marginal means
 
 ```{r}
-emm.P1.high.E2 <- emmeans(lmm.opt.P1.high.E2, ~ DuraBlock | Category + Hemisphere)
+emm.P1.high.E205 <- emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere)
 
-emm.P1.high.E2
+emm.P1.high.E205
 ```
 
 ##### Plots
 ```{r}
-emmip(emm.P1.high.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE)
+# emmip(emm.P1.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE)
 ```
+
+
+```{r p1.conf.LinePlot}
+
+durablock.labels = c("17ms\nblock1", "17ms\nblock2", "200ms\nblock2")
+
+p1.conf.LinePlot = {
+  ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(size = 2) +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
+    scale_x_discrete(labels = durablock.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme
+}
+
+p1.conf.LinePlot
+```
+
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.P1.high.E2, ~ DuraBlock | Category + Hemisphere))
+pairs(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere))
 ```
 
 
@@ -2553,51 +1988,93 @@ anova(lmm.etd.N170.high.E2, lmm.rdc.N170.high.E2, refit = FALSE)
 
 ##### The optimal model
 ```{r}
-lmm.opt.N170.high.E2 <- lmm.etd.N170.high.E2
+lmm.opt.N170.high.E205 <- lmm.etd.N170.high.E2
 
-summary(lmm.opt.N170.high.E2)
+summary(lmm.opt.N170.high.E205)
 ```
 
 ##### Diagnostic plots
 ```{r}
-qqplot_lmer(lmm.opt.N170.high.E2)
+qqplot_lmer(lmm.opt.N170.high.E205)
 ```
 
 
 ##### Estimated marginal means
 ```{r}
-emm.N170.high.E2 <- emmeans(lmm.opt.N170.high.E2, ~ DuraBlock | Category + Hemisphere)
+emm.N170.high.E205 <- emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Category + Hemisphere)
 
-emm.N170.high.E2
+emm.N170.high.E205
 ```
 
 
 ##### Plots
 ```{r}
-emmip(emm.N170.high.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
+emmip(emm.N170.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
   scale_y_continuous(trans = "reverse")
 
 ```
 
 
+```{r n170.conf.LinePlot}
+
+n170.conf.LinePlot = {
+  ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(size = 2) +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_x_discrete(labels = durablock.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme
+}
+
+n170.conf.LinePlot
+```
+
+
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.N170.high.E2, ~ DuraBlock | Category + Hemisphere), adjust = "none")
+pairs(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Category + Hemisphere), adjust = "none")
 ```
 
 
 
 
 ### Linear mixed model with guessing 
-
 ```{r}
 df.erp.guess.E2 <- {
   df.erp.E2 %>% 
-    filter(substr(Response, 2, 2) == 3) %>%
+    mutate(DuraType = paste(Duration, Type, sep = "-")) %>% 
+    filter(substr(Response, 2, 2) == 3,
+           !(DuraType == "200-intact")) %>%
+    mutate(DuraType = as.factor(DuraType)) %>% 
     sdif_coding_P203_erp()
   #   
   #   sdif_coding_E205_erp_conf()
 }
+
+contrasts(df.erp.guess.E2$DuraType) <- MASS::contr.sdif(nlevels(df.erp.guess.E2$DuraType)) 
+
+df.erp.guess.E2 %<>%
+  mutate(DT_SI = if_else(DuraType == "17-intact", -0.6666667, 0.3333333),
+         DT_20017 = if_else(DuraType == "200-scrambled", 0.6666667, -0.3333333),
+         
+         Cate_SI = Cate_C * DT_SI,
+         Cate_20017 = Cate_C * DT_20017,
+         
+         Hemi_SI = Hemi_C * DT_SI,
+         Hemi_20017 = Hemi_C * DT_20017,
+         
+         Cate_Hemi_SI = Cate_Hemi * DT_SI,
+         Cate_Hemi_20017 = Cate_Hemi * DT_20017)
 
 ```
 
@@ -2623,25 +2100,42 @@ head(df.erp.P1.guess.E2, 10)
 ##### The maximal model
 ```{r maximal lmm for P1 E2 guess}
 
-lmm.max.P1.guess.E2 <- lmer(MeanAmp ~ Type * Category * Hemisphere * Duration +
-                             (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
-                             (1 + Hemi_C | Stimuli),
-                           data = df.erp.P1.guess.E2,
-                           verbose = TRUE,
-                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                 optCtrl = list(maxfun = 1e5)))
-
-print(summary(lmm.max.P1.guess.E2), corr = FALSE)
+# lmm.max.P1.guess.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraType +
+#                               (1 + Cate_C + Hemi_C + Cate_Hemi +
+#                                  DT_SI + DT_20017 + 
+#                                  Cate_SI + Cate_20017 + Hemi_SI + Hemi_20017 +
+#                                  Cate_Hemi_SI + Cate_Hemi_20017 
+#                                | SubjCode) +
+#                               (1 + Hemi_C +
+#                                  DT_SI + DT_20017 + 
+#                                  Hemi_SI + Hemi_20017
+#                                | Stimuli),
+#                             data = df.erp.P1.guess.E2,
+#                             verbose = TRUE,
+#                            control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+#                                                  optCtrl = list(maxfun = 1e5)))
+# 
+# print(summary(lmm.max.P1.guess.E2), corr = FALSE)
 
 ```
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2 guess}
 
-lmm.zcp.P1.guess.E2 <- update(lmm.max.P1.guess.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                               (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
-                               (1 + Hemi_C || Stimuli))
+lmm.zcp.P1.guess.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraType +
+                              (1 + Cate_C + Hemi_C + Cate_Hemi +
+                                 DT_SI + DT_20017 + 
+                                 Cate_SI + Cate_20017 + Hemi_SI + Hemi_20017 +
+                                 Cate_Hemi_SI + Cate_Hemi_20017 
+                               || SubjCode) +
+                              (1 + Hemi_C +
+                                 DT_SI + DT_20017 + 
+                                 Hemi_SI + Hemi_20017
+                               || Stimuli),
+                            data = df.erp.P1.guess.E2,
+                            verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                 optCtrl = list(maxfun = 1e5)))
   
 
 print(summary(lmm.zcp.P1.guess.E2), corr = FALSE)
@@ -2657,9 +2151,13 @@ summary(rePCA(lmm.zcp.P1.guess.E2))
 
 ```{r}
 lmm.rdc.P1.guess.E2 <- update(lmm.zcp.P1.guess.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C || SubjCode) +
-                             (1 | Stimuli))
+                              formula = MeanAmp ~ Category * Hemisphere * DuraType +
+                                (1 + Cate_C + Hemi_C + 
+                                   DT_SI + DT_20017 + 
+                                   Cate_SI + Cate_20017 + Hemi_20017
+                                 || SubjCode) +
+                                (1 + DT_SI + DT_20017
+                                 || Stimuli))
 
 print(summary(lmm.rdc.P1.guess.E2), corr = FALSE)
 ```
@@ -2672,21 +2170,63 @@ anova(lmm.rdc.P1.guess.E2, lmm.zcp.P1.guess.E2, refit = FALSE)
 
 ```{r}
 lmm.etd.P1.guess.E2 <- update(lmm.rdc.P1.guess.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C | SubjCode) +
-                             (1 | Stimuli))
+                             formula =  MeanAmp ~ Category * Hemisphere * DuraType +
+                                (1 + Cate_C + Hemi_C + 
+                                   DT_SI + DT_20017 + 
+                                   Cate_SI + Cate_20017 + Hemi_20017
+                                 | SubjCode) +
+                                (1 + DT_SI + DT_20017
+                                 | Stimuli))
 
 print(summary(lmm.etd.P1.guess.E2), corr = FALSE)
 ```
 
 ```{r}
-anova(lmm.etd.P1.guess.E2, lmm.rdc.P1.guess.E2, refit = FALSE)
+summary(rePCA(lmm.etd.P1.guess.E2))
+```
+
+
+```{r}
+lmm.etd1.P1.guess.E2 <- update(lmm.etd.P1.guess.E2,
+                             formula =  MeanAmp ~ Category * Hemisphere * DuraType +
+                                (1 + Hemi_C + 
+                                   DT_SI + DT_20017 + 
+                                   Cate_SI + Hemi_20017
+                                 | SubjCode) +
+                                (1 + DT_SI + DT_20017
+                                 | Stimuli))
+
+print(summary(lmm.etd1.P1.guess.E2), corr = FALSE)
+```
+
+
+```{r}
+summary(rePCA(lmm.etd1.P1.guess.E2))
+```
+
+
+```{r}
+lmm.etd2.P1.guess.E2 <- update(lmm.etd1.P1.guess.E2,
+                             formula =  MeanAmp ~ Category * Hemisphere * DuraType +
+                                (1 + Hemi_C + 
+                                   DT_SI + DT_20017 + 
+                                   Cate_SI 
+                                 | SubjCode) +
+                                (1 + DT_20017
+                                 | Stimuli))
+
+print(summary(lmm.etd2.P1.guess.E2), corr = FALSE)
+```
+
+
+```{r}
+anova(lmm.etd2.P1.guess.E2, lmm.rdc.P1.guess.E2, refit = FALSE)
 ```
 
 ##### The optimal model
 
 ```{r}
-lmm.opt.P1.guess.E2 <- lmm.etd.P1.guess.E2
+lmm.opt.P1.guess.E2 <- lmm.rdc.P1.guess.E2
 
 summary(lmm.opt.P1.guess.E2)
 ```
@@ -2701,19 +2241,19 @@ qqplot_lmer(lmm.opt.P1.guess.E2)
 ##### Estimated marginal means
 
 ```{r}
-emm.P1.guess.E2 <- emmeans(lmm.opt.P1.guess.E2, ~ DuraBlock | Category + Hemisphere)
+emm.P1.guess.E2 <- emmeans(lmm.opt.P1.guess.E2, ~ DuraType | Category + Hemisphere)
 
 emm.P1.guess.E2
 ```
 
 ##### Plots
 ```{r}
-emmip(emm.P1.guess.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE)
+emmip(emm.P1.guess.E2, Category ~ DuraType | Hemisphere, CIs = TRUE)
 ```
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.P1.guess.E2, ~ DuraBlock | Category + Hemisphere))
+contrast(emm.P1.guess.E2, "pairwise", simple = "each", combine = TRUE)
 ```
 
 
@@ -2739,25 +2279,42 @@ head(df.erp.N170.guess.E2, 10)
 ##### The maximal model
 ```{r maximal lmm for N170 E2 guess}
 
-lmm.max.N170.guess.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
-                               (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
-                               (1 + Hemi_C | Stimuli),
-                             data = df.erp.N170.guess.E2,
-                             verbose = TRUE,
-                             control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                   optCtrl = list(maxfun = 1e5)))
-
-print(summary(lmm.max.N170.guess.E2), corr = FALSE)
+# lmm.max.N170.guess.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraType +
+#                               (1 + Cate_C + Hemi_C + Cate_Hemi +
+#                                  DT_SI + DT_20017 + 
+#                                  Cate_SI + Cate_20017 + Hemi_SI + Hemi_20017 +
+#                                  Cate_Hemi_SI + Cate_Hemi_20017 
+#                                | SubjCode) +
+#                               (1 + Hemi_C +
+#                                  DT_SI + DT_20017 + 
+#                                  Hemi_SI + Hemi_20017
+#                                | Stimuli),
+#                             data = df.erp.N170.guess.E2,
+#                             verbose = TRUE,
+#                            control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+#                                                  optCtrl = list(maxfun = 1e5)))
+# 
+# print(summary(lmm.max.N170.guess.E2), corr = FALSE)
 
 ```
 
 ##### The zero-correlation-parameter model
 ```{r zcp lmm for N170 E2 guess}
 
-lmm.zcp.N170.guess.E2 <- update(lmm.max.N170.guess.E2,
-                               formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                                 (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
-                             (1 + Hemi_C || Stimuli))
+lmm.zcp.N170.guess.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraType +
+                              (1 + Cate_C + Hemi_C + Cate_Hemi +
+                                 DT_SI + DT_20017 + 
+                                 Cate_SI + Cate_20017 + Hemi_SI + Hemi_20017 +
+                                 Cate_Hemi_SI + Cate_Hemi_20017 
+                               || SubjCode) +
+                              (1 + Hemi_C +
+                                 DT_SI + DT_20017 + 
+                                 Hemi_SI + Hemi_20017
+                               || Stimuli),
+                            data = df.erp.N170.guess.E2,
+                            verbose = TRUE,
+                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
+                                                 optCtrl = list(maxfun = 1e5)))
   
 print(summary(lmm.zcp.N170.guess.E2), corr = FALSE)
 
@@ -2771,9 +2328,13 @@ summary(rePCA(lmm.zcp.N170.guess.E2))
 
 ```{r}
 lmm.rdc.N170.guess.E2 <- update(lmm.zcp.N170.guess.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
-                             (1 | Stimuli))
+                                formula = MeanAmp ~ Category * Hemisphere * DuraType +
+                                  (1 + Cate_C + Hemi_C + 
+                                     DT_SI + DT_20017 + 
+                                     Cate_SI + Cate_20017 + Hemi_SI + Hemi_20017  
+                                   || SubjCode) +
+                                  (1 + DT_SI + DT_20017
+                                   || Stimuli))
 
 print(summary(lmm.rdc.N170.guess.E2), corr = FALSE)
 ```
@@ -2785,20 +2346,44 @@ anova(lmm.rdc.N170.guess.E2, lmm.zcp.N170.guess.E2, refit = FALSE)
 ##### The extended model
 ```{r}
 lmm.etd.N170.guess.E2 <- update(lmm.rdc.N170.guess.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
-                             (1 | Stimuli))
+                             formula = MeanAmp ~ Category * Hemisphere * DuraType +
+                                  (1 + Cate_C + Hemi_C + 
+                                     DT_SI + DT_20017 + 
+                                     Cate_SI + Cate_20017 + Hemi_SI + Hemi_20017  
+                                   | SubjCode) +
+                                  (1 + DT_SI + DT_20017
+                                   | Stimuli))
 
 print(summary(lmm.etd.N170.guess.E2), corr = FALSE)
 ```
 
 ```{r}
-anova(lmm.etd.N170.guess.E2, lmm.rdc.N170.guess.E2, refit = FALSE)
+summary(rePCA(lmm.etd.N170.guess.E2))
+```
+
+
+```{r}
+lmm.etd1.N170.guess.E2 <- update(lmm.etd.N170.guess.E2,
+                                 formula = MeanAmp ~ Category * Hemisphere * DuraType +
+                                   (1 + Hemi_C + 
+                                      DT_SI + DT_20017 + 
+                                      Cate_20017 + Hemi_20017  
+                                    | SubjCode) +
+                                   (1 + DT_SI + DT_20017
+                                    | Stimuli))
+
+print(summary(lmm.etd1.N170.guess.E2), corr = FALSE)
+```
+
+
+
+```{r}
+anova(lmm.etd1.N170.guess.E2, lmm.rdc.N170.guess.E2, refit = FALSE)
 ```
 
 ##### The optimal model
 ```{r}
-lmm.opt.N170.guess.E2 <- lmm.etd.N170.guess.E2
+lmm.opt.N170.guess.E2 <- lmm.etd1.N170.guess.E2
 
 summary(lmm.opt.N170.guess.E2)
 ```
@@ -2811,7 +2396,7 @@ qqplot_lmer(lmm.opt.N170.guess.E2)
 
 ##### Estimated marginal means
 ```{r}
-emm.N170.guess.E2 <- emmeans(lmm.opt.N170.guess.E2, ~ DuraBlock | Category + Hemisphere)
+emm.N170.guess.E2 <- emmeans(lmm.opt.N170.guess.E2, ~ DuraType | Category + Hemisphere)
 
 emm.N170.guess.E2
 ```
@@ -2819,7 +2404,7 @@ emm.N170.guess.E2
 
 ##### Plots
 ```{r}
-emmip(emm.N170.guess.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
+emmip(emm.N170.guess.E2, Category ~ DuraType | Hemisphere, CIs = TRUE) +
   scale_y_continuous(trans = "reverse")
 
 ```
@@ -2827,14 +2412,8 @@ emmip(emm.N170.guess.E2, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.N170.guess.E2, ~ Category | DuraBlock + Hemisphere), adjust = "none")
+pairs(emm.N170.guess.E2, adjust = "none")
 ```
-
-
-# Questions and predictions {#prediction}
-
-** Predictions **
-
 
 
 # Appendix
