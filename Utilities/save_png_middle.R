@@ -1,11 +1,11 @@
-tmpfn <- "E205-N170-high"
+tmpfn <- "E205-N170-resp"
 # tmpfn <- "E205-resp"  # 552
 
 
 res_value = 350
 res_rela = 90
 w = 650/res_rela*res_value
-h = 502/res_rela*res_value
+h = 552/res_rela*res_value
 
 # h = 400/res_rela*res_value
 
