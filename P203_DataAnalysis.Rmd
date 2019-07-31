@@ -24,33 +24,12 @@ output:
 ## Experiment design
 
 * **Independent variables**:
-    + Stimulus Type (`NS`: *intact* vs. *scrambled*)
-    + Stimulus Category (`FH`: *faces* vs. *houses*)
+    + Stimulus Type (`Type`: *intact* vs. *scrambled*)
+    + Stimulus Category (`Category`: *faces* vs. *houses*)
     + Hemisphere (`Hemisphere`: *left* vs. *right*)
-    + Durations (`Durations`: *17* vs. *200*)
+    + Duration (`Duration`: *17* vs. *200*)
+    
 
-* **Dependent variables**:
-    + *mean* (`MeanAmp`)
-    
-    Hypothesis to be tested:
-    Previous results showed the amplitudes of the N170 for faces with shorter duration are smaller. Two possible reasons:
-    1. the amplitudes for the N170 is smaller for shorter durations. 
-    2. the amplitudes are modulated by the responses (subjective perception).
-    
-    For 2. There are still two possibilities:
-    2.1. For shorter durations, the amplitudes were (constantly) smaller for all the trials
-    2.2. For shorter durations with correct judgement, the amplitudes are larger. With incorrect judgement, the amplitudes are smaller. As a result, the amplitudes of the N170 are smaller. 
-    
-    For 2.2, there are guessing involved. After guessing was excluded
-    2.2.1, -> 2.1
-      17_Key1 vs. 200_Key1
-      17_Key1 vs. 17_Key2 (vs. 17_Key3???)
-      
-    2.2.2, -> 2.2
-    
-    replicate the previous results (LMM without response?)
-  
-    
 ## Preparations
 ```{r, echo=FALSE, include=FALSE}
 # knitr::opts_chunk$set(error = TRUE)
@@ -68,7 +47,10 @@ library(emmeans)
 
 # options for calculating estimated marginal means
 # lmer.df = c("kenward-roger", "satterthwaite", "asymptotic")
-emm_options(lmer.df = "satterthwaite", lmerTest.limit = 1e6)  # , pbkrtest.limit =, disable.pbkrtest = FALSE
+emm_options(lmer.df = "satterthwaite", 
+            lmerTest.limit = 1e6,
+            opt.digits = FALSE)  # , pbkrtest.limit =, disable.pbkrtest = FALSE
+
 
 ```
   
@@ -101,7 +83,7 @@ erp_theme <- {
     theme(legend.position = "bottom")
 }
 
-ylimit.p1 <- c(3.5, -0.5)
+ylimit.p1 <- c(2.5, -0.5)
 ylimit.n170 <- c(1.5, -5.5)  # y axis for plotting N170 amplitude
 
 resp.labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "sure houses")
@@ -390,7 +372,7 @@ desc.ratio.205 <- {
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # df.erp.SC.205 %>%
 #   filter(Component == "N170", Hemisphere == "Right") %>%
 #   group_by(SubjCode, Category, DuraConf) %>%
@@ -508,11 +490,19 @@ resp.ColuPlot.205
 
 
 #### Contrasts
-```{r}
-contra.resp <- contrast(emm.resp, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+```{r eval=FALSE, include=FALSE}
+# contra.resp <- contrast(emm.resp, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# 
+# contra.resp
+# confint(contra.resp)
+```
 
-contra.resp
-confint(contra.resp)
+
+```{r}
+contra.resp <- contrast(emmeans(lmm.opt.resp, ~ Duration | Resp + Type), "pairwise")
+
+contra.resp[c(1, 5)]
+confint(contra.resp[c(1, 5)])
 ```
 
 #### One-sample t-test
@@ -620,19 +610,19 @@ clean.beha.205 %<>% sdif_coding_P203
 ##### The maximal model
 ```{r}
 
-lmm.max.rt <- lmer(RT ~ Type * Category * Duration * Resp + 
-                     (1 + Type_C + Cate_C + Dura_C +
-                        Type_Cate + Type_Dura + Cate_Dura + 
-                        Type_Cate_Dura 
-                      | SubjCode), 
-                   clean.beha.205)
-
-print(summary(lmm.max.rt), corr = FALSE)
+# lmm.max.rt <- lmer(RT ~ Type * Category * Duration * Resp + 
+#                      (1 + Type_C + Cate_C + Dura_C +
+#                         Type_Cate + Type_Dura + Cate_Dura + 
+#                         Type_Cate_Dura 
+#                       | SubjCode), 
+#                    clean.beha.205)
+# 
+# print(summary(lmm.max.rt), corr = FALSE)
 
 
 ```
 
-Category was removed from the fixed effects due to the rank deficient warning. Also, no significant differences of any effects on Category were observed in the summary of previous model. 
+The interaction between Category and other factors were removed from the fixed effects due to the rank deficient warning. Also, no significant differences of any effects on Category were observed in the summary of previous model. 
 
 ```{r}
 
@@ -898,6 +888,8 @@ lmm.opt.P1.E205 <- lmm.rdc.P1.E2
 # print(summary(lmm.opt.P1.E2), corr = FALSE)
 
 summary(lmm.opt.P1.E205)
+
+# confint(lmm.opt.P1.E205, method="Wald")
 ```
 
 ##### Diagnostic plots
@@ -952,11 +944,46 @@ p1.all.LinePlot
 
 
 ##### Contrasts
-```{r}
-contra.all.P1 <- contrast(emmeans(lmm.opt.P1.E2, ~ Duration + Type), "pairwise", simple = "each", combine = TRUE)
+```{r P1 amplitudes for all}
+contra.all.P1.gen <- contrast(emmeans(lmm.opt.P1.E205, ~ Duration | Hemisphere + Category + Type), 
+                                 "pairwise", adjust = "Bonferroni")
 
-contra.all.P1
-confint(contra.all.P1)
+contra.all.P1.gen[1:2]
+
+confint(contra.all.P1.gen[1:2])
+
+```
+
+
+```{r}
+contra.all.P1.spec <- contrast(emmeans(lmm.opt.P1.E205, ~ Category + Duration | Hemisphere + Type), 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.all.P1.spec[1:2]
+confint(contra.all.P1.spec[1:2])
+
+```
+
+```{r}
+contra.all.P1.gen[1:8]
+
+confint(contra.all.P1.gen[1:8])
+```
+
+
+```{r}
+contra.all.P1.spec
+# confint(contra.all.P1.spec[1:4])
+```
+
+```{r eval=FALSE, include=FALSE}
+# emm.dt.all <- emmeans(lmm.opt.P1.E2, ~ Duration + Type)
+# emm.dt.all
+# 
+# contra.all.P1 <- contrast(emm.dt.all, "pairwise", simple = "each", combine = TRUE)
+# 
+# contra.all.P1
+# confint(contra.all.P1)
 ```
 
 
@@ -1255,14 +1282,66 @@ n170.all.LinePlot
 ```
 ##### Contrasts
 ```{r}
-contra.all.N170 <- contrast(emm.N170.E205, simple = c("Category"), by = c("Duration", "Hemisphere"), adjust = "none")
-
-contra.all.N170
-confint(contra.all.N170)
+# contra.all.N170 <- contrast(emm.N170.E205, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# 
+# contra.all.N170
+# confint(contra.all.N170)
 ```
 
+```{r N170 amplitudes for all}
+contra.all.N170.gen <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration | Hemisphere + Category + Type), 
+                                 "pairwise")
+
+contra.all.N170.gen[1:2]
+
+confint(contra.all.N170.gen[1:2])
+
+
+contra.all.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration + Hemisphere |Category + Type), 
+                                interaction = "pairwise")
+
+contra.all.N170.gen.hemi[1]
+
+confint(contra.all.N170.gen.hemi[1])
+```
+
+
+
+
 ```{r}
-contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration | Type + Hemisphere), interaction = TRUE)
+contra.all.N170.spec <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration | Hemisphere + Type), 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.all.N170.spec[c(1,2)]
+confint(contra.all.N170.spec[c(1,2)])
+
+contra.all.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration + Hemisphere | Type), 
+                                 interaction = "pairwise")
+
+contra.all.N170.spec.hemi
+confint(contra.all.N170.spec[c(1,2)])
+```
+
+
+
+```{r}
+
+contra.all.N170.gen[1:8]
+
+confint(contra.all.N170.gen[1:8])
+
+
+contra.all.N170.gen.hemi[1:4]
+
+confint(contra.all.N170.gen.hemi[1:4])
+```
+
+
+```{r}
+
+contra.all.N170.spec
+
+# contra.all.N170.spec.hemi
 
 ```
 
@@ -1388,6 +1467,10 @@ lmm.opt.P1.SC.E205 <- lmm.etd.P1.SC.E2
 # print(summary(lmm.opt.P1.SC.E2), corr = FALSE)
 summary(lmm.opt.P1.SC.E205)
 
+confint(lmm.opt.P1.SC.E205, method = "Wald")
+
+anova(lmm.opt.P1.SC.E205)
+
 ```
 
 
@@ -1399,7 +1482,7 @@ qqplot_lmer(lmm.opt.P1.SC.E205)
 
 ##### Estimated marginal means
 ```{r}
-emm.P1.SC.E205 <- emmeans(lmm.opt.P1.SC.E2, ~ DuraConf | Category + Hemisphere)
+emm.P1.SC.E205 <- emmeans(lmm.opt.P1.SC.E2, ~ DuraConf + Category | Hemisphere)
 
 emm.P1.SC.E205
 ```
@@ -1421,7 +1504,7 @@ p1.conf.LinePlot = {
     scale_linetype_manual(values=c("solid", "dashed")) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
-    facet_grid(Hemisphere ~ ., # switch = "x",
+    facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
@@ -1439,9 +1522,60 @@ p1.conf.LinePlot
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Category + Hemisphere))
+# contra.SC.P1 <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Category), "pairwise", simple = "each", combine = TRUE)
+#   
+# contra.SC.P1
+# confint(contra.SC.P1)
 ```
 
+```{r P1 amplitudes for SC}
+contra.SC.P1.gen <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Hemisphere + Category), # 
+                                 "pairwise", adjust = "Bonferroni")
+
+contra.SC.P1.gen[1:6]
+
+confint(contra.SC.P1.gen[1:6])
+
+contra.SC.P1.gen[7:12]
+
+confint(contra.SC.P1.gen[7:12])
+
+# differences between hemispheres
+contra.SC.P1.gen.hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Hemisphere | Category), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+contra.SC.P1.gen.hemi
+```
+
+```{r}
+contra.SC.P1.gen.nohemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Category), # 
+                                 "pairwise", adjust = "Bonferroni")
+
+contra.SC.P1.gen.nohemi[1:6]
+confint(contra.SC.P1.gen.nohemi[1:6])
+```
+
+
+```{r}
+contra.SC.P1.spec <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf | Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.SC.P1.spec
+confint(contra.SC.P1.spec)
+
+
+contra.SC.P1.spec.hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf + Hemisphere ), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.SC.P1.spec.hemi
+```
+
+```{r eval=FALSE, include=FALSE}
+# contra.SC.P1.dc <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf), "pairwise", adjust = "Bonferroni")
+#   
+# contra.SC.P1.dc
+# 
+# confint(contra.SC.P1.dc)
+```
 
 
 #### Ampitudes of the N170
@@ -1542,6 +1676,7 @@ lmm.opt.N170.SC.E205 <- lmm.etd.N170.SC.E2
 
 print(summary(lmm.opt.N170.SC.E205), corr = FALSE)
 
+anova(lmm.opt.N170.SC.E205)
 ```
 
 ##### Diagnostic plots
@@ -1574,7 +1709,7 @@ n170.conf.LinePlot = {
     scale_linetype_manual(values=c("solid", "dashed")) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
-    facet_grid(Hemisphere ~ ., # switch = "x",
+    facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
@@ -1591,9 +1726,97 @@ n170.conf.LinePlot
 
 ##### Contrast
 ```{r}
-# pairs(emm.N170.SC.E2, simple = "DuraConf", by = c("Category", "Hemisphere"))
-pairs(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Category + Hemisphere), adjust = "none")
+# contra.N170.resp <- contrast(emm.N170.SC.E205, "pairwise", simple = "each", combine = FALSE, adjust = "Bonferroni")
+# 
+# contra.N170.resp
+# confint(contra.N170.resp)
 ```
+
+
+```{r N170 amplitudes for SC}
+contra.SC.N170.gen <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Hemisphere + Category), # 
+                                 "pairwise", adjust = "Bonferroni")
+
+contra.SC.N170.gen[1:6]
+
+confint(contra.SC.N170.gen[1:6])
+
+contra.SC.N170.gen[7:12]
+
+confint(contra.SC.N170.gen[7:12])
+
+contra.SC.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf + Hemisphere | Category), # 
+                                interaction = "pairwise", adjust = "Bonferroni")
+
+contra.SC.N170.gen.hemi[1:6]
+confint(contra.SC.N170.gen.hemi[1:6])
+
+```
+
+
+```{r}
+contra.SC.N170.spec <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf | Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.SC.N170.spec[1:6]
+confint(contra.SC.N170.spec[1:6])
+
+contra.SC.N170.spec[7:12]
+confint(contra.SC.N170.spec[7:12])
+
+contra.SC.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf + Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.SC.N170.spec.hemi
+
+```
+
+
+
+```{r}
+
+contra.N170.resp.nohemi.dura <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Category), 
+                                    "pairwise", adjust = "Bonferroni")
+
+contra.N170.resp.nohemi.dura
+confint(contra.N170.resp.nohemi.dura)
+
+
+contra.N170.resp.nohemi.cate <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category | DuraConf),
+                                    "pairwise", adjust = "Bonferroni")
+
+contra.N170.resp.nohemi.cate
+confint(contra.N170.resp.nohemi.cate)
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# contra.N170.resp.nohemi.inter <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf), 
+#                                     interaction = "pairwise", adjust = "Bonferroni")
+# 
+# contra.N170.resp.nohemi.inter
+# confint(contra.N170.resp.nohemi.inter)
+```
+
+
+
+
+```{r eval=FALSE, include=FALSE}
+
+# contra.N170.resp.nocate.dura <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Hemisphere), 
+#                                     "pairwise", adjust = "Bonferroni")
+# 
+# contra.N170.resp.nocate.dura
+# confint(contra.N170.resp.nocate.dura)
+# 
+# contra.N170.resp.nocate.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Hemisphere | DuraConf), 
+#                                     "pairwise", adjust = "Bonferroni")
+# 
+# contra.N170.resp.nocate.hemi
+# confint(contra.N170.resp.nocate.hemi)
+```
+
+
 
 
 ### Linear mixed model with high subjective confidences 
@@ -1851,6 +2074,8 @@ anova(lmm.etd.P1.high.E2, lmm.rdc.P1.high.E2, refit = FALSE)
 lmm.opt.P1.high.E205 <- lmm.etd.P1.high.E2
 
 summary(lmm.opt.P1.high.E205)
+
+anova(lmm.opt.P1.high.E205)
 ```
 
 ##### Diagnostic plots
@@ -1874,11 +2099,11 @@ emm.P1.high.E205
 ```
 
 
-```{r p1.conf.LinePlot}
+```{r p1.high.LinePlot}
 
 durablock.labels = c("17ms\nblock1", "17ms\nblock2", "200ms\nblock2")
 
-p1.conf.LinePlot = {
+p1.high.LinePlot = {
   ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(size = 2) +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -1897,15 +2122,47 @@ p1.conf.LinePlot = {
     erp_theme
 }
 
-p1.conf.LinePlot
+p1.high.LinePlot
 ```
 
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere))
+# contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere), "pairwise", simple = "each", combine = TRUE)
 ```
 
+```{r P1 amplitudes for high}
+contra.high.P1.gen <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Hemisphere + Category), # 
+                                 "pairwise", adjust = "none")
+
+contra.high.P1.gen[1:3]
+
+confint(contra.high.P1.gen[1:3])
+
+contra.high.P1.gen[4:6]
+
+confint(contra.high.P1.gen[4:6])
+
+contra.high.P1.gen.hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock + Hemisphere | Category), # 
+                                 interaction = "pairwise", adjust = "none")
+contra.high.P1.gen.hemi
+
+```
+
+
+```{r}
+contra.high.P1.spec <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock | Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.high.P1.spec
+confint(contra.high.P1.spec)
+
+contra.high.P1.spec.hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock + Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.high.P1.spec.hemi
+
+```
 
 
 #### Amplitudes of the N170
@@ -1991,6 +2248,8 @@ anova(lmm.etd.N170.high.E2, lmm.rdc.N170.high.E2, refit = FALSE)
 lmm.opt.N170.high.E205 <- lmm.etd.N170.high.E2
 
 summary(lmm.opt.N170.high.E205)
+
+anova(lmm.opt.N170.high.E205)
 ```
 
 ##### Diagnostic plots
@@ -2009,8 +2268,8 @@ emm.N170.high.E205
 
 ##### Plots
 ```{r}
-emmip(emm.N170.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
-  scale_y_continuous(trans = "reverse")
+# emmip(emm.N170.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
+#   scale_y_continuous(trans = "reverse")
 
 ```
 
@@ -2042,10 +2301,56 @@ n170.conf.LinePlot
 
 ##### Contrast
 ```{r}
-pairs(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Category + Hemisphere), adjust = "none")
+# contra.high.N170 <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock), "pairwise", simple = "each")
+# 
+# contra.high.N170
+# 
+# confint(contra.high.N170)
+```
+
+```{r N170 amplitudes for high}
+contra.high.N170.gen <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Hemisphere + Category), # 
+                                 "pairwise", adjust = "Bonferroni")
+
+contra.high.N170.gen[1:3]
+
+confint(contra.high.N170.gen[1:3])
+
+contra.high.N170.gen[4:6]
+
+confint(contra.high.N170.gen[4:6])
+
+contra.high.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock + Hemisphere | Category), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.high.N170.gen.hemi
 ```
 
 
+```{r}
+contra.high.N170.spec <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock | Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.high.N170.spec[1:3]
+confint(contra.high.N170.spec[1:3])
+
+contra.high.N170.spec[4:6]
+confint(contra.high.N170.spec[4:6])
+
+contra.high.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock + Hemisphere), # 
+                                 interaction = "pairwise", adjust = "Bonferroni")
+
+contra.high.N170.spec.hemi
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# contra.high.N170.spec <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock), 
+#                                   interaction = "pairwise", adjust = "Bonferroni")
+# 
+# contra.high.N170.spec
+# confint(contra.high.N170.spec)
+```
 
 
 ### Linear mixed model with guessing 
@@ -2229,6 +2534,8 @@ anova(lmm.etd2.P1.guess.E2, lmm.rdc.P1.guess.E2, refit = FALSE)
 lmm.opt.P1.guess.E2 <- lmm.rdc.P1.guess.E2
 
 summary(lmm.opt.P1.guess.E2)
+
+anova(lmm.opt.P1.guess.E2)
 ```
 
 ##### Diagnostic plots
@@ -2386,6 +2693,8 @@ anova(lmm.etd1.N170.guess.E2, lmm.rdc.N170.guess.E2, refit = FALSE)
 lmm.opt.N170.guess.E2 <- lmm.etd1.N170.guess.E2
 
 summary(lmm.opt.N170.guess.E2)
+
+anova(lmm.opt.N170.guess.E2)
 ```
 
 ##### Diagnostic plots
