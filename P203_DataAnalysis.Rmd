@@ -91,9 +91,8 @@ resp.labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "
 ```
 
 
-# Experiment 205
 
-## Behavior results
+# Behavior results
 ```{r load behavioral results of 205}
 raw.beha.205 <- {
   "E205_35_Behavior.csv" %>% 
@@ -187,7 +186,7 @@ clean.beha.205 %<>% filter(SubjCode %in% valid.17)
 
 ```
 
-### Participant demographic information
+## Participant demographic information
 ```{r participant information E205}
 subj.info.205 <- {
   clean.beha.205 %>% 
@@ -207,7 +206,7 @@ sum(subj.info.205$Sex == "female")
 ```
 
 
-### Responses
+## Responses
 ```{r}
 tmp.count <- {
   clean.beha.205 %>% 
@@ -383,12 +382,12 @@ desc.ratio.205 <- {
 #   spread(conditions, count)
 ```
 
-#### LMM for responses
+### LMM for responses
 ```{r}
 df.ratio.205 %<>% sdif_coding_P203_resp 
 ```
 
-##### The maximal model
+#### The maximal model
 ```{r}
 
 lmm.max.resp <- lmer(ratio ~ Type * Duration * Resp + (1 + Type_C + Dura_C + Type_Dura | SubjCode), 
@@ -398,7 +397,7 @@ print(summary(lmm.max.resp), corr = FALSE)
 
 ```
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r}
 
 lmm.zcp.resp <- update(lmm.max.resp, 
@@ -409,7 +408,7 @@ print(summary(lmm.zcp.resp), corr = FALSE)
 
 ```
 
-##### The reduced model
+#### The reduced model
 ```{r}
 summary(rePCA(lmm.zcp.resp))
 
@@ -422,7 +421,7 @@ anova(lmm.rdc.resp, lmm.zcp.resp, refit = FALSE)
 
 ```
 
-##### The extended model
+#### The extended model
 ```{r}
 
 lmm.etd.resp <- update(lmm.zcp.resp,
@@ -449,14 +448,14 @@ summary(lmm.etd1.resp)
 anova(lmm.etd1.resp, lmm.rdc.resp, refit = FALSE)
 ```
 
-##### The optimal model
+#### The optimal model
 ```{r}
 lmm.opt.resp <- lmm.etd1.resp 
 
 summary(lmm.opt.resp)
 ```
 
-#### Estimated marginal means
+### Estimated marginal means
 ```{r}
 emm.resp <- emmeans(lmm.opt.resp, ~ Resp + Duration + Type)
 
@@ -464,7 +463,7 @@ as.data.frame(emm.resp) %>%
   select(Type, Duration, Resp , everything())
 ```
 
-#### Plots
+### Plots
 ```{r}
 
 resp.ColuPlot.205 <- {
@@ -489,7 +488,7 @@ resp.ColuPlot.205
 ```
 
 
-#### Contrasts
+### Contrasts
 ```{r eval=FALSE, include=FALSE}
 # contra.resp <- contrast(emm.resp, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # 
@@ -505,15 +504,15 @@ contra.resp[c(1, 5)]
 confint(contra.resp[c(1, 5)])
 ```
 
-#### One-sample t-test
+### One-sample t-test
 ```{r}
 test(emm.resp, null = 0.5)
 
 ```
 
 
-## ERP amplitude analysis
-### Load mean amplitude for single trials
+# ERP amplitude analysis
+## Load mean amplitude for single trials
 The raw mean amplitude of each trial for all participants were loaded.
 ```{r load trial mean amplitude E2, message = FALSE}
 # read the trial mean amplitude data
@@ -535,16 +534,16 @@ df.erp.E2 %>%
 
 ```
 
-### Linear mixed model (all trials)
+## Linear mixed model across responses
 
-#### Set the successive difference coding
+### Set the successive difference coding
 ```{r set the dummy coding for ERP data E2}
 # dummy coding
 df.erp.E2.all <- sdif_coding_P203_erp(df.erp.E2)
 ```
 
 
-#### Amplitudes of the P1
+### Amplitudes of the P1
 ```{r erp df for the P1 E2}
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
 df.erp.P1.E2 <- {
@@ -562,7 +561,7 @@ head(df.erp.P1.E2, 10)
 ```
 
 
-##### The maximal model
+#### The maximal model
 ```{r maximal lmm for P1 E2}
 file.max.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_max.RData")
 
@@ -590,7 +589,7 @@ print(summary(lmm.max.P1.E2), corr = FALSE)
 
 ```
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2}
 file.zcp.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_zcp.RData")
 
@@ -619,7 +618,7 @@ print(summary(lmm.zcp.P1.E2), corr = FALSE)
 ```
 
 
-##### The reduced model
+#### The reduced model
 ```{r PCA analysis for zcp lmm for E2 P1}
 summary(rePCA(lmm.zcp.P1.E2))
 ```
@@ -654,7 +653,7 @@ print(summary(lmm.rdc.P1.E2), corr = FALSE)
 anova(lmm.rdc.P1.E2, lmm.zcp.P1.E2, refit = FALSE)
 ```
 
-##### The extended model
+#### The extended model
 ```{r }
 
 file.etd.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_etd.RData")
@@ -687,7 +686,7 @@ anova(lmm.etd.P1.E2.2, lmm.rdc.P1.E2, refit = FALSE)
 
 The reduced model (`lmm.rdc.P1.E2`) explained the data better than the extended model (`lmm.rdc.P1.E2.2`).
 
-##### The optimal model
+#### The optimal model
 ```{r }
 
 lmm.opt.P1.E205 <- lmm.rdc.P1.E2
@@ -699,13 +698,13 @@ summary(lmm.opt.P1.E205)
 # confint(lmm.opt.P1.E205, method="Wald")
 ```
 
-##### Diagnostic plots
+#### Diagnostic plots
 ```{r qqplot for lmm.opt.P1.E205}
 # qqplot
 qqplot_lmer(lmm.opt.P1.E205)
 ```
 
-##### Estimated marginal means
+#### Estimated marginal means
 ```{r}
 emm.P1.E205 <- emmeans(lmm.opt.P1.E205, ~ Type + Duration + Hemisphere + Category )
 
@@ -716,7 +715,7 @@ emm.P1.E205 %>%
 ```
 
 
-##### Plots
+#### Plots
 ```{r}
 # emmip(emm.P1.E205, Category ~ Duration | Type + Hemisphere, CIs = TRUE)
 
@@ -739,18 +738,25 @@ p1.all.LinePlot = {
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
     erp_theme 
 }
 
+# p1.all.LinePlot.slide <- {
+#   p1.all.LinePlot + 
+#     theme(legend.position="right",
+#           axis.line = element_line(color="black", size = 3))
+# }
+# ggsave('P1_all.png', p1.all.LinePlot.slide, width = 7, height = 4)
+
 p1.all.LinePlot
 ```
 
 
-##### Contrasts
+#### Contrasts
 ```{r P1 amplitudes for all}
 contra.all.P1.gen <- contrast(emmeans(lmm.opt.P1.E205, ~ Duration | Hemisphere + Category + Type), 
                                  "pairwise", adjust = "Bonferroni")
@@ -784,17 +790,17 @@ contra.all.P1.spec
 ```
 
 ```{r eval=FALSE, include=FALSE}
-# emm.dt.all <- emmeans(lmm.opt.P1.E2, ~ Duration + Type)
-# emm.dt.all
-# 
-# contra.all.P1 <- contrast(emm.dt.all, "pairwise", simple = "each", combine = TRUE)
-# 
-# contra.all.P1
-# confint(contra.all.P1)
+emm.dt.all <- emmeans(lmm.opt.P1.E2, ~ Duration + Type)
+emm.dt.all
+
+contra.all.P1 <- contrast(emm.dt.all, "pairwise", simple = "each", combine = TRUE)
+
+contra.all.P1
+confint(contra.all.P1)
 ```
 
 
-#### Ampitudes of the N170
+### Ampitudes of the N170
 ```{r erp df for the N170 E2}
 # only keep the data for amplitudes of the N170 (all erps)
 df.erp.N170.E2 <- {
@@ -812,7 +818,7 @@ head(df.erp.N170.E2, 10)
 ```
 
 
-##### The maximal model
+#### The maximal model
 ```{r maximal lmm for E2 N170}
 file.max.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_max.RData")
 
@@ -841,7 +847,7 @@ print(summary(lmm.max.N170.E2), corr = FALSE)
 ```
 
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r zcp lmm for E2 N170}
 
 file.zcp.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_zcp.RData")
@@ -873,7 +879,7 @@ print(summary(lmm.zcp.N170.E2), corr = FALSE)
 ```
 
 
-##### The reduced model
+#### The reduced model
 ```{r PCA analysis for zcp lmm for E2 N170}
 
 summary(rePCA(lmm.zcp.N170.E2))
@@ -910,7 +916,7 @@ print(summary(lmm.rdc.N170.E2), corr = FALSE)
 anova(lmm.rdc.N170.E2, lmm.zcp.N170.E2, refit = FALSE)
 ```
 
-##### The extended model
+#### The extended model
 ```{r }
 
 file.etd.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_etd.RData")
@@ -1031,7 +1037,7 @@ print(summary(lmm.etd3.N170.E2), corr = FALSE)
 anova(lmm.etd3.N170.E2, lmm.rdc.N170.E2, refit = FALSE)
 ```
 
-##### The optimal model
+#### The optimal model
 ```{r }
 
 lmm.opt.N170.E205 <- lmm.rdc.N170.E2
@@ -1041,13 +1047,13 @@ print(summary(lmm.opt.N170.E205), corr = FALSE)
 ```
 
 
-##### Diagnostic plots
+#### Diagnostic plots
 ```{r qqplot for lmm.opt.N170.E2}
 # qqplot
 qqplot_lmer(lmm.opt.N170.E205)
 ```
 
-##### Estimated marginal means
+#### Estimated marginal means
 ```{r}
 emm.N170.E205 <- emmeans(lmm.opt.N170.E205,  ~ Duration + Category + Hemisphere + Type)
 
@@ -1058,7 +1064,7 @@ emm.N170.E205 %>%
 ```
 
 
-##### Plots
+#### Plots
 ```{r}
 # emmip(emm.N170.E205, Category ~ Duration | Type + Hemisphere, CIs = TRUE) + 
 #   scale_y_continuous(trans = "reverse")
@@ -1078,21 +1084,29 @@ n170.all.LinePlot = {
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
     erp_theme 
 }
 
+# n170.all.LinePlot.slide <- {
+#   n170.all.LinePlot + 
+#     scale_y_reverse(limits = c(0.8, -4.8), breaks = seq(0, -4, -1)) +  # set the limit for y axis
+#     theme(legend.position="right",
+#           axis.line = element_line(color="black", size = 3))
+# }
+# ggsave('N170_all.png', n170.all.LinePlot.slide, width = 7, height = 4)
+
 n170.all.LinePlot
 ```
-##### Contrasts
+#### Contrasts
 ```{r}
-# contra.all.N170 <- contrast(emm.N170.E205, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# 
-# contra.all.N170
-# confint(contra.all.N170)
+contra.all.N170 <- contrast(emm.N170.E205, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+
+contra.all.N170
+confint(contra.all.N170)
 ```
 
 ```{r N170 amplitudes for all}
@@ -1153,9 +1167,9 @@ contra.all.N170.spec
 ```
 
 
-### Linear mixed model with subjective confidence
+## Linear mixed model with subjective confidence
 
-#### Converting response to subjective confidence
+### Converting response to subjective confidence
 ```{r}
 df.erp.SC.E2 <- {
   df.erp.E2 %>% 
@@ -1172,13 +1186,13 @@ df.erp.SC.E2 <- {
 ```
 
 
-#### Set the successive difference coding
+### Set the successive difference coding
 ```{r set the successive difference coding for ERP data E2 SC}
 # successive difference coding
 df.erp.SC.E2 <- sdif_coding_E205_erp(df.erp.SC.E2)
 ```
 
-#### Amplitudes of the P1
+### Amplitudes of the P1
 ```{r erp df for the P1 E2 SC}
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
 df.erp.P1.SC.E2 <- {
@@ -1196,7 +1210,7 @@ head(df.erp.P1.SC.E2, 10)
 ```
 
 
-##### The maximal model
+#### The maximal model
 ```{r maximal lmm for P1 E2 SC}
 
 lmm.max.P1.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
@@ -1211,7 +1225,7 @@ print(summary(lmm.max.P1.SC.E2), corr = FALSE)
 ```
 
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2 SC}
 
 lmm.zcp.P1.SC.E2 <- update(lmm.max.P1.SC.E2,
@@ -1224,7 +1238,7 @@ print(summary(lmm.zcp.P1.SC.E2), corr = FALSE)
 ```
 
 
-##### The reduced model
+#### The reduced model
 ```{r PCA analysis for zcp lmm for E2 P1 SC}
 summary(rePCA(lmm.zcp.P1.SC.E2))
 ```
@@ -1247,7 +1261,7 @@ anova(lmm.rdc.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
 ```
 
 
-##### The extended model
+#### The extended model
 ```{r }
 
 
@@ -1266,7 +1280,7 @@ print(summary(lmm.etd.P1.SC.E2), corr = FALSE)
 anova(lmm.rdc.P1.SC.E2, lmm.etd.P1.SC.E2, refit = FALSE)
 ```
 
-##### The optimal model
+#### The optimal model
 ```{r }
 
 lmm.opt.P1.SC.E205 <- lmm.etd.P1.SC.E2
@@ -1281,13 +1295,13 @@ anova(lmm.opt.P1.SC.E205)
 ```
 
 
-##### Diagnostic plots
+#### Diagnostic plots
 ```{r}
 qqplot_lmer(lmm.opt.P1.SC.E205)
 ```
 
 
-##### Estimated marginal means
+#### Estimated marginal means
 ```{r}
 emm.P1.SC.E205 <- emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Category | Hemisphere)
 
@@ -1295,7 +1309,7 @@ emm.P1.SC.E205
 ```
 
 
-##### Plots
+#### Plots
 ```{r}
 # emmip(emm.P1.SC.E205, Category ~ DuraConf | Hemisphere, CIs = TRUE)
 ```
@@ -1316,18 +1330,25 @@ p1.conf.LinePlot = {
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
     erp_theme
 }
 
+# p1.conf.LinePlot.slide <- {
+#   p1.conf.LinePlot + 
+#     theme(legend.position="right",
+#           axis.line = element_line(color="black", size = 3))
+# }
+# ggsave('P1_conf.png', p1.conf.LinePlot.slide, width = 8.5, height = 4)
+
 p1.conf.LinePlot
 ```
 
 
-##### Contrast
+#### Contrast
 ```{r}
 # contra.SC.P1 <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Category), "pairwise", simple = "each", combine = TRUE)
 #   
@@ -1385,7 +1406,7 @@ contra.SC.P1.spec.hemi
 ```
 
 
-#### Ampitudes of the N170
+### Ampitudes of the N170
 ```{r erp df for the N170 E2 SC}
 # only keep the data for amplitudes of the N170 (all erps)
 df.erp.N170.SC.E2 <- {
@@ -1403,7 +1424,7 @@ head(df.erp.N170.SC.E2, 10)
 ```
 
 
-##### The maximal model
+#### The maximal model
 ```{r maximal lmm for E2 N170 SC}
 
 lmm.max.N170.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
@@ -1418,7 +1439,7 @@ print(summary(lmm.max.N170.SC.E2), corr = FALSE)
 ```
 
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r zcp lmm for E2 N170 SC}
 
 
@@ -1436,7 +1457,7 @@ print(summary(lmm.zcp.N170.SC.E2), corr = FALSE)
 anova(lmm.max.N170.SC.E2, lmm.zcp.N170.SC.E2, refit = FALSE)
 ```
 
-##### The reduced model
+#### The reduced model
 ```{r PCA analysis for zcp lmm for E2 N170 SC}
 summary(rePCA(lmm.zcp.N170.SC.E2))
 ```
@@ -1459,7 +1480,7 @@ print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
 anova(lmm.rdc.N170.SC.E2, lmm.zcp.N170.SC.E2, refit = FALSE)
 ```
 
-##### The extended model
+#### The extended model
 ```{r}
 
 lmm.etd.N170.SC.E2 <- update(lmm.rdc.N170.SC.E2,
@@ -1476,7 +1497,7 @@ print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
 anova(lmm.rdc.N170.SC.E2, lmm.etd.N170.SC.E2, refit = FALSE)
 ```
 
-##### The optimal model
+#### The optimal model
 ```{r }
 
 lmm.opt.N170.SC.E205 <- lmm.etd.N170.SC.E2
@@ -1486,12 +1507,12 @@ print(summary(lmm.opt.N170.SC.E205), corr = FALSE)
 anova(lmm.opt.N170.SC.E205)
 ```
 
-##### Diagnostic plots
+#### Diagnostic plots
 ```{r}
 qqplot_lmer(lmm.opt.N170.SC.E205)
 ```
 
-##### Estimated marginal means
+#### Estimated marginal means
 ```{r}
 emm.N170.SC.E205 <- emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf | Hemisphere)
 
@@ -1499,7 +1520,7 @@ emm.N170.SC.E205
 ```
 
 
-##### Plots
+#### Plots
 ```{r}
 # emmip(emm.N170.SC.E205, Category ~ DuraConf | Hemisphere, CIs = TRUE) + 
 #   scale_y_continuous(trans = "reverse")
@@ -1521,17 +1542,25 @@ n170.conf.LinePlot = {
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
     erp_theme
 }
 
+# n170.conf.LinePlot.slide <- {
+#   n170.conf.LinePlot + 
+#     scale_y_reverse(limits = c(0.8, -4.8), breaks = seq(0, -4, -1)) +  # set the limit for y axis
+#     theme(legend.position="right",
+#           axis.line = element_line(color="black", size = 3))
+# }
+# ggsave('N170_confi.png', n170.conf.LinePlot.slide, width = 8.5, height = 4)
+
 n170.conf.LinePlot
 ```
 
-##### Contrast
+#### Contrast
 ```{r}
 # contra.N170.resp <- contrast(emm.N170.SC.E205, "pairwise", simple = "each", combine = FALSE, adjust = "Bonferroni")
 # 
@@ -1580,7 +1609,7 @@ contra.SC.N170.spec.hemi
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 contra.N170.resp.nohemi.dura <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Category), 
                                     "pairwise", adjust = "Bonferroni")
@@ -1626,7 +1655,7 @@ confint(contra.N170.resp.nohemi.cate)
 
 
 
-### Linear mixed model with high subjective confidences 
+## Linear mixed model with high subjective confidences 
 
 ```{r}
 tmpBlock.count <- {
@@ -1675,6 +1704,17 @@ avg.resp.wide.E205.Block <- {
 
 ```
 
+```{r}
+block.high <- {
+  avg.resp.long.E205.Block %>% 
+    filter(Category == "face", Duration == 17, Resp == 1, SubjCode != "P513") 
+}
+
+t.test(filter(block.high, blockID == 1)$RespRate, filter(block.high, blockID == 2)$RespRate, paired = T)
+
+
+```
+
 
 ```{r rainclound plot of the RT data E205 block, warning = FALSE}
 knitr::kable(desc.resp.E205.Block, digits = 4)
@@ -1711,20 +1751,25 @@ rt.RainPlot.E205.Block
 
 ```{r}
 
+bloc.labels <- c("1st Half", "2nd Half")
+names(bloc.labels) <- c(1, 2)
+
 acc.ColuPlot.E205.Block <- {
   ggplot(data = desc.resp.E205.Block, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Duration ~ blockID) +
+    facet_grid(Duration ~ blockID,
+               labeller = labeller(Duration = dura.labels,
+                                   blockID = bloc.labels)) +
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
     scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Subjective Responses for E205", x = "Responses", y = "Response Rate", fill = "Category") +  # set the names for main, x and y axises
+    labs(title = "", x = "Responses", y = "Percentage", fill = "Category") +  # set the names for main, x and y axises Subjective Responses for E205
     scale_fill_grey() +  # set the color for columns
     # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
-    plot_theme
+    erp_theme
 }
 
 acc.ColuPlot.E205.Block
@@ -1765,14 +1810,16 @@ desc.ratio.E205.Block <- {
 ratio.ColuPlot.E205.Block <- {
   ggplot(data = desc.ratio.E205.Block, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Duration ~ blockID) +
+    facet_grid(Duration ~ blockID,
+               labeller = labeller(Duration = dura.labels,
+                                   blockID = bloc.labels)) +
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
     scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "Subjective Responses for E205", x = "Responses", y = "Response Rate") +  # set the names for main, x and y axises
+    labs(title = "", x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
     scale_fill_grey() +  # set the color for columns
     # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
     plot_theme
@@ -1794,7 +1841,7 @@ df.erp.high.E2 <- {
 ```
 
 
-#### Amplitudes of the P1
+### Amplitudes of the P1
 ```{r erp df for the P1 E2 high}
 # only keep the data for amplitudes of the P1 (correct and incorrect erps)
 df.erp.P1.high.E2 <- {
@@ -1812,7 +1859,7 @@ head(df.erp.P1.high.E2, 10)
 ```
 
 
-##### The maximal model
+#### The maximal model
 ```{r maximal lmm for P1 E2 high}
 
 lmm.max.P1.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
@@ -1827,7 +1874,7 @@ print(summary(lmm.max.P1.high.E2), corr = FALSE)
 
 ```
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2 high}
 
 lmm.zcp.P1.high.E2 <- update(lmm.max.P1.high.E2,
@@ -1841,7 +1888,7 @@ print(summary(lmm.zcp.P1.high.E2), corr = FALSE)
 ```
  
  
-##### The reduced model
+#### The reduced model
 ```{r}
 summary(rePCA(lmm.zcp.P1.high.E2))
 ```
@@ -1860,7 +1907,7 @@ print(summary(lmm.rdc.P1.high.E2), corr = FALSE)
 anova(lmm.rdc.P1.high.E2, lmm.zcp.P1.high.E2, refit = FALSE)
 ```
 
-##### The extended model
+#### The extended model
 
 ```{r}
 lmm.etd.P1.high.E2 <- update(lmm.rdc.P1.high.E2,
@@ -1875,7 +1922,7 @@ print(summary(lmm.etd.P1.high.E2), corr = FALSE)
 anova(lmm.etd.P1.high.E2, lmm.rdc.P1.high.E2, refit = FALSE)
 ```
 
-##### The optimal model
+#### The optimal model
 
 ```{r}
 lmm.opt.P1.high.E205 <- lmm.etd.P1.high.E2
@@ -1885,14 +1932,14 @@ summary(lmm.opt.P1.high.E205)
 anova(lmm.opt.P1.high.E205)
 ```
 
-##### Diagnostic plots
+#### Diagnostic plots
 ```{r}
 qqplot_lmer(lmm.opt.P1.high.E205)
 ```
 
 
 
-##### Estimated marginal means
+#### Estimated marginal means
 
 ```{r}
 emm.P1.high.E205 <- emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere)
@@ -1900,7 +1947,7 @@ emm.P1.high.E205 <- emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemis
 emm.P1.high.E205
 ```
 
-##### Plots
+#### Plots
 ```{r}
 # emmip(emm.P1.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE)
 ```
@@ -1908,7 +1955,7 @@ emm.P1.high.E205
 
 ```{r p1.high.LinePlot}
 
-durablock.labels = c("17ms\nblock1", "17ms\nblock2", "200ms\nblock2")
+durablock.labels = c("17ms\nhalf 1", "17ms\nhalf 2", "200ms\nhalf 2")
 
 p1.high.LinePlot = {
   ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
@@ -1922,18 +1969,25 @@ p1.high.LinePlot = {
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
     erp_theme
 }
 
+# p1.high.LinePlot.slide <- {
+#   p1.high.LinePlot + 
+#     theme(legend.position="right",
+#           axis.line = element_line(color="black", size = 3))
+# }
+# ggsave('P1_high.png', p1.high.LinePlot.slide, width = 7.5, height = 4)
+
 p1.high.LinePlot
 ```
 
 
-##### Contrast
+#### Contrast
 ```{r}
 # contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere), "pairwise", simple = "each", combine = TRUE)
 ```
@@ -1972,7 +2026,7 @@ contra.high.P1.spec.hemi
 ```
 
 
-#### Amplitudes of the N170
+### Amplitudes of the N170
 ```{r erp df for the N170 E2 high}
 # only keep the data for amplitudes of the N170 (correct and incorrect erps)
 df.erp.N170.high.E2 <- {
@@ -1990,7 +2044,7 @@ head(df.erp.N170.high.E2, 10)
 ```
 
 
-##### The maximal model
+#### The maximal model
 ```{r maximal lmm for N170 E2 high}
 
 lmm.max.N170.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
@@ -2005,7 +2059,7 @@ print(summary(lmm.max.N170.high.E2), corr = FALSE)
 
 ```
 
-##### The zero-correlation-parameter model
+#### The zero-correlation-parameter model
 ```{r zcp lmm for N170 E2 high}
 
 lmm.zcp.N170.high.E2 <- update(lmm.max.N170.high.E2,
@@ -2018,7 +2072,7 @@ print(summary(lmm.zcp.N170.high.E2), corr = FALSE)
 ```
  
  
-##### The reduced model
+#### The reduced model
 ```{r}
 summary(rePCA(lmm.zcp.N170.high.E2))
 ```
@@ -2036,7 +2090,7 @@ print(summary(lmm.rdc.N170.high.E2), corr = FALSE)
 anova(lmm.rdc.N170.high.E2, lmm.zcp.N170.high.E2, refit = FALSE)
 ```
 
-##### The extended model
+#### The extended model
 ```{r}
 lmm.etd.N170.high.E2 <- update(lmm.rdc.N170.high.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
@@ -2050,7 +2104,7 @@ print(summary(lmm.etd.N170.high.E2), corr = FALSE)
 anova(lmm.etd.N170.high.E2, lmm.rdc.N170.high.E2, refit = FALSE)
 ```
 
-##### The optimal model
+#### The optimal model
 ```{r}
 lmm.opt.N170.high.E205 <- lmm.etd.N170.high.E2
 
@@ -2059,13 +2113,13 @@ summary(lmm.opt.N170.high.E205)
 anova(lmm.opt.N170.high.E205)
 ```
 
-##### Diagnostic plots
+#### Diagnostic plots
 ```{r}
 qqplot_lmer(lmm.opt.N170.high.E205)
 ```
 
 
-##### Estimated marginal means
+#### Estimated marginal means
 ```{r}
 emm.N170.high.E205 <- emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Category + Hemisphere)
 
@@ -2073,7 +2127,7 @@ emm.N170.high.E205
 ```
 
 
-##### Plots
+#### Plots
 ```{r}
 # emmip(emm.N170.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
 #   scale_y_continuous(trans = "reverse")
@@ -2081,9 +2135,9 @@ emm.N170.high.E205
 ```
 
 
-```{r n170.conf.LinePlot}
+```{r n170.high.LinePlot}
 
-n170.conf.LinePlot = {
+n170.high.LinePlot = {
   ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(size = 2) +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2095,18 +2149,26 @@ n170.conf.LinePlot = {
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
     erp_theme
 }
 
-n170.conf.LinePlot
+# n170.high.LinePlot.slide <- {
+#   n170.high.LinePlot + 
+#     scale_y_reverse(limits = c(0.8, -4.8), breaks = seq(0, -4, -1)) +  # set the limit for y axis
+#     theme(legend.position="right",
+#           axis.line = element_line(color="black", size = 3))
+# }
+# ggsave('N170_high.png', n170.high.LinePlot.slide, width = 7.5, height = 4)
+
+n170.high.LinePlot
 ```
 
 
-##### Contrast
+#### Contrast
 ```{r}
 # contra.high.N170 <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock), "pairwise", simple = "each")
 # 
