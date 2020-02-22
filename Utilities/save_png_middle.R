@@ -5,7 +5,7 @@ tmpfn <- "E205-N170-resp"
 res_value = 350
 res_rela = 90
 w = 650/res_rela*res_value
-h = 552/res_rela*res_value
+h = 532/res_rela*res_value
 
 # h = 400/res_rela*res_value
 
