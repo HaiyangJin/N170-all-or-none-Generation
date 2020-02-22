@@ -91,6 +91,74 @@ resp.labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "
 ```
 
 
+# Hypotheses
+Previous studies showed that the N170 amplitudes evoked by faces preseneted for longer durations were larger:
+```{r}
+Duration <- c("17", "200")
+Amplitudes <- c(-2.5, -5)
+Hypotheses <- rep("means", 2)
+
+df.lit <- data_frame(Duration, Amplitudes, Hypotheses)
+
+plot.lit <- {
+  ggplot(data = df.lit, aes(y = Amplitudes, x = Duration, fill = Duration)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(color = "black") +
+    facet_grid(. ~ Hypotheses) +
+    scale_fill_manual(values = c(gray(.7), gray(.3))) +
+    scale_y_reverse(limits =c(0, -5.5), breaks = seq(0, -5, -1), expand= c(0, 0)) +  # set the limit for y axis
+    geom_hline(yintercept = -2.5, linetype = "dashed", color = "red", size = 1) +
+    labs(x = "", y = expression(paste("Amplitudes (", mu, "V)"))) +  # set the names for main, x and y axises ,  title = "Means", 
+    # theme_bw() +
+    general_theme +
+    theme( # strip.text = element_text(color = "white"),
+          legend.position = "none",
+          axis.line = element_line(size = 3, colour = "black"))
+}
+
+plot.lit
+```
+
+There are two possible explainations for the aggregated mean amplitudes:
+```{r}
+
+Duration <- rep(c(rep("17", 5), rep("200", 5) ), 2)
+Amplitudes <- c(c(rep(-2.5, 5), rep(-5, 5)), c(rep(-.83, 3), rep(-5, 7)))
+TrialNum <- rep(as.character(rep(c(1:5), 2)), 2)
+Hypotheses <- c(rep("Possibility 1", 10), rep("Possibility 2", 10))
+
+df.st <- data_frame(Duration, Amplitudes, TrialNum, Hypotheses)
+
+plot.st <- {
+  ggplot(data = df.st, aes(y = Amplitudes, x = Duration, fill = Duration, color = TrialNum)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge") +
+    scale_fill_manual(values = c(gray(.7), gray(.3))) +
+    scale_color_manual(values = rep("black", 5)) +
+    facet_grid(. ~ Hypotheses) +
+    geom_hline(yintercept = -2.5, linetype = "dashed", color = "red", size = 1) +
+    scale_y_reverse(limits =c(0, -5.5), breaks = seq(0, -5, -1), expand= c(0, 0)) +  # set the limit for y axis
+    labs(x = "Duration (ms)") +  # set the names for main, x and y axises , title = "At the single-trial level:", , y = expression(paste("Amplitudes ( ", mu, "V)"))
+    theme_bw() +
+    general_theme +
+    theme(legend.position = "none",
+          axis.title.y = element_blank(),
+          axis.line = element_line(size = 3, colour = "black"))
+}
+
+plot.st
+```
+
+
+```{r combine the aggregated mean amp plots and the explanation plots, include=FALSE}
+
+library(ggpubr)
+
+plot.hypo <- ggarrange(plot.lit, plot.st, widths = c(1.1, 4))
+
+# ggsave('plot_hypo.png', plot.hypo, width = 7, height = 3)
+
+plot.hypo
+```
+
 
 # Behavior results
 ```{r load behavioral results of 205}
