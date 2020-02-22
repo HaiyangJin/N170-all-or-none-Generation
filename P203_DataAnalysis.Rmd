@@ -136,7 +136,7 @@ plot.st <- {
     facet_grid(. ~ Hypotheses) +
     geom_hline(yintercept = -2.5, linetype = "dashed", color = "red", size = 1) +
     scale_y_reverse(limits =c(0, -5.5), breaks = seq(0, -5, -1), expand= c(0, 0)) +  # set the limit for y axis
-    labs(x = "Duration (ms)") +  # set the names for main, x and y axises , title = "At the single-trial level:", , y = expression(paste("Amplitudes ( ", mu, "V)"))
+    labs(x = "Duration (ms)") +  # set the names for main, x and y axises , title = "At the single-trial level:", , y = expression(paste("Amplitudes (", mu, "V)"))
     theme_bw() +
     general_theme +
     theme(legend.position = "none",
@@ -806,7 +806,7 @@ p1.all.LinePlot = {
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration (ms)", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -1152,7 +1152,7 @@ n170.all.LinePlot = {
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration (ms)", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration (ms)", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -1398,7 +1398,7 @@ p1.conf.LinePlot = {
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -1610,7 +1610,7 @@ n170.conf.LinePlot = {
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -2037,7 +2037,7 @@ p1.high.LinePlot = {
     scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -2217,7 +2217,7 @@ n170.high.LinePlot = {
     scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes ( ", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
