@@ -2327,6 +2327,85 @@ The outline of the algorithm of `step(fit, reduce.fixed = false)` function is:
 More deatils could be found: Kuznetsova, A., Brockhoff, P. B., & Christensen, R. H. B. (2017). lmerTest Package: Tests in Linear Mixed Effects Models. Journal of Statistical Software, 82(13), 1-26. http://doi.org/10.18637/jss.v082.i13 **Page 8**
 
 
+## Stimuli specific effects
+```{r}
+
+# 28 participants in total
+
+resp.stim <- {
+  clean.beha.205 %>% 
+    # filter(Duration == "17", Resp == "1") %>% 
+    mutate(isKey1 = as.numeric(Resp == "1"),
+           Type_Category = paste(Type, Category, sep = "-")) %>% 
+    group_by(Stimuli, Duration, Type_Category) %>% 
+    summarize(avgCount = mean(isKey1)) 
+  
+  
+  # %>% 
+  #   group_by(Stimuli, Duration, Resp, Type, Category) %>%
+  #   summarize(avgCount = sum(Count)/28/8)
+}
+
+ggplot(resp.stim, aes(x = Stimuli, y = avgCount, fill = Type_Category)) +
+  geom_col() +
+  facet_grid(Duration ~ .) +
+  labs(title = "Averaged percentage of being responsed as 'Key 1' for each stimuli",
+       y = "Percentage") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        text = element_text(size = 10),
+        axis.title = element_text(size = 16), 
+        axis.text = element_text(size = 15), # the size of the texts in plot
+        # axis.text.x = element_text(angle = 45, vjust = 0.5),
+        legend.title=element_text(size=16),
+        legend.text=element_text(size=16),
+        # legend.position = "bottom",
+        legend.key.width = unit(1.2, "cm"),
+        plot.title = element_text(lineheight=.8, face="bold", size = 17),
+        strip.text = element_text(face="bold", size=15, lineheight=5.0),
+        strip.background = element_rect(fill="white", colour="white", size=1),
+        strip.placement = "outside",
+        legend.position = "bottom") 
+```
+
+
+```{r}
+
+resp.stim.1 <- {
+  clean.beha.205 %>% 
+    mutate(isKey1 = as.numeric(Resp == "1")) %>% 
+    filter(Type == "intact", Category == "face") %>% 
+    group_by(Stimuli, SubjCode, Duration) %>% 
+    summarize(avgCount = mean(isKey1)) %>% 
+    ungroup() 
+}
+
+resp.stim.1.17 <- {
+  resp.stim.1 %>% 
+    filter(Duration == "17") %>% 
+    select(-Duration) %>% 
+    spread(Stimuli, avgCount)
+}
+
+resp.stim.1.17 <- data.matrix(select(resp.stim.1.17, -SubjCode))
+
+resp.stim.1.200 <- {
+  resp.stim.1 %>% 
+    filter(Duration == "200") %>% 
+    select(-Duration) %>% 
+    spread(Stimuli, avgCount)
+}
+
+resp.stim.1.200 <- data.matrix(select(resp.stim.1.200, -SubjCode))
+
+
+library(plotly)
+
+heatmap_17 <- plot_ly(z = data.matrix(resp.stim.1.17), type = "heatmap", name = "Figrename")
+heatmap_200 <- plot_ly(z = data.matrix(resp.stim.1.200), type = "heatmap", name = "Figrename")
+
+```
+
 
 # Versions of packages used
 ```{r versions}
