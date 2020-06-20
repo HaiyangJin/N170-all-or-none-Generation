@@ -18,3 +18,6 @@ vignettes/*.pdf
 .Rproj.user
 
 .DS_Store
+
+# ignore bmm results
+bmmfit/

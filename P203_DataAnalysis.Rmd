@@ -2283,18 +2283,763 @@ contra.high.N170.spec.hemi
 ```
 
 
+### Bayesian mixed modeling of the N170 (high subjective confidence)
+Since the differences being non-significant in the linear mixed modeling is not informative whether N170 amplitudes of faces presented for 17ms and 200ms were the same when they are perceived with high subjective perception. Bayesian mixed modeling is used to answer this question.
+
+```{r message=FALSE}
+library(rstan)
+library(brms)
+library(tidybayes)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+
+```
+
+
+```{r set priors}
+# list all the parameters to be set priors
+get_prior(MeanAmp ~ Category * Hemisphere * DuraBlock +
+            (1 + Category * Hemisphere * DuraBlock | SubjCode) +
+            (1 + Hemisphere * DuraBlock | Stimuli),
+          data = df.erp.N170.high.E2)
+
+# set priors
+prior.N170.high <- c(
+  prior(normal(-3, 4), class = Intercept),
+  prior(normal(0, 1.5), class = b),
+  prior(normal(0, 5), class = sigma),
+  prior(normal(0, 3), class = sd),
+  prior(lkj(2), class = cor)
+)
+```
+
+
+```{r maximal bmm for N170 E2 high}
+
+# fit bmm if bmm_n170.RData is not available
+bmm_N170_high_file <- file.path(folder_bmm, "bmm_N170_high.RData")
+
+if (!file.exists(bmm_N170_high_file)) {
+  bmm.N170.high <- brm(MeanAmp ~ Category * Hemisphere * DuraBlock +
+                         (1 + Category * Hemisphere * DuraBlock | SubjCode) +
+                         (1 + Hemisphere * DuraBlock | Stimuli),
+                       data = df.erp.N170.high.E2,
+                       prior = prior.N170.high,
+                       chains = 8,
+                       warmup = 2000,
+                       iter = 10000,
+                       control = list(adapt_delta = 0.99),
+                       save_all_pars = TRUE)
+  
+  save(bmm.N170.high, file = bmm_N170_high_file)
+} else {
+  load(bmm_N170_high_file)
+}
+
+summary(bmm.N170.high)
+```
+
+```{r}
+# calculate the median and HDI
+bmm.N170.high %>% 
+  gather_draws(`b_.*`, regex = TRUE) %>% 
+  median_hdi() %>% 
+  rename(median = .value)
+```
+
+```{r}
+plot(bmm.N170.high, pars = "^b_", ask = FALSE, N = 4, newpage = FALSE)
+```
+
+
+#### Estimated marginal means (median)
+```{r}
+# median and hdi in each condition
+emm.bmm.N170.high <- emmeans(bmm.N170.high, ~ DuraBlock + Category + Hemisphere)
+summary(emm.bmm.N170.high)
+```
+
+```{r}
+# simple effect analysis
+emm.bmm.N170.high %>%
+  contrast(method = "pairwise", simple = "each", combine = TRUE) 
+```
+
+```{r}
+# test the face-specific effects
+contrast(emmeans(bmm.N170.high, ~ Category + DuraBlock | Hemisphere), 
+         interactio = "pairwise")
+```
+
+#### Posterior distributions of parameters of interests
+##### Distributions of DuraBlock
+```{r fig.height=6, fig.width=10}
+df_emm_db <- emm.bmm.N170.high %>% 
+  gather_emmeans_draws() %>% 
+  filter(Category == "face") %>% 
+  mutate(Count = n())
+
+df_emm_db_mh <- emm.bmm.N170.high %>% 
+  gather_emmeans_draws() %>% 
+  filter(Category == "face") %>% 
+  median_hdi()
+
+hemi_lab <- c("left", "right")
+names(hemi_lab) <- c("Left", "Right")
+con_lab <- c("17ms_half1 ", 
+             "17ms_half2 ",
+             "200ms_half2")
+names(con_lab) <- c("17_1", "17_2", "200_2")
+  
+posterior_db <- ggplot(df_emm_db) + 
+  geom_density(aes(x = .value), fill = "grey80") +
+  geom_vline(xintercept = 0, linetype = "dashed", size = 0.75, color = "gray30") +
+  geom_vline(data = df_emm_db_mh, aes(xintercept = .value), linetype = "dashed", color = "#0094EA", size = 1) +
+  geom_errorbarh(data = df_emm_db_mh, aes(y = 0, xmin = .lower, xmax = .upper, height = .15), color = "#0094EA", size = 1.5) + 
+  facet_grid(DuraBlock ~ Hemisphere,
+             labeller = labeller(Hemisphere = hemi_lab, DuraBlock = con_lab)) +
+  xlab(expression(paste("N170 Amplitudes (", mu, "V)"))) +
+  ylab("Density") +
+  theme_bw() +
+  theme(
+    text = element_text(size = 16),
+    axis.title = element_text(size = 20), 
+    axis.text = element_text(size = 18), # the size of the texts in plot
+    legend.title=element_text(size=24),
+    legend.text=element_text(size=18),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+    # remove the facet background color
+    strip.text = element_text(face="bold", size=20, lineheight=1),
+    strip.text.y.right = element_text(angle = 0, size=16),
+    strip.background = element_rect(fill="white", colour="white", size=1),
+    strip.placement = "outside"
+  ) +
+  NULL
+
+# ggsave("posterior_db.png", posterior_db, width = 10, height = 6)
+
+posterior_db
+
+```
+
+##### Differences among DuraBlock
+```{r fig.height=6, fig.width=10}
+df_emm_post <- pairs(emm.bmm.N170.high, simple = "DuraBlock") %>% 
+  gather_emmeans_draws() %>% 
+  filter(Category == "face") %>% 
+  mutate(Count = n())
+
+df_emm_post_mh <- pairs(emm.bmm.N170.high, simple = "DuraBlock") %>% 
+  gather_emmeans_draws() %>% 
+  filter(Category == "face") %>% 
+  median_hdi()
+
+hemi_lab <- c("left", "right")
+names(hemi_lab) <- c("Left", "Right")
+con_lab <- c("17ms_half1  \nvs.\n17ms_half2 ", 
+             "17ms_half1  \nvs.\n200ms_half2",
+             "17ms_half2  \nvs.\n200ms_half2")
+names(con_lab) <- c("17_1 - 17_2", "17_1 - 200_2", "17_2 - 200_2")
+  
+posterior_contra <- ggplot(df_emm_post) + 
+  geom_density(aes(x = .value), fill = "grey80") +
+  geom_vline(xintercept = 0, linetype = "dashed", size = 0.75, color = "gray30") +
+  geom_vline(data = df_emm_post_mh, aes(xintercept = .value), linetype = "dashed", color = "#0094EA", size = 1) +
+  geom_errorbarh(data = df_emm_post_mh, aes(y = 0, xmin = .lower, xmax = .upper, height = .15), color = "#0094EA", size = 1.5) + 
+  facet_grid(contrast ~ Hemisphere,
+             labeller = labeller(Hemisphere = hemi_lab, contrast = con_lab)) +
+  # scale_y_continuous(breaks = c(0, 0.5, 1), limits = c(-0.1, 1.4)) +
+  xlab(expression(paste("N170 Amplitudes (", mu, "V)"))) +
+  ylab("Density") +
+  theme_bw() +
+  theme(
+    text = element_text(size = 16),
+    axis.title = element_text(size = 20), 
+    axis.text = element_text(size = 18), # the size of the texts in plot
+    legend.title=element_text(size=24),
+    legend.text=element_text(size=18),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+    # remove the facet background color
+    strip.text = element_text(face="bold", size=20, lineheight=1),
+    strip.text.y.right = element_text(angle = 0, size=16),
+    strip.background = element_rect(fill="white", colour="white", size=1),
+    strip.placement = "outside"
+  ) +
+  NULL
+
+# ggsave("posterior_contra_bmm.png", posterior_contra, width = 10, height = 6)
+
+posterior_contra
+
+```
+
+
+##### Face-specific differences among DuraBlock
+```{r fig.height=6, fig.width=10}
+df_emm_spec_post <- contrast(emm.bmm.N170.high, interaction = "pairwise", by = "Hemisphere") %>% 
+  gather_emmeans_draws() %>% 
+  mutate(Count = n())
+
+df_emm_spec_post_mh <- pairs(emm.bmm.N170.high, interaction = "pairwise", by = "Hemisphere") %>% 
+  gather_emmeans_draws() %>% 
+  median_hdi()
+
+hemi_lab <- c("left", "right")
+names(hemi_lab) <- c("Left", "Right")
+con_lab <- c("17ms_half1  \nvs.\n17ms_half2 ", 
+             "17ms_half1  \nvs.\n200ms_half2",
+             "17ms_half2  \nvs.\n200ms_half2")
+names(con_lab) <- c("17_1 - 17_2", "17_1 - 200_2", "17_2 - 200_2")
+  
+posterior_contra_spec <- ggplot(df_emm_spec_post) + 
+  geom_density(aes(x = .value), fill = "grey80") +
+  geom_vline(xintercept = 0, linetype = "dashed", size = 0.75, color = "gray30") +
+  geom_vline(data = df_emm_spec_post_mh, aes(xintercept = .value), linetype = "dashed", color = "#0094EA", size = 1) +
+  geom_errorbarh(data = df_emm_spec_post_mh, aes(y = 0, xmin = .lower, xmax = .upper, height = .15), color = "#0094EA", size = 1.5) + 
+  facet_grid(DuraBlock_pairwise ~ Hemisphere,
+             labeller = labeller(Hemisphere = hemi_lab, DuraBlock_pairwise = con_lab)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1)) + #, limits = c(-0.1, 1.3)
+  xlab(expression(paste("N170 Amplitudes (", mu, "V)"))) +
+  ylab("Density") +
+  theme_bw() +
+  theme(
+    text = element_text(size = 16),
+    axis.title = element_text(size = 20), 
+    axis.text = element_text(size = 18), # the size of the texts in plot
+    legend.title=element_text(size=24),
+    legend.text=element_text(size=18),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+    # remove the facet background color
+    strip.text = element_text(face="bold", size=20, lineheight=1),
+    strip.text.y.right = element_text(angle = 0, size=16),
+    strip.background = element_rect(fill="white", colour="white", size=1),
+    strip.placement = "outside"
+  ) +
+  NULL
+
+# ggsave("posterior_contra_spec_bmm.png", posterior_contra_spec, width = 10, height = 6)
+
+posterior_contra_spec
+
+```
+
+#### Posterior predictive check
+In the posterior predictive check plots, the black line denotes the median of the data in this study and the the distribution depicts the predictive values based on the model (i.e., `bmm.N170.high`).
+```{r}
+df_high_pred <- posterior_predict(bmm.N170.high, nsamples =  1000) %>% 
+  array_branch(margin = 1) %>% 
+  map_dfr(function(x) {
+    df.erp.N170.high.E2 %>% 
+      mutate(MeanAmp = x)
+  }, .id = "iter") %>% 
+  mutate(iter = as.numeric(iter))
+
+tt <- lapply(levels(df.erp.N170.high.E2$SubjCode), function(x) {
+  
+  df_high_pred_sum <- df_high_pred %>% 
+    filter(SubjCode == x) %>%
+    group_by(iter, Hemisphere, Category, DuraBlock) %>% 
+    summarize(medianAmp = median(MeanAmp))
+  
+  df_high_obs_sum <- df.erp.N170.high.E2 %>% 
+    filter(SubjCode == x) %>%
+    group_by(Hemisphere, Category, DuraBlock) %>% 
+    summarize(medianAmp = median(MeanAmp))
+  
+  ggplot(df_high_pred_sum, aes(medianAmp)) +
+    geom_histogram(alpha=.5, bins = 40) +
+    geom_vline(aes(xintercept= medianAmp),data= df_high_obs_sum) +
+    facet_grid(DuraBlock ~ Hemisphere + Category, scales = "free") +
+    ggtitle(x) +
+    NULL
+})
+
+tt
+
+```
+
+#### N170 for faces with 17ms and 200ms (left hemisphere)
+##### Bayesian mixed models
+```{r}
+# manually set the backward difference coding
+df.N170.lface <- {
+  df.erp.N170.high.E2 %>% 
+    filter(Category == "face",
+           Hemisphere == "Left") %>% 
+    mutate(D1B2_D1B1 = ifelse(DuraBlock == "17_1", -2/3, 1/3),
+           D2B2_D1B2 = ifelse(DuraBlock == "200_2", 2/3, -1/3))
+}
+
+bmm_N170_high_lface_file <- file.path(folder_bmm, "bmm_N170_high_lface.RData")
+if (!file.exists(bmm_N170_high_lface_file)) {
+  bmm.N170.high.lface <- brm(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                             data = df.N170.lface,
+                             prior = prior.N170.high,
+                             chains = 8,
+                             warmup = 1000,
+                             iter = 30000,
+                             control = list(adapt_delta = 0.9),
+                             save_all_pars = TRUE)
+  
+  save(bmm.N170.high.lface, file = bmm_N170_high_lface_file) 
+} else {
+  load(bmm_N170_high_lface_file)
+}
+
+summary(bmm.N170.high.lface)
+
+```
+
+```{r}
+bmm.N170.high.lface %>% 
+  gather_draws(`b_.*`, regex = TRUE) %>% 
+  median_hdi()
+```
+
+
+```{r}
+plot(bmm.N170.high.lface, pars = "^b_", ask = FALSE)
+```
+
+
+##### The null model
+In the null model, `D2B2_D1B2` is forced to be 0, i.e., `D2B2_D1B2` will not be included in the model.
+```{r}
+
+bmm_N170_lface_null_file <- file.path(folder_bmm, "bmm_N170_lface_null.RData")
+if (!file.exists(bmm_N170_lface_null_file)) {
+  bmm_N170_lface_null <- brm(MeanAmp ~ D1B2_D1B1 + 
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                             data = df.N170.lface,
+                             prior = prior.N170.high,
+                             chains = 8,
+                             warmup = 1000,
+                             iter = 30000,
+                             control = list(adapt_delta = 0.9),
+                             save_all_pars = TRUE)
+  save(bmm_N170_lface_null, file = bmm_N170_lface_null_file)
+} else {
+  load(bmm_N170_lface_null_file)
+}
+
+lml_lface_null <- bridge_sampler(bmm_N170_lface_null, silent = TRUE)
+```
+
+
+```{r}
+lml.N170.high.lface <- bridge_sampler(bmm_N170_lface_null, silent = TRUE)
+BF01.N170.lface <- bayes_factor(lml_lface_null, lml.N170.high.lface)
+
+BF01.N170.lface
+```
+
+
+##### Bayes factor for models with different prior standard deviations
+
+```{r}
+# get_prior(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+#                             (1 + DuraBlock | SubjCode) +
+#                             (1 + DuraBlock | Stimuli),
+#                           data = df.N170.lface)
+
+BFs_N170_lface_file <- file.path(folder_bmm, "BFs_N170_lface.RData")
+if (!file.exists(BFs_N170_lface_file)) {
+  prior_sd <- c(0.05, 0.1, 0.2, 0.5, 0.75, 1, 2, 5) 
+  BFs <- map_dfr(prior_sd, function(psd) {
+    gc() # force R "garbage collector" so that we don't run out of memory 
+    
+    print(paste0("Fitting model with psd:", psd))
+    
+    thefit <- brm(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+                    (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                    (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                  data = df.N170.lface,
+                  prior =c(prior.N170.high,
+                           set_prior(paste0("normal(0,",psd ,")"), class = "b", coef = "D2B2_D1B2")), 
+                  chains = 8,
+                  warmup = 1000,
+                  iter = 30000,
+                  control = list(adapt_delta = 0.9), 
+                  save_all_pars = TRUE)
+    
+    lml_lface_alt <- bridge_sampler(thefit, silent = TRUE)
+    tibble(beta_sd = psd, 
+           BF = bayes_factor(lml_lface_null, lml_lface_alt)$bf) 
+  })
+  
+  BFs_N170_lface <- BFs %>% 
+    mutate(BF01 = BF,
+           BF10 = 1/BF)
+  
+  save(BFs_N170_lface, file = BFs_N170_lface_file)
+  
+} else {
+  load(BFs_N170_lface_file) 
+}
+
+
+BFs_N170_lface 
+```
+
+```{r BF plots for left N170}
+breaks <- c(1/50 , 1 / 20, 1 / 10, 1 / 3, 1, 3, 5, 10, 20)
+curve <- as.data.frame(spline(BFs_N170_lface$beta_sd, BFs_N170_lface$BF01))
+ggplot(BFs_N170_lface, aes(x = beta_sd, y = BF)) +
+  geom_point(size =2) +
+  ## geom_line(data = curve, aes(x = x, y = y))+
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  ## theme_bw() +
+  scale_x_continuous("Normal prior width (SD)\n") +
+  scale_y_log10("BF01", breaks = breaks, labels = MASS::fractions(breaks)) +
+  coord_cartesian(ylim = c(1 / 30, 30)) +
+  annotate("text", x =1, y= 18, label = "Evidence in favor of H0", size =5)+
+  annotate("text", x =1, y= 1/18, label = "Evidence in favor of H1", size =5) +
+  theme(axis.text.y = element_text(size = 8)) +
+  ggtitle("Bayes factors") +
+  NULL
+```
+
+```{r}
+# 
+# BFs_N170_lface_B21_file <- file.path(folder_bmm, "BFs_N170_lface_B21.RData")
+# load(BFs_N170_lface_B21_file) 
+# 
+# BFs_N170_lface_B21 
+```
+
+
+#### N170 for faces with 17ms and 200ms (right hemisphere)
+##### Bayesian mixed models
+```{r}
+df.N170.rface <- {
+  df.erp.N170.high.E2 %>% 
+    filter(Category == "face",
+           Hemisphere == "Right") %>% 
+    mutate(D1B2_D1B1 = ifelse(DuraBlock == "17_1", -2/3, 1/3),
+           D2B2_D1B2 = ifelse(DuraBlock == "200_2", 2/3, -1/3))
+}
+
+bmm_N170_high_rface_file <- file.path(folder_bmm, "bmm_N170_high_rface.RData")
+if (!file.exists(bmm_N170_high_rface_file)) {
+  bmm.N170.high.rface <- brm(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                             data = df.N170.rface,
+                             prior = prior.N170.high,
+                             chains = 8,
+                             warmup = 1000,
+                             iter = 30000,
+                             control = list(adapt_delta = 0.9),
+                             save_all_pars = TRUE)
+  
+  save(bmm.N170.high.rface, file = bmm_N170_high_rface_file)
+  
+} else {
+  load(bmm_N170_high_rface_file)
+}
+
+summary(bmm.N170.high.rface)
+
+```
+
+```{r}
+bmm.N170.high.rface %>% 
+  gather_draws(`b_.*`, regex = TRUE) %>% 
+  median_hdi()
+```
+
+```{r}
+summary(emmeans(bmm.N170.high.rface, ~ D1B2_D1B1 + D2B2_D1B2))
+```
+
+
+```{r}
+plot(bmm.N170.high.rface, pars = "^b_", ask = FALSE)
+```
+
+```{r}
+pp_check(bmm.N170.high.rface)
+```
+
+
+##### The null model
+```{r}
+
+bmm_N170_rface_null_file <- file.path(folder_bmm, "bmm_N170_rface_null.RData")
+if (!file.exists(bmm_N170_rface_null_file)) {
+  bmm_N170_rface_null <- brm(MeanAmp ~ D1B2_D1B1 + 
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                             data = df.N170.rface,
+                             prior = prior.N170.high,
+                             chains = 8,
+                             warmup = 1000,
+                             iter = 30000,
+                             control = list(adapt_delta = 0.9),
+                             save_all_pars = TRUE)
+  save(bmm_N170_rface_null, file = bmm_N170_rface_null_file)
+} else {
+  load(bmm_N170_rface_null_file)
+}
+
+lml_rface_null <- bridge_sampler(bmm_N170_rface_null, silent = TRUE)
+```
+
+
+```{r}
+lml.N170.high.rface <- bridge_sampler(bmm.N170.high.rface, silent = TRUE)
+BF01_N170_rface <- bayes_factor(lml_rface_null, lml.N170.high.rface)
+
+BF01_N170_rface
+
+```
+
+##### Bayes factor for models with different prior standard deviations
+```{r}
+
+# get_prior(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+#                             (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+#                             (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+#                           data = df.N170.rface)
+
+BFs_N170_rface_file <- file.path(folder_bmm, "BFs_N170_rface.RData")
+if (!file.exists(BFs_N170_rface_file)) {
+  prior_sd <- c(0.05, 0.1, 0.2, 0.5, 0.75, 1, 2, 5) 
+  BFs <- map_dfr(prior_sd, function(psd) {
+    gc() # force R "garbage collector" so that we don't run out of memory 
+    
+    print(paste0("Fitting model with psd:", psd))
+    
+    thefit <- brm(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+                    (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                    (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                  data = df.N170.rface,
+                  prior = c(prior.N170.high,
+                            set_prior(paste0("normal(0,",psd ,")"), class = "b", coef = "D2B2_D1B2")), 
+                  chains = 8,
+                  warmup = 1000,
+                  iter = 30000,
+                  control = list(adapt_delta = 0.9), 
+                  save_all_pars = TRUE)
+    
+    lml_rface_alt <- bridge_sampler(thefit, silent = TRUE)
+    tibble(beta_sd = psd, 
+           BF = bayes_factor(lml_rface_null, lml_rface_alt)$bf) 
+  })
+  
+  BFs_N170_rface <- BFs %>% 
+    mutate(BF01 = BF,
+           BF10 = 1/BF)
+  
+  save(BFs_N170_rface, file = BFs_N170_rface_file)
+  
+} else {
+  load(BFs_N170_rface_file)
+}
+
+BFs_N170_rface
+
+```
+
+```{r BF plots for right N170}
+breaks <- c(1/50 , 1 / 20, 1 / 10, 1 / 3, 1, 3, 5, 10, 20)
+curve <- as.data.frame(spline(BFs_N170_rface$beta_sd, BFs_N170_rface$BF01))
+ggplot(BFs_N170_rface, aes(x = beta_sd, y = BF)) +
+  geom_point(size =2) +
+  ## geom_line(data = curve, aes(x = x, y = y))+
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  ## theme_bw() +
+  scale_x_continuous("Normal prior width (SD)\n") +
+  scale_y_log10("BF01", breaks = breaks, labels = MASS::fractions(breaks)) +
+  coord_cartesian(ylim = c(1 / 30, 30)) +
+  annotate("text", x =1, y= 18, label = "Evidence in favor of H0", size =5)+
+  annotate("text", x =1, y= 1/18, label = "Evidence in favor of H1", size =5) +
+  theme(axis.text.y = element_text(size = 8)) +
+  ggtitle("Bayes factors") +
+  NULL
+```
+
+#### Face-specific N170 for 17ms and 200ms (left hemisphere)
+##### Bayesian mixed models
+```{r}
+# manually set the backward difference coding
+df.N170.lfs <- {
+  df.erp.N170.high.E2 %>% 
+    filter(Hemisphere == "Left") %>% 
+    mutate(D1B2_D1B1 = ifelse(DuraBlock == "17_1", -2/3, 1/3),
+           D2B2_D1B2 = ifelse(DuraBlock == "200_2", 2/3, -1/3),
+           
+           Cate_D1B2_D1B1 = Cate_C * D1B2_D1B1,
+           Cate_D2B2_D1B2 = Cate_C * D2B2_D1B2)
+}
+
+bmm_N170_high_lfs_file <- file.path(folder_bmm, "bmm_N170_high_lfs.RData")
+if (!file.exists(bmm_N170_high_lfs_file)) {
+  bmm.N170.high.lfs <- brm(MeanAmp ~ Cate_C + D1B2_D1B1 + D2B2_D1B2 + 
+                             Cate_D1B2_D1B1 + Cate_D2B2_D1B2 + # Category * DuraBlock +
+                               (1 + Cate_C + D1B2_D1B1 + D2B2_D1B2 + 
+                             Cate_D1B2_D1B1 + Cate_D2B2_D1B2 | SubjCode) +
+                               (1 + Cate_C + D1B2_D1B1 + D2B2_D1B2 + 
+                             Cate_D1B2_D1B1 + Cate_D2B2_D1B2 | Stimuli),
+                             data = df.N170.lfs,
+                             prior = prior.N170.high,
+                             chains = 8,
+                             warmup = 1000,
+                             iter = 30000,
+                             control = list(adapt_delta = 0.9),
+                             save_all_pars = TRUE)
+  
+  save(bmm.N170.high.lfs, file = bmm_N170_high_lfs_file) 
+} else {
+  load(bmm_N170_high_lfs_file)
+}
+
+summary(bmm.N170.high.lfs)
+```
+
+
+```{r}
+bmm.N170.high.lfs %>% 
+  gather_draws(`b_.*`, regex = TRUE) %>% 
+  median_hdi()
+```
+
+
+```{r}
+plot(bmm.N170.high.lfs, pars = "^b_", ask = FALSE)
+```
+
+
+##### The null model
+In the null model, `D2B2_D1B2` is forced to be 0, i.e., `D2B2_D1B2` will not be included in the model.
+```{r}
+
+bmm_N170_lfs_null_file <- file.path(folder_bmm, "bmm_N170_lfs_null.RData")
+if (!file.exists(bmm_N170_lfs_null_file)) {
+  bmm_N170_lfs_null <- brm(MeanAmp ~ D1B2_D1B1 + 
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                               (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                             data = df.N170.lfs,
+                             prior = prior.N170.high,
+                             chains = 8,
+                             warmup = 1000,
+                             iter = 30000,
+                             control = list(adapt_delta = 0.9),
+                             save_all_pars = TRUE)
+  save(bmm_N170_lfs_null, file = bmm_N170_lfs_null_file)
+} else {
+  load(bmm_N170_lfs_null_file)
+}
+
+lml_lfs_null <- bridge_sampler(bmm_N170_lfs_null, silent = TRUE)
+```
+
+
+```{r}
+lml.N170.high.lfs <- bridge_sampler(bmm_N170_lfs_null, silent = TRUE)
+BF01.N170.lfs <- bayes_factor(lml_lfs_null, lml.N170.high.lfs)
+
+BF01.N170.lfs
+```
+
+
+##### Bayes factor for models with different prior standard deviations
+
+```{r}
+# get_prior(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+#                             (1 + DuraBlock | SubjCode) +
+#                             (1 + DuraBlock | Stimuli),
+#                           data = df.N170.lfs)
+
+BFs_N170_lfs_file <- file.path(folder_bmm, "BFs_N170_lfs.RData")
+if (!file.exists(BFs_N170_lfs_file)) {
+  prior_sd <- c(0.05, 0.1, 0.2, 0.5, 0.75, 1, 2, 5) 
+  BFs <- map_dfr(prior_sd, function(psd) {
+    gc() # force R "garbage collector" so that we don't run out of memory 
+    
+    print(paste0("Fitting model with psd:", psd))
+    
+    thefit <- brm(MeanAmp ~ D1B2_D1B1 + D2B2_D1B2 +
+                    (1 + D1B2_D1B1 + D2B2_D1B2 | SubjCode) +
+                    (1 + D1B2_D1B1 + D2B2_D1B2 | Stimuli),
+                  data = df.N170.lfs,
+                  prior =c(prior.N170.high,
+                           set_prior(paste0("normal(0,",psd ,")"), class = "b", coef = "D2B2_D1B2")), 
+                  chains = 8,
+                  warmup = 1000,
+                  iter = 30000,
+                  control = list(adapt_delta = 0.9), 
+                  save_all_pars = TRUE)
+    
+    lml_lfs_alt <- bridge_sampler(thefit, silent = TRUE)
+    tibble(beta_sd = psd, 
+           BF = bayes_factor(lml_lfs_null, lml_lfs_alt)$bf) 
+  })
+  
+  BFs_N170_lfs <- BFs %>% 
+    mutate(BF01 = BF,
+           BF10 = 1/BF)
+  
+  save(BFs_N170_lfs, file = BFs_N170_lfs_file)
+  
+} else {
+  load(BFs_N170_lfs_file) 
+}
+
+
+BFs_N170_lfs 
+```
+
+```{r BF plots for left N170}
+breaks <- c(1/50 , 1 / 20, 1 / 10, 1 / 3, 1, 3, 5, 10, 20)
+curve <- as.data.frame(spline(BFs_N170_lfs$beta_sd, BFs_N170_lfs$BF01))
+ggplot(BFs_N170_lfs, aes(x = beta_sd, y = BF)) +
+  geom_point(size =2) +
+  ## geom_line(data = curve, aes(x = x, y = y))+
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  ## theme_bw() +
+  scale_x_continuous("Normal prior width (SD)\n") +
+  scale_y_log10("BF01", breaks = breaks, labels = MASS::fractions(breaks)) +
+  coord_cartesian(ylim = c(1 / 30, 30)) +
+  annotate("text", x =1, y= 18, label = "Evidence in favor of H0", size =5)+
+  annotate("text", x =1, y= 1/18, label = "Evidence in favor of H1", size =5) +
+  theme(axis.text.y = element_text(size = 8)) +
+  ggtitle("Bayes factors") +
+  NULL
+```
+
+
 # Appendix
 
 ## Model selection procedure
 
 For the analysis for every dependent variable, an optimal model was obtained by the following general steps:
-  
+
 1. **Maximum Model**: a maximum model with all fixed and random factors was built. 
 2. **ZCP Model**: a zero-correlated-parameter (zcp) model based on the maximum model is built. The only difference between zcp and maximum models is that the correlations between random effects are forced to be zero in the zcp model.
 3. **Reduced Model**: the random effects which are not supported by the data will be removed from the zcp model. The function `step(fit, fixed.reduce = FALSE)` from `library(lmerTest)` is used for this step. The algorithm could be found [here](#stepfun).
 4. **Extended Model**: extending the reduced model with correlation parameters between the remaining random effects.
 5. **Pruning Model**: pruning low correlation parameters. (Usually I don't do this.)
-  
+
 More details about this whole process chould be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
 
 ## Algorithm of function `step` {#stepfun}
