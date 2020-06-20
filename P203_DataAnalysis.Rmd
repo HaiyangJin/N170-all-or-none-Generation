@@ -1,5 +1,5 @@
 ---
-title: "P203 Subjective Perceptual and ERP Amplitude (N170)"
+title: "P203 Subjective Perception and ERP Amplitude (the N170)"
 author: "[Haiyang Jin](https://haiyangjin.github.io/)"
 date: "`r format(Sys.time(), '%d-%m-%Y')`"
 output:
@@ -20,15 +20,15 @@ output:
 ## Introduction
 
 **Linear Mixed Model** were used.
-  
+
 ## Experiment design
 
 * **Independent variables**:
-    + Stimulus Type (`Type`: *intact* vs. *scrambled*)
-    + Stimulus Category (`Category`: *faces* vs. *houses*)
-    + Hemisphere (`Hemisphere`: *left* vs. *right*)
-    + Duration (`Duration`: *17* vs. *200*)
-    
++ Stimulus Type (`Type`: *intact* vs. *scrambled*)
++ Stimulus Category (`Category`: *faces* vs. *houses*)
++ Hemisphere (`Hemisphere`: *left* vs. *right*)
++ Duration (`Duration`: *17* vs. *200*)
+
 
 ## Preparations
 ```{r, echo=FALSE, include=FALSE}
@@ -51,26 +51,27 @@ emm_options(lmer.df = "satterthwaite",
             lmerTest.limit = 1e6,
             opt.digits = FALSE)  # , pbkrtest.limit =, disable.pbkrtest = FALSE
 
-
 ```
-  
+
 ```{r foldes and load R files, include=FALSE}
+set.seed(42)
+
 # folders
-folder.R <- "R"
-folder.data <- "data"
-folder.nesi <- "NeSI"
-folder.output <- "output"
+folder_R <- "R"
+folder_data <- "data"
+folder_nesi <- "NeSI"
+folder_bmm <- "bmmfit"
 
 # load all the R files
-sapply(list.files(folder.R, "*.R", full.names = TRUE, recursive = TRUE), source)
+sapply(list.files(folder_R, "*.R", full.names = TRUE, recursive = TRUE), source)
 
 ```
 
 ```{r settings}
 # general setting
 saveCSV <- FALSE
-ratio.count <- 0.8
-RT.min <- 200
+ratio_count <- 0.8
+RT_min <- 200
 
 # set up the theme for plot and rainclound plot
 plot_theme <- {
@@ -83,10 +84,10 @@ erp_theme <- {
     theme(legend.position = "bottom")
 }
 
-ylimit.p1 <- c(2.5, -0.5)
-ylimit.n170 <- c(1.5, -5.5)  # y axis for plotting N170 amplitude
+ylimit_p1 <- c(2.5, -0.5)
+ylimit_n170 <- c(1.5, -5.5)  # y axis for plotting N170 amplitude
 
-resp.labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "sure houses")
+resp_labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "sure houses")
 
 ```
 
@@ -98,10 +99,10 @@ Duration <- c("17", "200")
 Amplitudes <- c(-2.5, -5)
 Hypotheses <- rep("means", 2)
 
-df.lit <- data_frame(Duration, Amplitudes, Hypotheses)
+df_lit <- data_frame(Duration, Amplitudes, Hypotheses)
 
-plot.lit <- {
-  ggplot(data = df.lit, aes(y = Amplitudes, x = Duration, fill = Duration)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+plot_lit <- {
+  ggplot(data = df_lit, aes(y = Amplitudes, x = Duration, fill = Duration)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(color = "black") +
     facet_grid(. ~ Hypotheses) +
     scale_fill_manual(values = c(gray(.7), gray(.3))) +
@@ -111,11 +112,11 @@ plot.lit <- {
     # theme_bw() +
     general_theme +
     theme( # strip.text = element_text(color = "white"),
-          legend.position = "none",
-          axis.line = element_line(size = 3, colour = "black"))
+      legend.position = "none",
+      axis.line = element_line(size = 3, colour = "black"))
 }
 
-plot.lit
+plot_lit
 ```
 
 There are two possible explainations for the aggregated mean amplitudes:
@@ -126,10 +127,10 @@ Amplitudes <- c(c(rep(-2.5, 5), rep(-5, 5)), c(rep(-.83, 3), rep(-5, 7)))
 TrialNum <- rep(as.character(rep(c(1:5), 2)), 2)
 Hypotheses <- c(rep("Possibility 1", 10), rep("Possibility 2", 10))
 
-df.st <- data_frame(Duration, Amplitudes, TrialNum, Hypotheses)
+df_st <- data_frame(Duration, Amplitudes, TrialNum, Hypotheses)
 
-plot.st <- {
-  ggplot(data = df.st, aes(y = Amplitudes, x = Duration, fill = Duration, color = TrialNum)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+plot_st <- {
+  ggplot(data = df_st, aes(y = Amplitudes, x = Duration, fill = Duration, color = TrialNum)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge") +
     scale_fill_manual(values = c(gray(.7), gray(.3))) +
     scale_color_manual(values = rep("black", 5)) +
@@ -144,27 +145,26 @@ plot.st <- {
           axis.line = element_line(size = 3, colour = "black"))
 }
 
-plot.st
+plot_st
 ```
 
 
 ```{r combine the aggregated mean amp plots and the explanation plots, include=FALSE}
 
-library(ggpubr)
-
-plot.hypo <- ggarrange(plot.lit, plot.st, widths = c(1.1, 4))
-
-# ggsave('plot_hypo.png', plot.hypo, width = 7, height = 3)
-
-plot.hypo
+# library(ggpubr)
+# plot.hypo <- ggarrange(plot_lit, plot_st, widths = c(1.1, 4))
+# 
+# # ggsave('plot_hypo.pdf', plot.hypo, width = 7, height = 3)
+# 
+# plot_hypo
 ```
 
 
 # Behavior results
 ```{r load behavioral results of 205}
-raw.beha.205 <- {
+raw_beha_205 <- {
   "E205_35_Behavior.csv" %>% 
-    file.path(folder.data, .) %>% 
+    file.path(folder_data, .) %>% 
     read_csv() 
 }
 
@@ -172,8 +172,8 @@ raw.beha.205 <- {
 
 
 ```{r select certain rows and columns from the data, and calculate the Z value for reaction times (205)}
-clean.beha.205 <- {
-  raw.beha.205 %>%
+clean_beha_205 <- {
+  raw_beha_205 %>%
     filter(`Procedure[Trial]` == "expProc") %>% # remove rows for practice and countdown
     select(ExperimentName, SubjCode = Subject, blockID, Block, Trial, Age, Sex, Handedness, Type = `stimCategory[Trial]`, Category = `FH[Trial]`, Duration = `stimDuration[Trial]`, ACC = `Resp.ACC[Trial]`, Resp.RT = `Resp.RT[Trial]`, Resp = `Resp.RESP[Trial]`, Stimuli = `stimName[Trial]`) %>% # select and rename the columns (remove unuseful columns)
     mutate(
@@ -185,44 +185,44 @@ clean.beha.205 <- {
       Category = as.factor(Category),
       Resp = as.factor(Resp),
       blockID = as.factor(blockID)
-      ) %>% 
+    ) %>% 
     group_by(SubjCode, Type, Category, Duration, ACC) %>% # divide the data based on these conditions
     mutate(
       RT = Resp.RT + as.numeric(levels(Duration))[Duration],
       RT.Z = scale(RT), # calculate the Z value for reaction times within each group
       RT.Within3Z = ifelse(RT.Z <= 3 & RT.Z >= -3, 1, ifelse(RT.Z < -3 | RT.Z > 3, 0, NaN)) # if the Z values are between -3 and 3, will be marked as 1
-      ) %>% 
+    ) %>% 
     ungroup() # ungroup the data 
-     
+  
 }
 
 # behavior.tidyup
-head(clean.beha.205, 10)
+head(clean_beha_205, 10)
 
 ```
 
 ```{r check the number of trials for 205}
 # check the number of trials for 205
 sum.count.205 <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count_sum = n())
 }
 
 valid.count.205 <- {
-  clean.beha.205 %>% 
-    filter(RT > RT.min) %>% 
+  clean_beha_205 %>% 
+    filter(RT > RT_min) %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count = n()) %>% 
     right_join(sum.count.205, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
     mutate(ratio = Count / Count_sum) %>% 
-    filter(ratio > ratio.count) %$%
+    filter(ratio > ratio_count) %$%
     SubjCode %>% 
     unique()
 }
 
 # remove the participants
-clean.beha.205 %<>% filter(SubjCode %in% valid.count.205)
+clean_beha_205 %<>% filter(SubjCode %in% valid.count.205)
 
 ```
 
@@ -231,7 +231,7 @@ clean.beha.205 %<>% filter(SubjCode %in% valid.count.205)
 # remove participants whose performance in Key 1 was lower than 95%
 
 valid.17 <- {
-  clean.beha.205 %>%
+  clean_beha_205 %>%
     filter(Duration == 17, Resp == 1) %>% # Type == "intact",
     group_by(SubjCode, Duration, Resp) %>% # Type, 
     summarize(Accuracy = mean(ACC), Count = n()) %>% 
@@ -240,24 +240,24 @@ valid.17 <- {
 }
 
 
-# clean.beha.205 %>%
+# clean_beha_205 %>%
 #   filter(Duration == 17, Resp == 1) %>% # Type == "intact",
 #   group_by(SubjCode, Duration, Resp) %>% # Type, 
 #   summarize(Accuracy = mean(ACC), Count = n()) %>% 
 #   filter(Accuracy < 0.95) %>% 
 #   ungroup() %>% 
 #   summarize(mean(Accuracy), min(Accuracy), max(Accuracy))  
-  
-clean.beha.205 %<>% filter(SubjCode %in% valid.17)
 
-  
+clean_beha_205 %<>% filter(SubjCode %in% valid.17)
+
+
 
 ```
 
 ## Participant demographic information
 ```{r participant information E205}
 subj.info.205 <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     select(SubjCode, Age, Sex, Handedness) %>% # select the columns of participant inforamtion
     distinct() # only keep the unique rows
 }
@@ -277,14 +277,14 @@ sum(subj.info.205$Sex == "female")
 ## Responses
 ```{r}
 tmp.count <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     group_by(SubjCode, Type, Category, Duration) %>% 
     summarize(Count_sum = n())
 }
 
 
 avg.dist.long.205 <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     # mutate(RespRateFace = if_else(Category == "face", ACC, if_else(Category == "house", as.numeric(!ACC), NaN))) %>% 
     group_by(SubjCode, Type, Category, Duration, Resp) %>% 
     summarize(Count = n()) %>% 
@@ -308,7 +308,7 @@ desc.dist.205 <- {
               , CI_hi = Mean + SE * 1.96
               , Median = median(RespRate)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-              ) %>% 
+    ) %>% 
     ungroup() %>% 
     add_row(Type = "intact", Category = "house", Duration = 200, Resp = 2, Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
             SE.hi = 0, CI_lo = 0, CI_hi = 0, Median = 0, Lower = 0, Upper = 0)
@@ -336,14 +336,14 @@ dist.RainPlot.205 <- {
     geom_point(data = desc.dist.205, aes(y = Mean, x = Resp, color = Category), position = position_nudge(x = 0.3), size = 2.5) +
     geom_errorbar(data = desc.dist.205, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(Type ~ Duration) +
-
+    
     # facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
     # scale_color_brewer(palette = "Set1") + # palette = "RdBu"
     # scale_fill_brewer(palette = "Set1") + # palette = "RdBu"
     labs(title = "Reaction times for 205", x = "Stimulus Type", y = "Reaction times (ms)", fill = "Duration(ms)", color = "Duration(ms)") +  # set the names for main, x and y axises and the legend
-    # scale_x_discrete(labels=resp.labels) +
+    # scale_x_discrete(labels=resp_labels) +
     # coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     theme_bw() + # the backgroud color
@@ -388,7 +388,7 @@ dist.ColuPlot.205
 
 ```{r}
 df.ratio.205 <- {
-  clean.beha.205 %>%
+  clean_beha_205 %>%
     mutate(isFace = if_else(Category == "face", 1, 0)) %>%
     group_by(SubjCode, Type, Duration, Resp) %>%
     summarize(ratio = mean(isFace), Count = n())
@@ -406,7 +406,7 @@ desc.ratio.205 <- {
               , CI_hi = Mean + SE * 1.96
               , Median = median(ratio)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-              ) %>%
+    ) %>%
     ungroup()
 }
 
@@ -586,7 +586,7 @@ The raw mean amplitude of each trial for all participants were loaded.
 # read the trial mean amplitude data
 df.erp.E2 <- {
   "E205_MeanAmp.csv" %>% 
-    file.path(folder.data, .) %>% 
+    file.path(folder_data, .) %>% 
     read_csv() %>% 
     substr_Event() %>% 
     filter(SubjCode %in% valid.17) %>% 
@@ -620,7 +620,7 @@ df.erp.P1.E2 <- {
 }
 
 if (saveCSV) {
-  output.erp.P1.E2 <- file.path(folder.nesi, "E205_erp_P1.RData")
+  output.erp.P1.E2 <- file.path(folder_nesi, "E205_erp_P1.RData")
   save(df.erp.P1.E2, file = output.erp.P1.E2)
 }
 
@@ -631,7 +631,7 @@ head(df.erp.P1.E2, 10)
 
 #### The maximal model
 ```{r maximal lmm for P1 E2}
-file.max.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_max.RData")
+file.max.P1.E2 <- file.path(folder_nesi, "E205_P1_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.P1.E2)) {
@@ -659,7 +659,7 @@ print(summary(lmm.max.P1.E2), corr = FALSE)
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2}
-file.zcp.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_zcp.RData")
+file.zcp.P1.E2 <- file.path(folder_nesi, "E205_P1_lmm_zcp.RData")
 
 # fit the zcp model
 if (!file.exists(file.zcp.P1.E2)) {
@@ -676,7 +676,7 @@ if (!file.exists(file.zcp.P1.E2)) {
                         data = df.erp.P1.E2,
                         verbose = TRUE,
                         control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
-                                                optCtrl = list(maxfun = 1e7)))
+                                              optCtrl = list(maxfun = 1e7)))
 } else {
   load(file.zcp.P1.E2)
 }
@@ -694,7 +694,7 @@ summary(rePCA(lmm.zcp.P1.E2))
 
 ```{r }
 
-file.rdc.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_rdc.RData")
+file.rdc.P1.E2 <- file.path(folder_nesi, "E205_P1_lmm_rdc.RData")
 
 # fit the rdc model
 if (!file.exists(file.rdc.P1.E2)) {
@@ -724,11 +724,11 @@ anova(lmm.rdc.P1.E2, lmm.zcp.P1.E2, refit = FALSE)
 #### The extended model
 ```{r }
 
-file.etd.P1.E2 <- file.path(folder.nesi, "E205_P1_lmm_etd.RData")
+file.etd.P1.E2 <- file.path(folder_nesi, "E205_P1_lmm_etd.RData")
 
 # fit the etd model
 if (!file.exists(file.etd.P1.E2)) {
-
+  
   lmm.etd.P1.E2 <- update(lmm.rdc.P1.E2,
                           formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
                             (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
@@ -804,7 +804,7 @@ p1.all.LinePlot = {
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
     facet_grid(Type ~ Hemisphere, # switch = "x", 
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration (ms)", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
@@ -827,7 +827,7 @@ p1.all.LinePlot
 #### Contrasts
 ```{r P1 amplitudes for all}
 contra.all.P1.gen <- contrast(emmeans(lmm.opt.P1.E205, ~ Duration | Hemisphere + Category + Type), 
-                                 "pairwise", adjust = "Bonferroni")
+                              "pairwise", adjust = "Bonferroni")
 
 contra.all.P1.gen[1:2]
 
@@ -838,7 +838,7 @@ confint(contra.all.P1.gen[1:2])
 
 ```{r}
 contra.all.P1.spec <- contrast(emmeans(lmm.opt.P1.E205, ~ Category + Duration | Hemisphere + Type), 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                               interaction = "pairwise", adjust = "Bonferroni")
 
 contra.all.P1.spec[1:2]
 confint(contra.all.P1.spec[1:2])
@@ -877,7 +877,7 @@ df.erp.N170.E2 <- {
 }
 
 if (saveCSV) {
-  output.erp.N170.E2 <- file.path(folder.nesi, "E205_erp_N170.RData")
+  output.erp.N170.E2 <- file.path(folder_nesi, "E205_erp_N170.RData")
   save(df.erp.N170.E2, file = output.erp.N170.E2)
 }
 
@@ -888,7 +888,7 @@ head(df.erp.N170.E2, 10)
 
 #### The maximal model
 ```{r maximal lmm for E2 N170}
-file.max.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_max.RData")
+file.max.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_max.RData")
 
 # fit the maximal model
 if (!file.exists(file.max.N170.E2)) {
@@ -897,11 +897,11 @@ if (!file.exists(file.max.N170.E2)) {
                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi +
                                Type_Cate_Dura_Hemi
-                               | SubjCode) +
+                             | SubjCode) +
                             (1 + Type_C + Dura_C + Hemi_C +
                                Type_Dura + Type_Hemi + Dura_Hemi +
                                Type_Dura_Hemi
-                               | Stimuli),
+                             | Stimuli),
                           data = df.erp.N170.E2,
                           verbose = TRUE,
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
@@ -918,7 +918,7 @@ print(summary(lmm.max.N170.E2), corr = FALSE)
 #### The zero-correlation-parameter model
 ```{r zcp lmm for E2 N170}
 
-file.zcp.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_zcp.RData")
+file.zcp.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_zcp.RData")
 
 # fit the zcp model
 if (!file.exists(file.zcp.N170.E2)) {
@@ -927,11 +927,11 @@ if (!file.exists(file.zcp.N170.E2)) {
                                Type_Cate + Type_Dura + Cate_Dura + Type_Hemi + Cate_Hemi + Dura_Hemi +
                                Type_Cate_Dura + Type_Cate_Hemi + Type_Dura_Hemi + Cate_Dura_Hemi + 
                                Type_Cate_Dura_Hemi 
-                               || SubjCode) +
+                             || SubjCode) +
                             (1 + Type_C + Dura_C + Hemi_C + 
                                Type_Dura + Type_Hemi + Dura_Hemi +
                                Type_Dura_Hemi 
-                               || Stimuli),
+                             || Stimuli),
                           data = df.erp.N170.E2,
                           verbose = TRUE,
                           control = lmerControl(optimizer = "bobyqa",  # nloptwrap Nelder_Mead
@@ -956,7 +956,7 @@ summary(rePCA(lmm.zcp.N170.E2))
 
 ```{r}
 
-file.rdc.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_rdc.RData")
+file.rdc.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_rdc.RData")
 
 # fit the rdc model
 if (!file.exists(file.rdc.N170.E2)) {
@@ -987,11 +987,11 @@ anova(lmm.rdc.N170.E2, lmm.zcp.N170.E2, refit = FALSE)
 #### The extended model
 ```{r }
 
-file.etd.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_etd.RData")
+file.etd.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd.RData")
 
 # fit the etd model
 if (!file.exists(file.etd.N170.E2)) {
-
+  
   lmm.etd.N170.E2 <- update(lmm.rdc.N170.E2,
                             formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
                               (1 + Type_C + Cate_C + Dura_C + Hemi_C +  
@@ -1016,11 +1016,11 @@ summary(rePCA(lmm.etd.N170.E2))
 
 ```{r }
 
-file.etd1.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_etd1.RData")
+file.etd1.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd1.RData")
 
 # fit the etd1 model
 if (!file.exists(file.etd1.N170.E2)) {
-
+  
   lmm.etd1.N170.E2 <- update(lmm.etd.N170.E2,
                              formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
                                (1 + Type_C + Dura_C + Hemi_C +  
@@ -1047,11 +1047,11 @@ summary(rePCA(lmm.etd1.N170.E2))
 
 ```{r }
 
-file.etd2.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_etd2.RData")
+file.etd2.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd2.RData")
 
 # fit the etd2 model
 if (!file.exists(file.etd2.N170.E2)) {
-
+  
   lmm.etd2.N170.E2 <- update(lmm.etd1.N170.E2,
                              formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
                                (1 + Type_C + Dura_C + Hemi_C +  
@@ -1077,11 +1077,11 @@ summary(rePCA(lmm.etd2.N170.E2))
 
 ```{r }
 
-file.etd3.N170.E2 <- file.path(folder.nesi, "E205_N170_lmm_etd3.RData")
+file.etd3.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd3.RData")
 
 # fit the etd3 model
 if (!file.exists(file.etd3.N170.E2)) {
-
+  
   lmm.etd3.N170.E2 <- update(lmm.etd2.N170.E2,
                              formula = MeanAmp ~ Type * Category * Duration * Hemisphere + 
                                (1 + Dura_C + Hemi_C +  
@@ -1150,7 +1150,7 @@ n170.all.LinePlot = {
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
     facet_grid(Type ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration (ms)", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
@@ -1179,7 +1179,7 @@ confint(contra.all.N170)
 
 ```{r N170 amplitudes for all}
 contra.all.N170.gen <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration | Hemisphere + Category + Type), 
-                                 "pairwise")
+                                "pairwise")
 
 contra.all.N170.gen[1:2]
 
@@ -1187,7 +1187,7 @@ confint(contra.all.N170.gen[1:2])
 
 
 contra.all.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration + Hemisphere |Category + Type), 
-                                interaction = "pairwise")
+                                     interaction = "pairwise")
 
 contra.all.N170.gen.hemi[1]
 
@@ -1205,7 +1205,7 @@ contra.all.N170.spec[c(1,2)]
 confint(contra.all.N170.spec[c(1,2)])
 
 contra.all.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration + Hemisphere | Type), 
-                                 interaction = "pairwise")
+                                      interaction = "pairwise")
 
 contra.all.N170.spec.hemi
 confint(contra.all.N170.spec[c(1,2)])
@@ -1269,7 +1269,7 @@ df.erp.P1.SC.E2 <- {
 }
 
 if (saveCSV) {
-  output.erp.P1.SC.E2 <- file.path(folder.nesi, "E205_erp_P1_SC.RData")
+  output.erp.P1.SC.E2 <- file.path(folder_nesi, "E205_erp_P1_SC.RData")
   save(df.erp.P1.SC.E2, file = output.erp.P1.SC.E2)
 }
 
@@ -1395,7 +1395,7 @@ p1.conf.LinePlot = {
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
@@ -1426,7 +1426,7 @@ p1.conf.LinePlot
 
 ```{r P1 amplitudes for SC}
 contra.SC.P1.gen <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Hemisphere + Category), # 
-                                 "pairwise", adjust = "Bonferroni")
+                             "pairwise", adjust = "Bonferroni")
 
 contra.SC.P1.gen[1:6]
 
@@ -1438,13 +1438,13 @@ confint(contra.SC.P1.gen[7:12])
 
 # differences between hemispheres
 contra.SC.P1.gen.hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Hemisphere | Category), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                  interaction = "pairwise", adjust = "Bonferroni")
 contra.SC.P1.gen.hemi
 ```
 
 ```{r}
 contra.SC.P1.gen.nohemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Category), # 
-                                 "pairwise", adjust = "Bonferroni")
+                                    "pairwise", adjust = "Bonferroni")
 
 contra.SC.P1.gen.nohemi[1:6]
 confint(contra.SC.P1.gen.nohemi[1:6])
@@ -1453,14 +1453,14 @@ confint(contra.SC.P1.gen.nohemi[1:6])
 
 ```{r}
 contra.SC.P1.spec <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf | Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                              interaction = "pairwise", adjust = "Bonferroni")
 
 contra.SC.P1.spec
 confint(contra.SC.P1.spec)
 
 
 contra.SC.P1.spec.hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf + Hemisphere ), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                   interaction = "pairwise", adjust = "Bonferroni")
 
 contra.SC.P1.spec.hemi
 ```
@@ -1483,7 +1483,7 @@ df.erp.N170.SC.E2 <- {
 }
 
 if (saveCSV) {
-  output.erp.N170.SC.E2 <- file.path(folder.nesi, "E205_erp_N170_SC.RData")
+  output.erp.N170.SC.E2 <- file.path(folder_nesi, "E205_erp_N170_SC.RData")
   save(df.erp.N170.SC.E2, file = output.erp.N170.SC.E2)
 }
 
@@ -1515,7 +1515,7 @@ lmm.zcp.N170.SC.E2 <- update(lmm.max.N170.SC.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraConf +
                                (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
                                (1 + Hemi_C || Stimuli))
-  
+
 
 print(summary(lmm.zcp.N170.SC.E2), corr = FALSE)
 
@@ -1607,7 +1607,7 @@ n170.conf.LinePlot = {
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = duraconf.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
@@ -1639,7 +1639,7 @@ n170.conf.LinePlot
 
 ```{r N170 amplitudes for SC}
 contra.SC.N170.gen <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Hemisphere + Category), # 
-                                 "pairwise", adjust = "Bonferroni")
+                               "pairwise", adjust = "Bonferroni")
 
 contra.SC.N170.gen[1:6]
 
@@ -1650,7 +1650,7 @@ contra.SC.N170.gen[7:12]
 confint(contra.SC.N170.gen[7:12])
 
 contra.SC.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf + Hemisphere | Category), # 
-                                interaction = "pairwise", adjust = "Bonferroni")
+                                    interaction = "pairwise", adjust = "Bonferroni")
 
 contra.SC.N170.gen.hemi[1:6]
 confint(contra.SC.N170.gen.hemi[1:6])
@@ -1660,7 +1660,7 @@ confint(contra.SC.N170.gen.hemi[1:6])
 
 ```{r}
 contra.SC.N170.spec <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf | Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                interaction = "pairwise", adjust = "Bonferroni")
 
 contra.SC.N170.spec[1:6]
 confint(contra.SC.N170.spec[1:6])
@@ -1669,7 +1669,7 @@ contra.SC.N170.spec[7:12]
 confint(contra.SC.N170.spec[7:12])
 
 contra.SC.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf + Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                     interaction = "pairwise", adjust = "Bonferroni")
 
 contra.SC.N170.spec.hemi
 
@@ -1680,14 +1680,14 @@ contra.SC.N170.spec.hemi
 ```{r eval=FALSE, include=FALSE}
 
 contra.N170.resp.nohemi.dura <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Category), 
-                                    "pairwise", adjust = "Bonferroni")
+                                         "pairwise", adjust = "Bonferroni")
 
 contra.N170.resp.nohemi.dura
 confint(contra.N170.resp.nohemi.dura)
 
 
 contra.N170.resp.nohemi.cate <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category | DuraConf),
-                                    "pairwise", adjust = "Bonferroni")
+                                         "pairwise", adjust = "Bonferroni")
 
 contra.N170.resp.nohemi.cate
 confint(contra.N170.resp.nohemi.cate)
@@ -1727,14 +1727,14 @@ confint(contra.N170.resp.nohemi.cate)
 
 ```{r}
 tmpBlock.count <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     filter(Type == "intact") %>% 
     group_by(SubjCode, Category, Duration, blockID) %>% 
     summarize(Count_sum = n())
 }
 
 avg.resp.long.E205.Block <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     filter(Type == "intact") %>% 
     group_by(SubjCode, Category, Duration, blockID, Resp) %>% 
     summarize(Count = n()) %>% 
@@ -1756,7 +1756,7 @@ desc.resp.E205.Block <- {
               , CI = SE * qt(0.975,N)
               , Median = median(RespRate)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-              ) %>% 
+    ) %>% 
     ungroup() %>% 
     add_row(blockID = 2, Category = "house", Duration = 200, Resp = 2, Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
             SE.hi = 0, CI = 0, Median = 0, Lower = 0, Upper = 0)
@@ -1795,7 +1795,7 @@ rt.RainPlot.E205.Block <- {
     geom_point(data = desc.resp.E205.Block, aes(y = Mean, x = Resp, color = Category), position = position_nudge(x = 0.3), size = 2.5) +
     geom_errorbar(data = desc.resp.E205.Block, aes(y = Mean, ymin = Lower, ymax = Upper), position = position_nudge(x = 0.3), width = 0) +
     facet_grid(Duration ~ blockID) +
-
+    
     # facet_grid(. ~ Type, switch = "x") +  # create two panels to show data
     # scale_colour_grey() + # start = .1, end = .6, color for the contour
     # scale_fill_grey() + # start = .3, end = .6, color for the fill
@@ -1847,7 +1847,7 @@ acc.ColuPlot.E205.Block
 
 ```{r}
 df.ratio.E205.Block <- {
-  clean.beha.205 %>%
+  clean_beha_205 %>%
     filter(Type == "intact") %>% 
     mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
     group_by(SubjCode, blockID, Duration, Resp) %>% 
@@ -1865,7 +1865,7 @@ desc.ratio.E205.Block <- {
               , CI = SE * qt(0.975,N)
               , Median = median(ratio)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-              ) %>% 
+    ) %>% 
     ungroup()
 }
 
@@ -1918,7 +1918,7 @@ df.erp.P1.high.E2 <- {
 }
 
 if (saveCSV) {
-  output.erp.P1.high.E2 <- file.path(folder.nesi, "E205_erp_P1_high.RData")
+  output.erp.P1.high.E2 <- file.path(folder_nesi, "E205_erp_P1_high.RData")
   save(df.erp.P1.high.E2, file = output.erp.P1.high.E2)
 }
 
@@ -1949,13 +1949,13 @@ lmm.zcp.P1.high.E2 <- update(lmm.max.P1.high.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
                                (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
                                (1 + Hemi_C || Stimuli))
-  
+
 
 print(summary(lmm.zcp.P1.high.E2), corr = FALSE)
 
 ```
- 
- 
+
+
 #### The reduced model
 ```{r}
 summary(rePCA(lmm.zcp.P1.high.E2))
@@ -1965,8 +1965,8 @@ summary(rePCA(lmm.zcp.P1.high.E2))
 ```{r}
 lmm.rdc.P1.high.E2 <- update(lmm.zcp.P1.high.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C || SubjCode) +
-                             (1 | Stimuli))
+                               (1 + Cate_C + Hemi_C || SubjCode) +
+                               (1 | Stimuli))
 
 print(summary(lmm.rdc.P1.high.E2), corr = FALSE)
 ```
@@ -1980,8 +1980,8 @@ anova(lmm.rdc.P1.high.E2, lmm.zcp.P1.high.E2, refit = FALSE)
 ```{r}
 lmm.etd.P1.high.E2 <- update(lmm.rdc.P1.high.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C | SubjCode) +
-                             (1 | Stimuli))
+                               (1 + Cate_C + Hemi_C | SubjCode) +
+                               (1 | Stimuli))
 
 print(summary(lmm.etd.P1.high.E2), corr = FALSE)
 ```
@@ -2034,7 +2034,7 @@ p1.high.LinePlot = {
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.p1) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
@@ -2062,7 +2062,7 @@ p1.high.LinePlot
 
 ```{r P1 amplitudes for high}
 contra.high.P1.gen <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Hemisphere + Category), # 
-                                 "pairwise", adjust = "none")
+                               "pairwise", adjust = "none")
 
 contra.high.P1.gen[1:3]
 
@@ -2073,7 +2073,7 @@ contra.high.P1.gen[4:6]
 confint(contra.high.P1.gen[4:6])
 
 contra.high.P1.gen.hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock + Hemisphere | Category), # 
-                                 interaction = "pairwise", adjust = "none")
+                                    interaction = "pairwise", adjust = "none")
 contra.high.P1.gen.hemi
 
 ```
@@ -2081,13 +2081,13 @@ contra.high.P1.gen.hemi
 
 ```{r}
 contra.high.P1.spec <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock | Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                interaction = "pairwise", adjust = "Bonferroni")
 
 contra.high.P1.spec
 confint(contra.high.P1.spec)
 
 contra.high.P1.spec.hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock + Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                     interaction = "pairwise", adjust = "Bonferroni")
 
 contra.high.P1.spec.hemi
 
@@ -2103,7 +2103,7 @@ df.erp.N170.high.E2 <- {
 }
 
 if (saveCSV) {
-  output.erp.N170.high.E2 <- file.path(folder.nesi, "E205_erp_N170_high.RData")
+  output.erp.N170.high.E2 <- file.path(folder_nesi, "E205_erp_N170_high.RData")
   save(df.erp.N170.high.E2, file = output.erp.N170.high.E2)
 }
 
@@ -2133,13 +2133,13 @@ print(summary(lmm.max.N170.high.E2), corr = FALSE)
 lmm.zcp.N170.high.E2 <- update(lmm.max.N170.high.E2,
                                formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
                                  (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
-                             (1 + Hemi_C || Stimuli))
-  
+                                 (1 + Hemi_C || Stimuli))
+
 print(summary(lmm.zcp.N170.high.E2), corr = FALSE)
 
 ```
- 
- 
+
+
 #### The reduced model
 ```{r}
 summary(rePCA(lmm.zcp.N170.high.E2))
@@ -2147,9 +2147,9 @@ summary(rePCA(lmm.zcp.N170.high.E2))
 
 ```{r}
 lmm.rdc.N170.high.E2 <- update(lmm.zcp.N170.high.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
-                             (1 | Stimuli))
+                               formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                                 (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
+                                 (1 | Stimuli))
 
 print(summary(lmm.rdc.N170.high.E2), corr = FALSE)
 ```
@@ -2161,9 +2161,9 @@ anova(lmm.rdc.N170.high.E2, lmm.zcp.N170.high.E2, refit = FALSE)
 #### The extended model
 ```{r}
 lmm.etd.N170.high.E2 <- update(lmm.rdc.N170.high.E2,
-                             formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
-                             (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
-                             (1 | Stimuli))
+                               formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
+                                 (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
+                                 (1 | Stimuli))
 
 print(summary(lmm.etd.N170.high.E2), corr = FALSE)
 ```
@@ -2214,7 +2214,7 @@ n170.high.LinePlot = {
                   show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
-    scale_y_reverse(limits = ylimit.n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
@@ -2247,35 +2247,28 @@ n170.high.LinePlot
 
 ```{r N170 amplitudes for high}
 contra.high.N170.gen <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Hemisphere + Category), # 
-                                 "pairwise", adjust = "Bonferroni")
+                                 "pairwise", adjust = "Bonferroni", infer = TRUE)
 
 contra.high.N170.gen[1:3]
 
-confint(contra.high.N170.gen[1:3])
-
 contra.high.N170.gen[4:6]
 
-confint(contra.high.N170.gen[4:6])
-
 contra.high.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock + Hemisphere | Category), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                      interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
 contra.high.N170.gen.hemi
 ```
 
-
 ```{r}
 contra.high.N170.spec <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock | Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                  interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
 contra.high.N170.spec[1:3]
-confint(contra.high.N170.spec[1:3])
 
 contra.high.N170.spec[4:6]
-confint(contra.high.N170.spec[4:6])
 
 contra.high.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock + Hemisphere), # 
-                                 interaction = "pairwise", adjust = "Bonferroni")
+                                       interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
 contra.high.N170.spec.hemi
 ```
@@ -2333,17 +2326,13 @@ More deatils could be found: Kuznetsova, A., Brockhoff, P. B., & Christensen, R.
 # 28 participants in total
 
 resp.stim <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     # filter(Duration == "17", Resp == "1") %>% 
     mutate(isKey1 = as.numeric(Resp == "1"),
            Type_Category = paste(Type, Category, sep = "-")) %>% 
     group_by(Stimuli, Duration, Type_Category) %>% 
     summarize(avgCount = mean(isKey1)) 
   
-  
-  # %>% 
-  #   group_by(Stimuli, Duration, Resp, Type, Category) %>%
-  #   summarize(avgCount = sum(Count)/28/8)
 }
 
 ggplot(resp.stim, aes(x = Stimuli, y = avgCount, fill = Type_Category)) +
@@ -2372,7 +2361,7 @@ ggplot(resp.stim, aes(x = Stimuli, y = avgCount, fill = Type_Category)) +
 ```{r}
 
 resp.stim.1 <- {
-  clean.beha.205 %>% 
+  clean_beha_205 %>% 
     mutate(isKey1 = as.numeric(Resp == "1")) %>% 
     filter(Type == "intact", Category == "face") %>% 
     group_by(Stimuli, SubjCode, Duration) %>% 
@@ -2405,7 +2394,6 @@ heatmap_17 <- plot_ly(z = data.matrix(resp.stim.1.17), type = "heatmap", name = 
 heatmap_200 <- plot_ly(z = data.matrix(resp.stim.1.200), type = "heatmap", name = "Figrename")
 
 ```
-
 
 # Versions of packages used
 ```{r versions}
