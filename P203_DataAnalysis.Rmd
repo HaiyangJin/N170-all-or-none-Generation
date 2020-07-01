@@ -29,12 +29,11 @@ output:
 + Hemisphere (`Hemisphere`: *left* vs. *right*)
 + Duration (`Duration`: *17* vs. *200*)
 
-
 ## Preparations
 ```{r, echo=FALSE, include=FALSE}
 # knitr::opts_chunk$set(error = TRUE)
 knitr::opts_chunk$set(echo = TRUE) # show the code for this chunk
-options(width = 130)  # set the maximum width of the html output
+options(width = 140)  # set the maximum width of the html output
 ```
 
 ```{r setup and load the related libraries, message=FALSE}
@@ -71,7 +70,7 @@ sapply(list.files(folder_R, "*.R", full.names = TRUE, recursive = TRUE), source)
 # general setting
 saveCSV <- FALSE
 ratio_count <- 0.8
-RT_min <- 200
+RT_min <- 200  # minimum response times
 
 # set up the theme for plot and rainclound plot
 plot_theme <- {
@@ -94,7 +93,7 @@ resp_labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "
 
 # Hypotheses
 Previous studies showed that the N170 amplitudes evoked by faces preseneted for longer durations were larger:
-```{r}
+```{r fig.height=3, fig.width=2}
 Duration <- c("17", "200")
 Amplitudes <- c(-2.5, -5)
 Hypotheses <- rep("means", 2)
@@ -159,15 +158,65 @@ plot_st
 # plot_hypo
 ```
 
+# Brief introduction to the analysis
+
+## Equivalence tests
+In this study, we do predict that there will be no differences between some conditions. For example, we expect that N170 amplitudes for faces presented for various durations are comparable as long as they are perceived with high subjective confidence. Thus, we employ Equivalence tests to explore if the differences are equivalent to a null region, which we defined as [-0.5, 0.5] in this study. Esentially, the equivalence test performs two one-sided tests to examine if the differences are smaller than the upper boundary of the region and larger than the lower boundary. 
+By performing the conventional null hypothesis significance tests and the equivalence tests, there are (at least) five scenarios for the results:
+```{r possible results, fig.height=4.7, fig.width=8}
+# equivalence interval
+delta_null <- 0.5  # the equivalent interval will be [-delta_null, delta_null]
+CI_size = .8
+
+df_equi <- tibble(
+  Scenarios = paste("Scenario", 1:6),
+  CI_low = c(delta_null-.15, -delta_null-.5, -delta_null+.15, delta_null-.6, -delta_null-.25, -delta_null-.1),
+  CI_upp = CI_low + c(rep(CI_size, 5), 1.3)
+) %>% 
+  mutate(Scenarios = factor(Scenarios),
+         Scenarios = factor(Scenarios, levels = rev(levels(Scenarios))))
+
+gg_equi <- ggplot(df_equi, aes(xmin = CI_low, xmax = CI_upp, y = Scenarios)) +
+  geom_errorbarh(height = .5, color = c("red", "red", "blue", rep("black", 3)), size = 1) + 
+  geom_vline(xintercept = 0, linetype = "longdash") +
+  geom_vline(xintercept = c(-delta_null, delta_null), linetype = "dashed", color = "gray30") +
+  scale_x_continuous(limits = c(-1.15, 1.15), breaks = c(-delta_null, 0, delta_null)) +
+  xlab(expression(paste("Amplitudes (", mu, "V)"))) +
+  theme_bw() +
+  theme(
+    text = element_text(size = 10),
+    axis.title = element_text(size = 16), 
+    axis.text = element_text(size = 15), # the size of the texts in plot
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.title=element_text(size=16),
+    legend.text=element_text(size=16),
+    # legend.position = "bottom",
+    legend.key.width = unit(1.2, "cm"),
+    plot.title = element_text(lineheight=.8, face="bold", size = 17),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+    # remove the facet background color
+    strip.text = element_text(face="bold", size=15, lineheight=5.0),
+    strip.background = element_rect(fill="white", colour="white", size=1),
+    strip.placement = "outside"
+)
+
+# ggsave("equivalence_test.png", gg_equi, width = 8, height = 4.7)
+
+gg_equi
+```
+
 
 # Behavior results
 ```{r load behavioral results of 205}
 raw_beha_205 <- {
   "E205_35_Behavior.csv" %>% 
     file.path(folder_data, .) %>% 
-    read_csv() 
+    read_csv()
 }
-
 ```
 
 
@@ -282,7 +331,6 @@ tmp.count <- {
     summarize(Count_sum = n())
 }
 
-
 avg.dist.long.205 <- {
   clean_beha_205 %>% 
     # mutate(RespRateFace = if_else(Category == "face", ACC, if_else(Category == "house", as.numeric(!ACC), NaN))) %>% 
@@ -293,7 +341,6 @@ avg.dist.long.205 <- {
     mutate(RespRate = Count / Count_sum) %>% 
     ungroup()
 }
-
 
 # descriptive statistics of accuracy for plotting
 desc.dist.205 <- {
@@ -321,12 +368,11 @@ avg.dist.wide.205 <- {
     spread(Conditions, RespRate)
 }
 
-
 ```
 
 
 ```{r rainclound plot of the RT data E205, warning = FALSE}
-knitr::kable(desc.dist.205, digits = 4)
+desc.dist.205
 
 dist.RainPlot.205 <- {
   ggplot(data = avg.dist.long.205, aes(y = RespRate, x = as.factor(Resp), fill = Category)) + 
@@ -354,7 +400,7 @@ dist.RainPlot.205 <- {
 
 &nbsp;
 
-```{r display the RainCloud plot for reaction times}
+```{r display the RainCloud plot for reaction times, eval=FALSE, include=FALSE}
 dist.RainPlot.205
 ```
 
@@ -387,7 +433,7 @@ dist.ColuPlot.205
 
 
 ```{r}
-df.ratio.205 <- {
+df_ratio_205 <- {
   clean_beha_205 %>%
     mutate(isFace = if_else(Category == "face", 1, 0)) %>%
     group_by(SubjCode, Type, Duration, Resp) %>%
@@ -395,7 +441,7 @@ df.ratio.205 <- {
 }
 
 desc.ratio.205 <- {
-  df.ratio.205 %>%
+  df_ratio_205 %>%
     group_by(Type, Duration, Resp) %>%
     summarize(Mean = mean(ratio)
               , N = n()
@@ -411,8 +457,6 @@ desc.ratio.205 <- {
 }
 
 ```
-
-
 
 ```{r eval=FALSE, include=FALSE}
 
@@ -436,9 +480,6 @@ desc.ratio.205 <- {
 
 ```
 
-
-
-
 ```{r eval=FALSE, include=FALSE}
 # df.erp.SC.205 %>%
 #   filter(Component == "N170", Hemisphere == "Right") %>%
@@ -452,14 +493,13 @@ desc.ratio.205 <- {
 
 ### LMM for responses
 ```{r}
-df.ratio.205 %<>% sdif_coding_P203_resp 
+df_ratio_205 %<>% sdif_coding_P203_resp 
 ```
 
 #### The maximal model
 ```{r}
-
 lmm.max.resp <- lmer(ratio ~ Type * Duration * Resp + (1 + Type_C + Dura_C + Type_Dura | SubjCode), 
-                     df.ratio.205)
+                     df_ratio_205)
 
 print(summary(lmm.max.resp), corr = FALSE)
 
@@ -467,7 +507,6 @@ print(summary(lmm.max.resp), corr = FALSE)
 
 #### The zero-correlation-parameter model
 ```{r}
-
 lmm.zcp.resp <- update(lmm.max.resp, 
                        formula = ratio ~ Type * Duration * Resp + 
                          (1 + Type_C + Dura_C + Type_Dura || SubjCode))
@@ -480,7 +519,6 @@ print(summary(lmm.zcp.resp), corr = FALSE)
 ```{r}
 summary(rePCA(lmm.zcp.resp))
 
-
 lmm.rdc.resp <- update(lmm.zcp.resp,
                        formula = ratio ~ Type * Duration * Resp + 
                          (0 + Dura_C + Type_Dura || SubjCode))
@@ -491,7 +529,6 @@ anova(lmm.rdc.resp, lmm.zcp.resp, refit = FALSE)
 
 #### The extended model
 ```{r}
-
 lmm.etd.resp <- update(lmm.zcp.resp,
                        formula = ratio ~ Type * Duration * Resp + 
                          (0 + Dura_C + Type_Dura | SubjCode))
@@ -502,7 +539,6 @@ summary(lmm.etd.resp)
 
 
 ```{r}
-
 lmm.etd1.resp <- update(lmm.etd.resp,
                         formula = ratio ~ Type * Duration * Resp + 
                           (0 + Type_Dura | SubjCode))
@@ -557,25 +593,19 @@ resp.ColuPlot.205
 
 
 ### Contrasts
-```{r eval=FALSE, include=FALSE}
-# contra.resp <- contrast(emm.resp, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# 
-# contra.resp
-# confint(contra.resp)
-```
-
-
 ```{r}
-contra.resp <- contrast(emmeans(lmm.opt.resp, ~ Duration | Resp + Type), "pairwise")
+contra.resp <- contrast(emmeans(lmm.opt.resp, ~ Duration | Resp + Type), "pairwise",
+                        infer = TRUE)
 
 contra.resp[c(1, 5)]
-confint(contra.resp[c(1, 5)])
+summary(contra.resp[c(1, 5)], delta = .05, level = .9)
 ```
 
 ### One-sample t-test
 ```{r}
-test(emm.resp, null = 0.5)
-
+summary(emm.resp[c(13, 18)], null = 0.5, delta = .1, infer = TRUE, level=.9)
+summary(emm.resp[c(13, 18)], null = 0.6, side = "<", infer = TRUE)
+summary(emm.resp[c(13, 18)], null = 0.4, side = ">", infer = TRUE)
 ```
 
 
@@ -774,11 +804,11 @@ qqplot_lmer(lmm.opt.P1.E205)
 
 #### Estimated marginal means
 ```{r}
-emm.P1.E205 <- emmeans(lmm.opt.P1.E205, ~ Type + Duration + Hemisphere + Category )
+emm.P1.E205 <- emmeans(lmm.opt.P1.E205, ~ Type + Hemisphere + Category + Duration)
 
 emm.P1.E205 %>% 
   as.data.frame() %>% 
-  select(Type, Category, Duration, Hemisphere, everything())
+  arrange(Type, Hemisphere, Category, Duration)
 
 ```
 
@@ -786,9 +816,7 @@ emm.P1.E205 %>%
 #### Plots
 ```{r}
 # emmip(emm.P1.E205, Category ~ Duration | Type + Hemisphere, CIs = TRUE)
-
 ```
-
 
 ```{r p1.all.LinePlot}
 
@@ -825,48 +853,57 @@ p1.all.LinePlot
 
 
 #### Contrasts
+##### Main results for intact stimuli
+Comparisons of P1 amplitudes for intact faces with different durations:
 ```{r P1 amplitudes for all}
-contra.all.P1.gen <- contrast(emmeans(lmm.opt.P1.E205, ~ Duration | Hemisphere + Category + Type), 
-                              "pairwise", adjust = "Bonferroni")
+contra_all_P1 <- contrast(emmeans(lmm.opt.P1.E205, ~ Duration | Hemisphere + Category + Type), 
+                              "pairwise", combine = TRUE, adjust = "Bonferroni", infer = TRUE)
 
-contra.all.P1.gen[1:2]
-
-confint(contra.all.P1.gen[1:2])
-
+contra_all_P1[1:2]
+summary(contra_all_P1[1:2], delta = delta_null, level = .9)
+summary(contra_all_P1[1:2], delta = delta_null, side = ">")
+summary(contra_all_P1[1:2], delta = delta_null, side = "<")
 ```
 
-
+Comparisons of face-specific P1 amplitude components for intact stimuli with different durations:
 ```{r}
-contra.all.P1.spec <- contrast(emmeans(lmm.opt.P1.E205, ~ Category + Duration | Hemisphere + Type), 
-                               interaction = "pairwise", adjust = "Bonferroni")
-
-contra.all.P1.spec[1:2]
-confint(contra.all.P1.spec[1:2])
-
+contra_all_P1_spec <- contrast(emmeans(lmm.opt.P1.E205, ~ Category + Duration | Hemisphere + Type), 
+                               interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+contra_all_P1_spec[1:2]
+summary(contra_all_P1_spec[1:2], delta = delta_null, level = .9)
+summary(contra_all_P1_spec[1:2], delta = delta_null, side = ">")
+summary(contra_all_P1_spec[1:2], delta = delta_null, side = "<")
 ```
 
+##### Main results for scrambled stimuli
+Comparisons of P1 amplitudes for scrambled faces with different durations:
+```{r P1 amplitudes for all scrambled}
+contra_all_P1[5:6]
+summary(contra_all_P1[5:6], delta = delta_null, level = .9)
+summary(contra_all_P1[5:6], delta = delta_null, side = ">")
+summary(contra_all_P1[5:6], delta = delta_null, side = "<")
+```
+
+Comparisons of face-specific P1 amplitude components for scrambled stimuli with different durations:
 ```{r}
-contra.all.P1.gen[1:8]
-
-confint(contra.all.P1.gen[1:8])
+contra_all_P1_spec[3:4]
+summary(contra_all_P1_spec[3:4], delta = delta_null, level = .9)
+summary(contra_all_P1_spec[3:4], delta = delta_null, side = ">")
+summary(contra_all_P1_spec[3:4], delta = delta_null, side = "<")
 ```
 
-
+##### Other results
+Comparisons of P1 amplitudes between Durations (without multiple comparison corrections):
 ```{r}
-contra.all.P1.spec
-# confint(contra.all.P1.spec[1:4])
+summary(contra_all_P1[1:8], adjust = "none")
+summary(contra_all_P1[1:8], delta = delta_null, side = "two.sided", adjust = "none")
 ```
 
-```{r eval=FALSE, include=FALSE}
-emm.dt.all <- emmeans(lmm.opt.P1.E2, ~ Duration + Type)
-emm.dt.all
-
-contra.all.P1 <- contrast(emm.dt.all, "pairwise", simple = "each", combine = TRUE)
-
-contra.all.P1
-confint(contra.all.P1)
+Comparisons of face-specific P1 amplitude components between Durations (without multiple comparison corrections):
+```{r}
+summary(contra_all_P1_spec[1:4], adjust = "none")
+summary(contra_all_P1_spec[1:4], delta = delta_null, side = "two.sided", adjust = "none")
 ```
-
 
 ### Ampitudes of the N170
 ```{r erp df for the N170 E2}
@@ -884,7 +921,6 @@ if (saveCSV) {
 # the structure of this dataset
 head(df.erp.N170.E2, 10)
 ```
-
 
 #### The maximal model
 ```{r maximal lmm for E2 N170}
@@ -1123,12 +1159,12 @@ qqplot_lmer(lmm.opt.N170.E205)
 
 #### Estimated marginal means
 ```{r}
-emm.N170.E205 <- emmeans(lmm.opt.N170.E205,  ~ Duration + Category + Hemisphere + Type)
+emm.N170.E205 <- emmeans(lmm.opt.N170.E205,  ~ Type + Hemisphere + Category + Duration)
 
 emm.N170.E205 %>% 
   as.data.frame() %>% 
-  select(Type, Category, Duration, Hemisphere, everything())
-
+  arrange(Type, Hemisphere, Category, Duration)
+  
 ```
 
 
@@ -1169,71 +1205,95 @@ n170.all.LinePlot = {
 
 n170.all.LinePlot
 ```
+
 #### Contrasts
+##### Main results for intact stimuli
+Comparisons of N170 amplitudes for intact faces with different durations:
 ```{r}
-contra.all.N170 <- contrast(emm.N170.E205, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contra_all_N170 <- contrast(emmeans(lmm.opt.N170.E205,  ~ Duration | Hemisphere + Category + Type),
+                            "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.all.N170
-confint(contra.all.N170)
+contra_all_N170[1:2]
+summary(contra_all_N170[1:2], delta = delta_null, level = .9)
+summary(contra_all_N170[1:2], delta = delta_null, side = ">")
+summary(contra_all_N170[1:2], delta = delta_null, side = "<")
 ```
 
-```{r N170 amplitudes for all}
-contra.all.N170.gen <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration | Hemisphere + Category + Type), 
-                                "pairwise")
-
-contra.all.N170.gen[1:2]
-
-confint(contra.all.N170.gen[1:2])
-
-
-contra.all.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration + Hemisphere |Category + Type), 
-                                     interaction = "pairwise")
-
-contra.all.N170.gen.hemi[1]
-
-confint(contra.all.N170.gen.hemi[1])
-```
-
-
-
-
+Comparisons of N170 amplitude lateralization for intact faces with different durations:
 ```{r}
-contra.all.N170.spec <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration | Hemisphere + Type), 
-                                 interaction = "pairwise", adjust = "Bonferroni")
-
-contra.all.N170.spec[c(1,2)]
-confint(contra.all.N170.spec[c(1,2)])
-
-contra.all.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration + Hemisphere | Type), 
-                                      interaction = "pairwise")
-
-contra.all.N170.spec.hemi
-confint(contra.all.N170.spec[c(1,2)])
+contra_all_N170_hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Duration + Hemisphere | Category + Type), 
+                                 interaction = "pairwise", infer = TRUE)
+contra_all_N170_hemi[1]
+summary(contra_all_N170_hemi[1], delta = delta_null, level = .9)
+summary(contra_all_N170_hemi[1], delta = delta_null, side = ">")
+summary(contra_all_N170_hemi[1], delta = delta_null, side = "<")
 ```
 
-
-
+Comparisons of face-specific N170 amplitude components for intact stimuli with different durations:
 ```{r}
+contra_all_N170_spec <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration | Hemisphere + Type), 
+                                 interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.all.N170.gen[1:8]
-
-confint(contra.all.N170.gen[1:8])
-
-
-contra.all.N170.gen.hemi[1:4]
-
-confint(contra.all.N170.gen.hemi[1:4])
+contra_all_N170_spec[1:2]
+summary(contra_all_N170_spec[1:2], delta = delta_null, level = .9)
+summary(contra_all_N170_spec[1:2], delta = delta_null, side = ">")
+summary(contra_all_N170_spec[1:2], delta = delta_null, side = "<")
 ```
 
-
+Comparisons of face-specific N170 amplitude component lateralization for intact stimuli with different durations:
 ```{r}
+contra_all_N170_spec_hemi <- contrast(emmeans(lmm.opt.N170.E205, ~ Category + Duration + Hemisphere | Type), 
+                                 interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.all.N170.spec
-
-# contra.all.N170.spec.hemi
-
+contra_all_N170_spec_hemi[1]
+summary(contra_all_N170_spec_hemi[1], delta = delta_null, level = .9)
+summary(contra_all_N170_spec_hemi[1], delta = delta_null, side = ">")
+summary(contra_all_N170_spec_hemi[1], delta = delta_null, side = "<")
 ```
 
+##### Main results for scrambled stimuli
+Comparisons of N170 amplitudes for scrambled faces with different durations:
+```{r}
+contra_all_N170[5:6]
+summary(contra_all_N170[5:6], delta = delta_null, level = .9)
+summary(contra_all_N170[5:6], delta = delta_null, side = ">")
+summary(contra_all_N170[5:6], delta = delta_null, side = "<")
+```
+
+Comparisons of N170 amplitude lateralization for scrambled faces with different durations:
+```{r}
+contra_all_N170_hemi[3]
+summary(contra_all_N170_hemi[3], delta = delta_null, level = .9)
+summary(contra_all_N170_hemi[3], delta = delta_null, side = ">")
+summary(contra_all_N170_hemi[3], delta = delta_null, side = "<")
+```
+
+Comparisons of face-specific N170 amplitude components for scrambled stimuli with different durations:
+```{r}
+contra_all_N170_spec[3:4]
+summary(contra_all_N170_spec[3:4], delta = delta_null, level = .9)
+summary(contra_all_N170_spec[3:4], delta = delta_null, side = ">")
+summary(contra_all_N170_spec[3:4], delta = delta_null, side = "<")
+```
+
+##### Other results
+Comparisons of N170 amplitudes between Durations (without multiple comparison corrections):
+```{r}
+summary(contra_all_N170[1:8], adjust = "none")
+summary(contra_all_N170[1:8], delta = delta_null, level = .9, adjust = "none")
+```
+
+Comparisons of N170 amplitude lateralization between Durations (without multiple comparison corrections):
+```{r}
+summary(contra_all_N170_hemi[1:4], adjust = "none")
+summary(contra_all_N170_hemi[1:4], delta = delta_null, level = .9)
+```
+
+Comparisons of face-specific N170 amplitudes between Durations (without multiple comparison corrections):
+```{r}
+summary(contra_all_N170_spec[1:4], adjust = "none")
+summary(contra_all_N170_spec[1:4], delta = delta_null, level = .9, adjust = "none")
+```
 
 ## Linear mixed model with subjective confidence
 
@@ -1371,11 +1431,12 @@ qqplot_lmer(lmm.opt.P1.SC.E205)
 
 #### Estimated marginal means
 ```{r}
-emm.P1.SC.E205 <- emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Category | Hemisphere)
+emm.P1.SC.E205 <- emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf + Hemisphere)
 
-emm.P1.SC.E205
+emm.P1.SC.E205 %>% 
+  as_tibble() %>% 
+  arrange(Category, DuraConf)
 ```
-
 
 #### Plots
 ```{r}
@@ -1417,62 +1478,61 @@ p1.conf.LinePlot
 
 
 #### Contrast
-```{r}
-# contra.SC.P1 <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Category), "pairwise", simple = "each", combine = TRUE)
-#   
-# contra.SC.P1
-# confint(contra.SC.P1)
-```
-
+##### Main results
+Comparisons of P1 amplitudes for (intact) faces with different durations and confidence (left hemisphere):
 ```{r P1 amplitudes for SC}
-contra.SC.P1.gen <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Hemisphere + Category), # 
-                             "pairwise", adjust = "Bonferroni")
+contra_SC_P1 <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Hemisphere + Category), # 
+                             "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.SC.P1.gen[1:6]
-
-confint(contra.SC.P1.gen[1:6])
-
-contra.SC.P1.gen[7:12]
-
-confint(contra.SC.P1.gen[7:12])
-
-# differences between hemispheres
-contra.SC.P1.gen.hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Hemisphere | Category), # 
-                                  interaction = "pairwise", adjust = "Bonferroni")
-contra.SC.P1.gen.hemi
+contra_SC_P1[1:6]
+summary(contra_SC_P1[1:6], delta = delta_null, level = .9)
+summary(contra_SC_P1[1:6], delta = delta_null, side = ">")
+summary(contra_SC_P1[1:6], delta = delta_null, side = "<")
 ```
 
+Comparisons of P1 amplitudes for (intact) faces with different durations and confidence (right hemisphere):
 ```{r}
-contra.SC.P1.gen.nohemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf | Category), # 
-                                    "pairwise", adjust = "Bonferroni")
-
-contra.SC.P1.gen.nohemi[1:6]
-confint(contra.SC.P1.gen.nohemi[1:6])
-```
-
-
-```{r}
-contra.SC.P1.spec <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf | Hemisphere), # 
-                              interaction = "pairwise", adjust = "Bonferroni")
-
-contra.SC.P1.spec
-confint(contra.SC.P1.spec)
-
-
-contra.SC.P1.spec.hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf + Hemisphere ), # 
-                                   interaction = "pairwise", adjust = "Bonferroni")
-
-contra.SC.P1.spec.hemi
+contra_SC_P1[7:12]
+summary(contra_SC_P1[7:12], delta = delta_null, level = .9)
+summary(contra_SC_P1[7:12], delta = delta_null, side = ">")
+summary(contra_SC_P1[7:12], delta = delta_null, side = "<")
 ```
 
 ```{r eval=FALSE, include=FALSE}
-# contra.SC.P1.dc <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf), "pairwise", adjust = "Bonferroni")
-#   
-# contra.SC.P1.dc
-# 
-# confint(contra.SC.P1.dc)
+# Comparisons of P1 amplitude lateralization for (intact) faces with different durations and confidence:
+contra_SC_P1_hemi <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ DuraConf + Hemisphere | Category), # 
+                                  interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+contra_SC_P1_hemi[1:6]
+summary(contra_SC_P1_hemi[1:6], delta = delta_null, level = .9)
+summary(contra_SC_P1_hemi[1:6], delta = delta_null, side = ">")
+summary(contra_SC_P1_hemi[1:6], delta = delta_null, side = "<")
 ```
 
+Comparisons of face-specific P1 amplitude components for different durations and confidence (left hemisphere):
+```{r}
+contra_SC_P1_spec <- contrast(emmeans(lmm.opt.P1.SC.E205, ~ Category + DuraConf | Hemisphere), # 
+                              interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+
+contra_SC_P1_spec[1:6]
+summary(contra_SC_P1_spec[1:6], delta = delta_null, level = .9)
+summary(contra_SC_P1_spec[1:6], delta = delta_null, side = ">")
+summary(contra_SC_P1_spec[1:6], delta = delta_null, side = "<")
+```
+
+Comparisons of face-specific P1 amplitude components for different durations and confidence (right hemisphere):
+```{r}
+contra_SC_P1_spec[7:12]
+summary(contra_SC_P1_spec[7:12], delta = delta_null, level = .9)
+summary(contra_SC_P1_spec[7:12], delta = delta_null, side = ">")
+summary(contra_SC_P1_spec[7:12], delta = delta_null, side = "<")
+```
+
+##### Other results
+Comparisons of P1 amplitudes for (intact) faces with different durations and confidence (without multiple comparison corrections):
+```{r}
+summary(contra_SC_P1[1:24], adjust = "none")
+summary(contra_SC_P1[1:24], adjust = "none", delta = delta_null, level = .9)
+```
 
 ### Ampitudes of the N170
 ```{r erp df for the N170 E2 SC}
@@ -1582,9 +1642,11 @@ qqplot_lmer(lmm.opt.N170.SC.E205)
 
 #### Estimated marginal means
 ```{r}
-emm.N170.SC.E205 <- emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf | Hemisphere)
+emm.N170.SC.E205 <- emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf + Hemisphere)
 
-emm.N170.SC.E205
+emm.N170.SC.E205 %>% 
+  as_tibble() %>% 
+  arrange(Category, DuraConf)
 ```
 
 
@@ -1629,99 +1691,72 @@ n170.conf.LinePlot
 ```
 
 #### Contrast
-```{r}
-# contra.N170.resp <- contrast(emm.N170.SC.E205, "pairwise", simple = "each", combine = FALSE, adjust = "Bonferroni")
-# 
-# contra.N170.resp
-# confint(contra.N170.resp)
-```
-
-
+##### Main results
+Comparisons of N170 amplitudes for (intact) faces with different durations and confidence (left hemisphere):
 ```{r N170 amplitudes for SC}
-contra.SC.N170.gen <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Hemisphere + Category), # 
-                               "pairwise", adjust = "Bonferroni")
+contra_SC_N170 <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Hemisphere + Category), # 
+                               "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.SC.N170.gen[1:6]
-
-confint(contra.SC.N170.gen[1:6])
-
-contra.SC.N170.gen[7:12]
-
-confint(contra.SC.N170.gen[7:12])
-
-contra.SC.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf + Hemisphere | Category), # 
-                                    interaction = "pairwise", adjust = "Bonferroni")
-
-contra.SC.N170.gen.hemi[1:6]
-confint(contra.SC.N170.gen.hemi[1:6])
-
+contra_SC_N170[1:6]
+summary(contra_SC_N170[1:6], delta = delta_null, level = .9)
+summary(contra_SC_N170[1:6], delta = delta_null, side = ">")
+summary(contra_SC_N170[1:6], delta = delta_null, side = "<")
 ```
 
-
+Comparisons of N170 amplitudes for (intact) faces with different durations and confidence (right hemisphere):
 ```{r}
-contra.SC.N170.spec <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf | Hemisphere), # 
-                                interaction = "pairwise", adjust = "Bonferroni")
-
-contra.SC.N170.spec[1:6]
-confint(contra.SC.N170.spec[1:6])
-
-contra.SC.N170.spec[7:12]
-confint(contra.SC.N170.spec[7:12])
-
-contra.SC.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf + Hemisphere), # 
-                                     interaction = "pairwise", adjust = "Bonferroni")
-
-contra.SC.N170.spec.hemi
-
+contra_SC_N170[7:12]
+summary(contra_SC_N170[7:12], delta = delta_null, level = .9)
+summary(contra_SC_N170[7:12], delta = delta_null, side = ">")
+summary(contra_SC_N170[7:12], delta = delta_null, side = "<")
 ```
 
-
-
-```{r eval=FALSE, include=FALSE}
-
-contra.N170.resp.nohemi.dura <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Category), 
-                                         "pairwise", adjust = "Bonferroni")
-
-contra.N170.resp.nohemi.dura
-confint(contra.N170.resp.nohemi.dura)
-
-
-contra.N170.resp.nohemi.cate <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category | DuraConf),
-                                         "pairwise", adjust = "Bonferroni")
-
-contra.N170.resp.nohemi.cate
-confint(contra.N170.resp.nohemi.cate)
+Comparisons of N170 amplitude lateralization for (intact) faces with different durations and confidence:
+```{r}
+contra_SC_N170_hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf + Hemisphere | Category), # 
+                                    interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+contra_SC_N170_hemi[1:6]
+summary(contra_SC_N170_hemi[1:6], delta = delta_null, level = .9)
+summary(contra_SC_N170_hemi[1:6], delta = delta_null, side = ">")
+summary(contra_SC_N170_hemi[1:6], delta = delta_null, side = "<")
 ```
 
+Comparisons of face-specific N170 amplitude components for different durations and confidence (left hemisphere):
+```{r}
+contra_SC_N170_spec <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf | Hemisphere), # 
+                                interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-```{r eval=FALSE, include=FALSE}
-# contra.N170.resp.nohemi.inter <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf), 
-#                                     interaction = "pairwise", adjust = "Bonferroni")
-# 
-# contra.N170.resp.nohemi.inter
-# confint(contra.N170.resp.nohemi.inter)
+contra_SC_N170_spec[1:6]
+summary(contra_SC_N170_spec[1:6], delta = delta_null, level = .9)
+summary(contra_SC_N170_spec[1:6], delta = delta_null, side = ">")
+summary(contra_SC_N170_spec[1:6], delta = delta_null, side = "<")
 ```
 
-
-
-
-```{r eval=FALSE, include=FALSE}
-
-# contra.N170.resp.nocate.dura <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ DuraConf | Hemisphere), 
-#                                     "pairwise", adjust = "Bonferroni")
-# 
-# contra.N170.resp.nocate.dura
-# confint(contra.N170.resp.nocate.dura)
-# 
-# contra.N170.resp.nocate.hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Hemisphere | DuraConf), 
-#                                     "pairwise", adjust = "Bonferroni")
-# 
-# contra.N170.resp.nocate.hemi
-# confint(contra.N170.resp.nocate.hemi)
+Comparisons of face-specific N170 amplitude components for different durations and confidence (right hemisphere):
+```{r}
+contra_SC_N170_spec[7:12]
+summary(contra_SC_N170_spec[7:12], delta = delta_null, level = .9)
+summary(contra_SC_N170_spec[7:12], delta = delta_null, side = ">")
+summary(contra_SC_N170_spec[7:12], delta = delta_null, side = "<")
 ```
 
+Comparisons of face-specific N170 amplitude component lateralization for different durations and confidence:
+```{r}
+contra_SC_N170_spec_hemi <- contrast(emmeans(lmm.opt.N170.SC.E205, ~ Category + DuraConf + Hemisphere), # 
+                                interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
+contra_SC_N170_spec_hemi
+summary(contra_SC_N170_spec_hemi, delta = delta_null, level = .9)
+summary(contra_SC_N170_spec_hemi, delta = delta_null, side = ">")
+summary(contra_SC_N170_spec_hemi, delta = delta_null, side = "<")
+```
 
+##### Other results
+Comparisons of N170 amplitudes for different durations and confidence (without multiple comparison corrections):
+```{r}
+summary(contra_SC_N170[1:24], adjust = "none")
+summary(contra_SC_N170[1:24], adjust = "none", delta = delta_null, level = .9)
+```
 
 ## Linear mixed model with high subjective confidences 
 
@@ -2008,11 +2043,12 @@ qqplot_lmer(lmm.opt.P1.high.E205)
 
 
 #### Estimated marginal means
-
 ```{r}
-emm.P1.high.E205 <- emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere)
+emm.P1.high.E205 <- emmeans(lmm.opt.P1.high.E205, ~ DuraBlock + Category + Hemisphere)
 
-emm.P1.high.E205
+emm.P1.high.E205 %>% 
+  as_tibble() %>% 
+  arrange(DuraBlock, Category, Hemisphere)
 ```
 
 #### Plots
@@ -2056,43 +2092,61 @@ p1.high.LinePlot
 
 
 #### Contrast
-```{r}
-# contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Category + Hemisphere), "pairwise", simple = "each", combine = TRUE)
-```
-
+##### Main results
+Comparisons of P1 amplitudes for (intact) faces with different durations and high confidence (left hemisphere):
 ```{r P1 amplitudes for high}
-contra.high.P1.gen <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Hemisphere + Category), # 
-                               "pairwise", adjust = "none")
+contra_high_P1 <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock | Hemisphere + Category), 
+                               "pairwise", adjust = "none", infer = TRUE)
 
-contra.high.P1.gen[1:3]
-
-confint(contra.high.P1.gen[1:3])
-
-contra.high.P1.gen[4:6]
-
-confint(contra.high.P1.gen[4:6])
-
-contra.high.P1.gen.hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock + Hemisphere | Category), # 
-                                    interaction = "pairwise", adjust = "none")
-contra.high.P1.gen.hemi
-
+contra_high_P1[1:3]
+summary(contra_high_P1[1:3], delta = delta_null, level = .9)
+summary(contra_high_P1[1:3], delta = delta_null, side = ">")
+summary(contra_high_P1[1:3], delta = delta_null, side = "<")
 ```
 
-
+Comparisons of P1 amplitudes for (intact) faces with different durations and high confidence (right hemisphere):
 ```{r}
-contra.high.P1.spec <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock | Hemisphere), # 
-                                interaction = "pairwise", adjust = "Bonferroni")
-
-contra.high.P1.spec
-confint(contra.high.P1.spec)
-
-contra.high.P1.spec.hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock + Hemisphere), # 
-                                     interaction = "pairwise", adjust = "Bonferroni")
-
-contra.high.P1.spec.hemi
-
+contra_high_P1[4:6]
+summary(contra_high_P1[4:6], delta = delta_null, level = .9)
+summary(contra_high_P1[4:6], delta = delta_null, side = ">")
+summary(contra_high_P1[4:6], delta = delta_null, side = "<")
 ```
 
+```{r eval=FALSE, include=FALSE}
+# Comparisons of P1 amplitude lateralization for (intact) faces with different durations and high confidence:
+contra_high_P1_hemi <- contrast(emmeans(lmm.opt.P1.high.E205, ~ DuraBlock + Hemisphere | Category), # 
+                                    interaction = "pairwise", adjust = "none", infer = TRUE)
+contra_high_P1_hemi[1:3]
+summary(contra_SC_P1_hemi[1:3], delta = delta_null, level = .9)
+summary(contra_SC_P1_hemi[1:3], delta = delta_null, side = ">")
+summary(contra_SC_P1_hemi[1:3], delta = delta_null, side = "<")
+```
+
+Comparisons of face-specific P1 amplitude components for (intact) faces with different durations and high confidence (left hemisphere):
+```{r}
+contra_high_P1_spec <- contrast(emmeans(lmm.opt.P1.high.E205, ~ Category + DuraBlock | Hemisphere), # 
+                                interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+contra_high_P1_spec[1:3]
+summary(contra_high_P1_spec[1:3], delta = delta_null, level = .9)
+summary(contra_high_P1_spec[1:3], delta = delta_null, side = ">")
+summary(contra_high_P1_spec[1:3], delta = delta_null, side = "<")
+```
+
+Comparisons of face-specific P1 amplitude components for (intact) faces with different durations and high confidence (right hemisphere):
+```{r}
+contra_high_P1_spec[4:6]
+summary(contra_high_P1_spec[4:6], delta = delta_null, level = .9)
+summary(contra_high_P1_spec[4:6], delta = delta_null, side = ">")
+summary(contra_high_P1_spec[4:6], delta = delta_null, side = "<")
+```
+
+
+##### Other results
+Comparisons of P1 amplitudes for different durations and high confidence (without multiple comparison corrections):
+```{r}
+summary(contra_high_P1[1:12], adjust = "none")
+summary(contra_high_P1[1:12], adjust = "none", delta = delta_null, level = .9)
+```
 
 ### Amplitudes of the N170
 ```{r erp df for the N170 E2 high}
@@ -2189,9 +2243,11 @@ qqplot_lmer(lmm.opt.N170.high.E205)
 
 #### Estimated marginal means
 ```{r}
-emm.N170.high.E205 <- emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Category + Hemisphere)
+emm.N170.high.E205 <- emmeans(lmm.opt.N170.high.E205, ~ DuraBlock + Category + Hemisphere)
 
-emm.N170.high.E205
+emm.N170.high.E205 %>% 
+  as_tibble() %>% 
+  arrange(DuraBlock, Category, Hemisphere)
 ```
 
 
@@ -2237,62 +2293,83 @@ n170.high.LinePlot
 
 
 #### Contrast
-```{r}
-# contra.high.N170 <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock), "pairwise", simple = "each")
-# 
-# contra.high.N170
-# 
-# confint(contra.high.N170)
-```
-
+##### Main results
+Comparisons of N170 amplitudes for (intact) faces with different durations and high confidence (left hemisphere):
 ```{r N170 amplitudes for high}
-contra.high.N170.gen <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Hemisphere + Category), # 
+contra_high_N170 <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock | Hemisphere + Category), # 
                                  "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.high.N170.gen[1:3]
-
-contra.high.N170.gen[4:6]
-
-contra.high.N170.gen.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock + Hemisphere | Category), # 
-                                      interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
-
-contra.high.N170.gen.hemi
+# left hemisphere
+contra_high_N170[1:3]
+summary(contra_high_N170[1:3], delta = delta_null, level = .9)
+summary(contra_high_N170[1:3], delta = delta_null, side = ">")
+summary(contra_high_N170[1:3], delta = delta_null, side = "<")
 ```
 
+Comparisons of N170 amplitudes for (intact) faces with different durations and high confidence (right hemisphere):
 ```{r}
-contra.high.N170.spec <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock | Hemisphere), # 
+# right hemisphere
+contra_high_N170[4:6]
+summary(contra_high_N170[4:6], delta = delta_null, level = .9)
+summary(contra_high_N170[4:6], delta = delta_null, side = ">")
+summary(contra_high_N170[4:6], delta = delta_null, side = "<")
+```
+
+Comparisons of N170 amplitude lateralization for (intact) faces with different durations and high confidence:
+```{r}
+contra_high_N170_hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ DuraBlock + Hemisphere | Category), # 
+                                      interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+contra_high_N170_hemi[1:3]
+summary(contra_high_N170_hemi[1:3], delta = delta_null, level = .9)
+summary(contra_high_N170_hemi[1:3], delta = delta_null, side = ">")
+summary(contra_high_N170_hemi[1:3], delta = delta_null, side = "<")
+```
+
+Comparisons of face-specific N170 amplitude components for (intact) faces with different durations and high confidence (left hemisphere):
+```{r}
+contra_high_N170_spec <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock | Hemisphere), # 
                                   interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.high.N170.spec[1:3]
+contra_high_N170_spec[1:3]
+summary(contra_high_N170_spec[1:3], delta = delta_null, level = .9)
+summary(contra_high_N170_spec[1:3], delta = delta_null, side = ">")
+summary(contra_high_N170_spec[1:3], delta = delta_null, side = "<")
+```
 
-contra.high.N170.spec[4:6]
+Comparisons of face-specific N170 amplitude components for (intact) faces with different durations and high confidence (right hemisphere):
+```{r}
+# right
+contra_high_N170_spec[4:6]
+summary(contra_high_N170_spec[4:6], delta = delta_null, level = .9)
+summary(contra_high_N170_spec[4:6], delta = delta_null, side = ">")
+summary(contra_high_N170_spec[4:6], delta = delta_null, side = "<")
 
-contra.high.N170.spec.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock + Hemisphere), # 
+```
+
+Comparisons of face-specific N170 amplitude component lateralization for (intact) faces with different durations and high confidence:
+```{r}
+contra_high_N170_spec_hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock + Hemisphere), # 
+                                  interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
+
+contra_high_N170_spec_hemi
+summary(contra_high_N170_spec_hemi, delta = delta_null, level = .9)
+summary(contra_high_N170_spec_hemi, delta = delta_null, side = ">")
+summary(contra_high_N170_spec_hemi, delta = delta_null, side = "<")
+```
+
+##### Other results
+Comparisons of P1 amplitudes for different durations and high confidence (without multiple comparison corrections):
+```{r}
+summary(contra_high_N170[1:12], adjust = "none")
+summary(contra_high_N170[1:12], delta = delta_null, adjust = "none", level = .9)
+```
+
+```{r}
+contra_high_N170_spec.hemi <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock + Hemisphere), # 
                                        interaction = "pairwise", adjust = "Bonferroni", infer = TRUE)
 
-contra.high.N170.spec.hemi
-```
-
-
-```{r eval=FALSE, include=FALSE}
-# contra.high.N170.spec <- contrast(emmeans(lmm.opt.N170.high.E205, ~ Category + DuraBlock), 
-#                                   interaction = "pairwise", adjust = "Bonferroni")
-# 
-# contra.high.N170.spec
-# confint(contra.high.N170.spec)
-```
-
-#### Equivalence tests
-```{r}
-
-summary(contra.high.N170.gen[1:3], delta = 0.5, side = "two.sided")
-summary(contra.high.N170.gen[4:6], delta = 0.5, side = "two.sided")
-
-```
-
-```{r}
-summary(contra.high.N170.spec[1:3], delta = 0.5, side = "two.sdied")
-summary(contra.high.N170.spec[4:6], delta = 0.5, side = "two.sided")
+contra_high_N170_spec.hemi
+summary(contra_high_N170_spec.hemi, delta = delta_null, level = .9)
 ```
 
 # Appendix
