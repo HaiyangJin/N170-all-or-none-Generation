@@ -591,6 +591,52 @@ resp.ColuPlot.205
 
 ```
 
+```{r eval=FALSE, include=FALSE, fig.asp=.5, fig.width = 5}
+# combine the two behavior response plots
+
+dist_ColuPlot_205 <- 
+  ggplot(data = desc.dist.205, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+  facet_grid(Type ~ Duration,
+             labeller = labeller(Duration = dura.labels)) +
+  geom_errorbar(mapping = aes(ymin = CI_lo, ymax = CI_hi), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = c(1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+  scale_y_continuous(expand= c(0, 0), limits = c(-0.1, 1.15), breaks = seq(0, 1, 0.25)) +# remove the space between columns and x axis  
+  labs(x = "Responses", y = "Percentage", fill = "Category") +  # set the names for main, x and y axises Subjective Responses for E205
+  scale_fill_grey() +  # set the color for columns
+  # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+  erp_theme +
+  theme(legend.position = c(0.53, 0.3)) 
+
+resp_ColuPlot_205 <- {
+  ggplot(data = as.data.frame(emm.resp), aes(y = emmean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Type ~ Duration, 
+               labeller = labeller(Duration = dura.labels)) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    # coord_cartesian(ylim = c(0,1.12) ) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.1, 1.15), breaks = seq(0, 1, 0.25)) +  # remove the space between columns and x axis
+    labs(x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
+    scale_fill_grey() +  # set the color for columns
+    # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    plot_theme
+}
+  
+plot_two_response <- ggpubr::ggarrange(dist_ColuPlot_205, resp_ColuPlot_205, nrow = 1,
+            widths = c(1, .7),
+            labels = c("a", "b"),
+            font.label = list(size = 24, face = "plain"))  # ratio between the two subplots)
+
+ggsave('plot_two_response.png', plot_two_response, width = 10, height = 5)
+
+```
+
 
 ### Contrasts
 ```{r}
@@ -818,7 +864,7 @@ emm.P1.E205 %>%
 # emmip(emm.P1.E205, Category ~ Duration | Type + Hemisphere, CIs = TRUE)
 ```
 
-```{r p1.all.LinePlot}
+```{r p1.all.LinePlot fig.asp=1, fig.width = 4}
 
 hemiLabel <- c("left", "right")
 names(hemiLabel) <- c("Left", "Right")
@@ -834,7 +880,7 @@ p1.all.LinePlot = {
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration (ms)", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration (ms)", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -848,7 +894,44 @@ p1.all.LinePlot = {
 # }
 # ggsave('P1_all.png', p1.all.LinePlot.slide, width = 7, height = 4)
 
+
 p1.all.LinePlot
+```
+
+
+```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+library(RColorBrewer)
+duration_color <- c(brewer.pal(9, 'Blues')[c(6:8)], brewer.pal(12, "Paired")[6]) 
+category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
+
+p1_all_LinePlot <- {
+  ggplot(data = data.frame(emm.P1.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = duration_color[c(3, 4)], guide = FALSE) +
+    geom_line(aes(linetype = Category, color = Category),  size = .85) +  # position = "dodge", alpha = .7
+    scale_color_manual(values=category_color, limits = c("face", "house")) +
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(Type ~ Hemisphere, # switch = "x", 
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration (ms)", y = expression(paste("P1 Amplitudes (", mu, "V)")), color = "Category", linetype = "Category") +  # set the names for main, x and y axises title = "", 
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme +
+    theme(
+      legend.position = c(.5, .5),
+      legend.title=element_text(size=10), 
+      legend.text=element_text(size=10),
+    ) +
+    guides(linetype = guide_legend(title.position = "left", nrow = 1),
+           color = guide_legend(title.position = "left", nrow = 1))
+}
+
+ggsave('P1_all_pub.png', p1_all_LinePlot, width = 6, height = 5)
 ```
 
 
@@ -1206,6 +1289,42 @@ n170.all.LinePlot = {
 n170.all.LinePlot
 ```
 
+```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+
+n170_all_LinePlot <- {
+  ggplot(data = data.frame(emm.N170.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = duration_color[c(3, 4)], guide = FALSE) +
+    geom_line(aes(linetype = Category, color = Category),  size = .85) +  # position = "dodge", alpha = .7
+    scale_color_manual(values=category_color, limits = c("face", "house")) +
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(Type ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration (ms)", y = expression(paste("N170 Amplitudes (", mu, "V)")), color = "Category", linetype = "Category") +  # set the names for main, x and y axises title = "", 
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme +
+    theme(
+      legend.position = c(.5, .5),
+      legend.title=element_text(size=10), 
+      legend.text=element_text(size=10),
+    ) +
+    guides(linetype = guide_legend(title.position = "left", nrow = 1),
+           color = guide_legend(title.position = "left", nrow = 1))
+}
+
+ggsave('N170_all_pub.png', n170_all_LinePlot, width = 6, height = 5)
+
+```
+
+
+
+
 #### Contrasts
 ##### Main results for intact stimuli
 Comparisons of N170 amplitudes for intact faces with different durations:
@@ -1476,6 +1595,39 @@ p1.conf.LinePlot = {
 p1.conf.LinePlot
 ```
 
+```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+
+duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")[6]) 
+category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
+
+p1_con_LinePlot = {
+  ggplot(data = data.frame(emm.P1.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = duration_color, guide = FALSE) +
+    geom_line(aes(linetype = Category, color = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_color_manual(values=category_color) +
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
+    scale_x_discrete(labels = duraconf.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme + 
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+ggsave('P1_con_pub.png', p1_con_LinePlot, width = 7, height = 5)
+```
+
 
 #### Contrast
 ##### Main results
@@ -1688,6 +1840,39 @@ n170.conf.LinePlot = {
 # ggsave('N170_confi.png', n170.conf.LinePlot.slide, width = 8.5, height = 4)
 
 n170.conf.LinePlot
+```
+
+```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+
+duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")[6]) 
+category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
+
+n170_con_LinePlot = {
+  ggplot(data = data.frame(emm.N170.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = duration_color, guide = FALSE) +
+    geom_line(aes(linetype = Category, color = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_color_manual(values=category_color) +
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_x_discrete(labels = duraconf.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+ggsave('N170_con_pub.png', n170_con_LinePlot, width = 7, height = 5)
 ```
 
 #### Contrast
@@ -2091,6 +2276,41 @@ p1.high.LinePlot
 ```
 
 
+```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+
+duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]) 
+category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
+
+p1_high_LinePlot = {
+  ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = duration_color, guide = FALSE) +
+    geom_line(aes(linetype = Category, color = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_color_manual(values=category_color) +
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
+    scale_x_discrete(labels = durablock.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Blocks", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+ggsave('p1_high_pub.png', p1_high_LinePlot, width = 7, height = 4.5)
+```
+
+
+
 #### Contrast
 ##### Main results
 Comparisons of P1 amplitudes for (intact) faces with different durations and high confidence (left hemisphere):
@@ -2291,6 +2511,38 @@ n170.high.LinePlot = {
 n170.high.LinePlot
 ```
 
+```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+
+duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]) 
+category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
+
+n170_high_LinePlot = {
+  ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = duration_color, guide = FALSE) +
+    geom_line(aes(linetype = Category, color = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_color_manual(values=category_color) +
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_x_discrete(labels = durablock.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Blocks", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+ggsave('n170_high_pub.png', n170_high_LinePlot, width = 7, height = 4.5)
+```
 
 #### Contrast
 ##### Main results
