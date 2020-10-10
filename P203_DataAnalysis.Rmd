@@ -654,6 +654,113 @@ summary(emm.resp[c(13, 18)], null = 0.6, side = "<", infer = TRUE)
 summary(emm.resp[c(13, 18)], null = 0.4, side = ">", infer = TRUE)
 ```
 
+### Logisitc mixed models for responses
+```{r}
+library(optimx)
+
+df_glmm_205 <- clean_beha_205 %>%
+  mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
+  sdif_coding_P203_resp 
+```
+
+#### The maximal model
+```{r}
+# glmm_max_resp <- glmer(isFace ~ Type * Duration * Resp +
+#                          (1 + Type_C + Dura_C + Type_Dura | SubjCode), 
+#                        family = binomial("logit"),
+#                        df_glmm_205)
+# 
+# print(summary(glmm_max_resp), corr = FALSE)
+
+```
+
+#### The zero-correlation-parameter model
+```{r}
+
+glmm_zcp_resp <- glmer(isFace ~ Type * Duration * Resp +
+                         (1 + Type_C + Dura_C + Type_Dura || SubjCode), 
+                       family = binomial("logit"),
+                       df_glmm_205)
+
+print(summary(glmm_zcp_resp), corr = FALSE)
+ 
+```
+
+#### The reduced model
+```{r}
+summary(rePCA(glmm_zcp_resp))
+
+glmm_rdc_resp <- update(glmm_zcp_resp,
+                        formula = isFace ~ Type * Duration * Resp + 
+                          (0 + Dura_C + Type_Dura || SubjCode),
+                        control = glmerControl(optimizer = "optimx", # calc.derivs = FALSE,
+                                               optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+
+print(summary(glmm_rdc_resp), corr = FALSE)
+
+# anova(lmm.rdc.resp, lmm.zcp.resp, refit = FALSE)
+
+```
+
+```{r}
+summary(rePCA(glmm_rdc_resp))
+
+glmm_rdc_resp1 <- update(glmm_zcp_resp,
+                        formula = isFace ~ Type * Duration * Resp + 
+                          (0 + Type_Dura || SubjCode),
+                        control = glmerControl(optimizer = "optimx", # calc.derivs = FALSE,
+                                               optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+
+print(summary(glmm_rdc_resp1), corr = FALSE)
+
+```
+
+```{r}
+summary(rePCA(glmm_rdc_resp1))
+
+glmm_rdc_resp2 <- update(glmm_rdc_resp1,
+                        formula = isFace ~ Type * Duration * Resp + 
+                          (1 | SubjCode),
+                        control = glmerControl(optimizer = "optimx", # calc.derivs = FALSE,
+                                               optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+
+print(summary(glmm_rdc_resp1), corr = FALSE)
+
+```
+
+
+#### The extended model
+```{r}
+lmm.etd.resp <- update(lmm.zcp.resp,
+                       formula = ratio ~ Type * Duration * Resp + 
+                         (0 + Dura_C + Type_Dura | SubjCode))
+
+summary(lmm.etd.resp)
+
+```
+
+
+```{r}
+lmm.etd1.resp <- update(lmm.etd.resp,
+                        formula = ratio ~ Type * Duration * Resp + 
+                          (0 + Type_Dura | SubjCode))
+
+summary(lmm.etd1.resp)
+
+```
+
+
+```{r}
+anova(lmm.etd1.resp, lmm.rdc.resp, refit = FALSE)
+```
+
+#### The optimal model
+```{r}
+lmm.opt.resp <- lmm.etd1.resp 
+
+summary(lmm.opt.resp)
+```
+
 
 # ERP amplitude analysis
 ## Load mean amplitude for single trials
