@@ -322,8 +322,7 @@ range(subj.info.205$Age)
 sum(subj.info.205$Sex == "female")
 ```
 
-
-## Responses
+## Allocation of responses in each condition
 ```{r}
 tmp.count <- {
   clean_beha_205 %>% 
@@ -357,8 +356,8 @@ desc.dist.205 <- {
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
     ) %>% 
     ungroup() %>% 
-    add_row(Type = "intact", Category = "house", Duration = 200, Resp = 2, Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
-            SE.hi = 0, CI_lo = 0, CI_hi = 0, Median = 0, Lower = 0, Upper = 0)
+    add_row(Type = "intact", Category = "house", Duration = "200", Resp = "2", Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
+            SE.hi = 0, CI_lo = 0, CI_hi = 0, Median = 0, Lower = 0, Upper = 0, .before = 17)
 }
 
 avg.dist.wide.205 <- {
@@ -431,7 +430,7 @@ dist.ColuPlot.205
 
 ```
 
-
+## Percentage of face stimuli
 ```{r}
 df_ratio_205 <- {
   clean_beha_205 %>%
@@ -440,7 +439,7 @@ df_ratio_205 <- {
     summarize(ratio = mean(isFace), Count = n())
 }
 
-desc.ratio.205 <- {
+desc_ratio_205 <- {
   df_ratio_205 %>%
     group_by(Type, Duration, Resp) %>%
     summarize(Mean = mean(ratio)
@@ -458,139 +457,30 @@ desc.ratio.205 <- {
 
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r }
 
-# rate.ColuPlot.205 <- {
-#   ggplot(data = desc.ratio.205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
-#     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-#     facet_grid(Type ~ Duration) +
-#     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
-#                   show.legend = FALSE, width = 0.25, alpha = .5,
-#                   position = position_dodge(width=0.9)) +
-#     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-#     coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
-#     scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-#     labs(title = "", x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
-#     scale_fill_grey() +  # set the color for columns
-#     # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
-#     plot_theme
-# }
-# 
-# rate.ColuPlot.205
-
-```
-
-```{r eval=FALSE, include=FALSE}
-# df.erp.SC.205 %>%
-#   filter(Component == "N170", Hemisphere == "Right") %>%
-#   group_by(SubjCode, Category, DuraConf) %>%
-#   summarize(count = n()) %>%
-#   mutate(conditions = paste(Category, DuraConf, sep = "_")) %>%
-#   ungroup() %>%
-#   select(SubjCode, conditions, count) %>%
-#   spread(conditions, count)
-```
-
-### LMM for responses
-```{r}
-df_ratio_205 %<>% sdif_coding_P203_resp 
-```
-
-#### The maximal model
-```{r}
-lmm.max.resp <- lmer(ratio ~ Type * Duration * Resp + (1 + Type_C + Dura_C + Type_Dura | SubjCode), 
-                     df_ratio_205)
-
-print(summary(lmm.max.resp), corr = FALSE)
-
-```
-
-#### The zero-correlation-parameter model
-```{r}
-lmm.zcp.resp <- update(lmm.max.resp, 
-                       formula = ratio ~ Type * Duration * Resp + 
-                         (1 + Type_C + Dura_C + Type_Dura || SubjCode))
-
-print(summary(lmm.zcp.resp), corr = FALSE)
-
-```
-
-#### The reduced model
-```{r}
-summary(rePCA(lmm.zcp.resp))
-
-lmm.rdc.resp <- update(lmm.zcp.resp,
-                       formula = ratio ~ Type * Duration * Resp + 
-                         (0 + Dura_C + Type_Dura || SubjCode))
-
-anova(lmm.rdc.resp, lmm.zcp.resp, refit = FALSE)
-
-```
-
-#### The extended model
-```{r}
-lmm.etd.resp <- update(lmm.zcp.resp,
-                       formula = ratio ~ Type * Duration * Resp + 
-                         (0 + Dura_C + Type_Dura | SubjCode))
-
-summary(lmm.etd.resp)
-
-```
-
-
-```{r}
-lmm.etd1.resp <- update(lmm.etd.resp,
-                        formula = ratio ~ Type * Duration * Resp + 
-                          (0 + Type_Dura | SubjCode))
-
-summary(lmm.etd1.resp)
-
-```
-
-
-```{r}
-anova(lmm.etd1.resp, lmm.rdc.resp, refit = FALSE)
-```
-
-#### The optimal model
-```{r}
-lmm.opt.resp <- lmm.etd1.resp 
-
-summary(lmm.opt.resp)
-```
-
-### Estimated marginal means
-```{r}
-emm.resp <- emmeans(lmm.opt.resp, ~ Resp + Duration + Type)
-
-as.data.frame(emm.resp) %>% 
-  select(Type, Duration, Resp , everything())
-```
-
-### Plots
-```{r}
-
-resp.ColuPlot.205 <- {
-  ggplot(data = as.data.frame(emm.resp), aes(y = emmean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+rate.ColuPlot.205 <- {
+  ggplot(data = desc_ratio_205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Type ~ Duration, 
                labeller = labeller(Duration = dura.labels)) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    # coord_cartesian(ylim = c(0,1.12) ) +  # set the limit for y axis
+    # coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
     scale_y_continuous(expand= c(0, 0), limits = c(-0.1, 1.15), breaks = seq(0, 1, 0.25)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
     scale_fill_grey() +  # set the color for columns
     # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
     plot_theme
 }
 
-resp.ColuPlot.205
+rate.ColuPlot.205
 
 ```
 
+Combine the two plots (for publication):
 ```{r eval=FALSE, include=FALSE, fig.asp=.5, fig.width = 5}
 # combine the two behavior response plots
 
@@ -612,15 +502,15 @@ dist_ColuPlot_205 <-
   theme(legend.position = c(0.53, 0.3)) 
 
 resp_ColuPlot_205 <- {
-  ggplot(data = as.data.frame(emm.resp), aes(y = emmean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  ggplot(data = desc_ratio_205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Type ~ Duration, 
                labeller = labeller(Duration = dura.labels)) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+    geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    # coord_cartesian(ylim = c(0,1.12) ) +  # set the limit for y axis
+    # coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
     scale_y_continuous(expand= c(0, 0), limits = c(-0.1, 1.15), breaks = seq(0, 1, 0.25)) +  # remove the space between columns and x axis
     labs(x = "Responses", y = "Percentage") +  # set the names for main, x and y axises Subjective Responses for E205
     scale_fill_grey() +  # set the color for columns
@@ -636,131 +526,6 @@ plot_two_response <- ggpubr::ggarrange(dist_ColuPlot_205, resp_ColuPlot_205, nro
 ggsave('plot_two_response.png', plot_two_response, width = 10, height = 5)
 
 ```
-
-
-### Contrasts
-```{r}
-contra.resp <- contrast(emmeans(lmm.opt.resp, ~ Duration | Resp + Type), "pairwise",
-                        infer = TRUE)
-
-contra.resp[c(1, 5)]
-summary(contra.resp[c(1, 5)], delta = .05, level = .9)
-```
-
-### One-sample t-test
-```{r}
-summary(emm.resp[c(13, 18)], null = 0.5, delta = .1, infer = TRUE, level=.9)
-summary(emm.resp[c(13, 18)], null = 0.6, side = "<", infer = TRUE)
-summary(emm.resp[c(13, 18)], null = 0.4, side = ">", infer = TRUE)
-```
-
-### Logisitc mixed models for responses
-```{r}
-library(optimx)
-
-df_glmm_205 <- clean_beha_205 %>%
-  mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
-  sdif_coding_P203_resp 
-```
-
-#### The maximal model
-```{r}
-# glmm_max_resp <- glmer(isFace ~ Type * Duration * Resp +
-#                          (1 + Type_C + Dura_C + Type_Dura | SubjCode), 
-#                        family = binomial("logit"),
-#                        df_glmm_205)
-# 
-# print(summary(glmm_max_resp), corr = FALSE)
-
-```
-
-#### The zero-correlation-parameter model
-```{r}
-
-glmm_zcp_resp <- glmer(isFace ~ Type * Duration * Resp +
-                         (1 + Type_C + Dura_C + Type_Dura || SubjCode), 
-                       family = binomial("logit"),
-                       df_glmm_205)
-
-print(summary(glmm_zcp_resp), corr = FALSE)
- 
-```
-
-#### The reduced model
-```{r}
-summary(rePCA(glmm_zcp_resp))
-
-glmm_rdc_resp <- update(glmm_zcp_resp,
-                        formula = isFace ~ Type * Duration * Resp + 
-                          (0 + Dura_C + Type_Dura || SubjCode),
-                        control = glmerControl(optimizer = "optimx", # calc.derivs = FALSE,
-                                               optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-
-print(summary(glmm_rdc_resp), corr = FALSE)
-
-# anova(lmm.rdc.resp, lmm.zcp.resp, refit = FALSE)
-
-```
-
-```{r}
-summary(rePCA(glmm_rdc_resp))
-
-glmm_rdc_resp1 <- update(glmm_zcp_resp,
-                        formula = isFace ~ Type * Duration * Resp + 
-                          (0 + Type_Dura || SubjCode),
-                        control = glmerControl(optimizer = "optimx", # calc.derivs = FALSE,
-                                               optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-
-print(summary(glmm_rdc_resp1), corr = FALSE)
-
-```
-
-```{r}
-summary(rePCA(glmm_rdc_resp1))
-
-glmm_rdc_resp2 <- update(glmm_rdc_resp1,
-                        formula = isFace ~ Type * Duration * Resp + 
-                          (1 | SubjCode),
-                        control = glmerControl(optimizer = "optimx", # calc.derivs = FALSE,
-                                               optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
-
-print(summary(glmm_rdc_resp1), corr = FALSE)
-
-```
-
-
-#### The extended model
-```{r}
-lmm.etd.resp <- update(lmm.zcp.resp,
-                       formula = ratio ~ Type * Duration * Resp + 
-                         (0 + Dura_C + Type_Dura | SubjCode))
-
-summary(lmm.etd.resp)
-
-```
-
-
-```{r}
-lmm.etd1.resp <- update(lmm.etd.resp,
-                        formula = ratio ~ Type * Duration * Resp + 
-                          (0 + Type_Dura | SubjCode))
-
-summary(lmm.etd1.resp)
-
-```
-
-
-```{r}
-anova(lmm.etd1.resp, lmm.rdc.resp, refit = FALSE)
-```
-
-#### The optimal model
-```{r}
-lmm.opt.resp <- lmm.etd1.resp 
-
-summary(lmm.opt.resp)
-```
-
 
 # ERP amplitude analysis
 ## Load mean amplitude for single trials
