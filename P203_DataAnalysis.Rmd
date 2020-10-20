@@ -520,8 +520,8 @@ resp_ColuPlot_205 <- {
   
 plot_two_response <- ggpubr::ggarrange(dist_ColuPlot_205, resp_ColuPlot_205, nrow = 1,
             widths = c(1, .7),
-            labels = c("a", "b"),
-            font.label = list(size = 24, face = "plain"))  # ratio between the two subplots)
+            labels = c("A", "B"),
+            font.label = list(size = 24))  # ratio between the two subplots)
 
 ggsave('plot_two_response.png', plot_two_response, width = 10, height = 5)
 
@@ -2130,7 +2130,7 @@ p1.high.LinePlot = {
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Halves", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -2167,7 +2167,7 @@ p1_high_LinePlot = {
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Blocks", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Halves", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
     erp_theme +
     theme(
@@ -2365,7 +2365,7 @@ n170.high.LinePlot = {
     scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Subjective Confidence", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Halves", y = expression(paste("Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     # scale_x_discrete(labels = c("left", "right")) +
     # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
     theme_bw() +
@@ -2402,7 +2402,7 @@ n170_high_LinePlot = {
     scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
     scale_x_discrete(labels = durablock.labels) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
-    labs(x = "Duration and Blocks", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    labs(x = "Duration and Halves", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
     erp_theme +
     theme(
