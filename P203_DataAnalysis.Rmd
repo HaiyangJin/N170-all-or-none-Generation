@@ -523,7 +523,7 @@ plot_two_response <- ggpubr::ggarrange(dist_ColuPlot_205, resp_ColuPlot_205, nro
             labels = c("A", "B"),
             font.label = list(size = 24))  # ratio between the two subplots)
 
-ggsave('plot_two_response.png', plot_two_response, width = 10, height = 5)
+ggsave('plot_two_response.pdf', plot_two_response, width = 10, height = 5)
 
 ```
 
@@ -803,7 +803,7 @@ p1_all_LinePlot <- {
            color = guide_legend(title.position = "left", nrow = 1))
 }
 
-ggsave('P1_all_pub.png', p1_all_LinePlot, width = 6, height = 5)
+ggsave('P1_all_pub.pdf', p1_all_LinePlot, width = 6, height = 5)
 ```
 
 
@@ -1190,7 +1190,7 @@ n170_all_LinePlot <- {
            color = guide_legend(title.position = "left", nrow = 1))
 }
 
-ggsave('N170_all_pub.png', n170_all_LinePlot, width = 6, height = 5)
+ggsave('N170_all_pub.pdf', n170_all_LinePlot, width = 6, height = 5)
 
 ```
 
@@ -1497,7 +1497,7 @@ p1_con_LinePlot = {
     )
 }
 
-ggsave('P1_con_pub.png', p1_con_LinePlot, width = 7, height = 5)
+ggsave('P1_con_pub.pdf', p1_con_LinePlot, width = 7, height = 5)
 ```
 
 
@@ -1744,7 +1744,7 @@ n170_con_LinePlot = {
     )
 }
 
-ggsave('N170_con_pub.png', n170_con_LinePlot, width = 7, height = 5)
+ggsave('N170_con_pub.pdf', n170_con_LinePlot, width = 7, height = 5)
 ```
 
 #### Contrast
@@ -2178,7 +2178,7 @@ p1_high_LinePlot = {
     )
 }
 
-ggsave('p1_high_pub.png', p1_high_LinePlot, width = 7, height = 4.5)
+ggsave('p1_high_pub.pdf', p1_high_LinePlot, width = 7, height = 4.5)
 ```
 
 
@@ -2413,7 +2413,7 @@ n170_high_LinePlot = {
     )
 }
 
-ggsave('n170_high_pub.png', n170_high_LinePlot, width = 7, height = 4.5)
+ggsave('n170_high_pub.pdf', n170_high_LinePlot, width = 7, height = 4.5)
 ```
 
 #### Contrast
