@@ -14,7 +14,7 @@ general_theme = theme_bw() +
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid', arrow = arrow(length = unit(0.3, "cm"))),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
     # remove the facet background color
     strip.text = element_text(face="bold", size=15, lineheight=5.0),
     strip.background = element_rect(fill="white", colour="white", size=1),

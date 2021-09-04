@@ -4,16 +4,32 @@ author: "[Haiyang Jin](https://haiyangjin.github.io/)"
 date: "`r format(Sys.time(), '%d-%m-%Y')`"
 output:
   html_document:
-    df_print: paged
+    code_folding: hide
     number_sections: true
     toc: true
     toc_depth: 4
     toc_float: 
       collapsed: true
       smooth_scroll: false
-    includes:
-      after_body: Utilities/footer.html
 ---
+
+<style>
+pre {
+  overflow-x: auto;
+}
+pre code {
+  word-wrap: normal;
+  white-space: pre;
+}
+</style>
+
+```{r global_options, echo = FALSE, include = FALSE}
+options(width = 1500)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      include = TRUE, cache = FALSE, tidy = FALSE, 
+                      size = "big", fig.width=8, fig.asp=0.7)
+xaringanExtra::use_clipboard()
+```
 
 # General introduction
 
@@ -30,13 +46,7 @@ output:
 + Duration (`Duration`: *17* vs. *200*)
 
 ## Preparations
-```{r, echo=FALSE, include=FALSE}
-# knitr::opts_chunk$set(error = TRUE)
-knitr::opts_chunk$set(echo = TRUE) # show the code for this chunk
-options(width = 140)  # set the maximum width of the html output
-```
-
-```{r setup and load the related libraries, message=FALSE}
+```{r setup, message=FALSE}
 ## load libraries
 library(tidyverse)
 library(magrittr)
@@ -52,7 +62,7 @@ emm_options(lmer.df = "satterthwaite",
 
 ```
 
-```{r foldes and load R files, include=FALSE}
+```{r foldes and load R files}
 set.seed(42)
 
 # folders
@@ -93,7 +103,7 @@ resp_labels = c("sure faces", "not sure faces", "guessing", "not sure houses", "
 
 # Hypotheses
 Previous studies showed that the N170 amplitudes evoked by faces preseneted for longer durations were larger:
-```{r fig.height=3, fig.width=2}
+```{r fig.height=6, fig.width=4}
 Duration <- c("17", "200")
 Amplitudes <- c(-2.5, -5)
 Hypotheses <- rep("means", 2)
@@ -149,7 +159,6 @@ plot_st
 
 
 ```{r combine the aggregated mean amp plots and the explanation plots, include=FALSE}
-
 # library(ggpubr)
 # plot.hypo <- ggarrange(plot_lit, plot_st, widths = c(1.1, 4))
 # 
@@ -161,7 +170,7 @@ plot_st
 # Brief introduction to the analysis
 
 ## Equivalence tests
-In this study, we do predict that there will be no differences between some conditions. For example, we expect that N170 amplitudes for faces presented for various durations are comparable as long as they are perceived with high subjective confidence. Thus, we employ Equivalence tests to explore if the differences are equivalent to a null region, which we defined as [-0.5, 0.5] in this study. Esentially, the equivalence test performs two one-sided tests to examine if the differences are smaller than the upper boundary of the region and larger than the lower boundary. 
+In this study, we do predict that there will be no differences between some conditions. For example, we expect that N170 amplitudes for faces presented for various duration are comparable as long as they are perceived with high subjective confidence. Thus, we employ Equivalence tests to explore if the differences are equivalent to a null region, which we defined as [-0.5, 0.5] in this study. Essentially, the equivalence test performs two one-sided tests to examine if the differences are smaller than the upper boundary of the region and larger than the lower boundary. 
 By performing the conventional null hypothesis significance tests and the equivalence tests, there are (at least) five scenarios for the results:
 ```{r possible results, fig.height=4.7, fig.width=8}
 # equivalence interval
@@ -209,6 +218,42 @@ gg_equi <- ggplot(df_equi, aes(xmin = CI_low, xmax = CI_upp, y = Scenarios)) +
 gg_equi
 ```
 
+```{r}
+
+gg_equi_bw <- ggplot(df_equi, aes(xmin = CI_low, xmax = CI_upp, y = Scenarios)) +
+  geom_errorbarh(height = .5, size = 1,
+                 color = c("gray50", "gray50", "gray", rep("black", 3))) + 
+  geom_vline(xintercept = 0, linetype = "longdash") +
+  geom_vline(xintercept = c(-delta_null, delta_null), linetype = "dashed", color = "gray30") +
+  scale_x_continuous(limits = c(-1.15, 1.15), breaks = c(-delta_null, 0, delta_null)) +
+  xlab(expression(paste("Amplitudes (", mu, "V)"))) +
+  theme_bw() +
+  theme(
+    text = element_text(size = 10),
+    axis.title = element_text(size = 16), 
+    axis.text = element_text(size = 15), # the size of the texts in plot
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.title=element_text(size=16),
+    legend.text=element_text(size=16),
+    # legend.position = "bottom",
+    legend.key.width = unit(1.2, "cm"),
+    plot.title = element_text(lineheight=.8, face="bold", size = 17),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+    # remove the facet background color
+    strip.text = element_text(face="bold", size=15, lineheight=5.0),
+    strip.background = element_rect(fill="white", colour="white", size=1),
+    strip.placement = "outside"
+)
+
+# ggsave("equivalence_test_bw.png", gg_equi_pw, width = 8, height = 4.7)
+
+gg_equi_bw
+```
+
 
 # Behavior results
 ```{r load behavioral results of 205}
@@ -247,7 +292,6 @@ clean_beha_205 <- {
 
 # behavior.tidyup
 head(clean_beha_205, 10)
-
 ```
 
 ```{r check the number of trials for 205}
@@ -272,13 +316,11 @@ valid.count.205 <- {
 
 # remove the participants
 clean_beha_205 %<>% filter(SubjCode %in% valid.count.205)
-
 ```
 
 
 ```{r remove participants whose performance in Key 1 was lower than 95%}
 # remove participants whose performance in Key 1 was lower than 95%
-
 valid.17 <- {
   clean_beha_205 %>%
     filter(Duration == 17, Resp == 1) %>% # Type == "intact",
@@ -287,7 +329,6 @@ valid.17 <- {
     filter(Accuracy > 0.95) %$%
     SubjCode
 }
-
 
 # clean_beha_205 %>%
 #   filter(Duration == 17, Resp == 1) %>% # Type == "intact",
@@ -298,9 +339,6 @@ valid.17 <- {
 #   summarize(mean(Accuracy), min(Accuracy), max(Accuracy))  
 
 clean_beha_205 %<>% filter(SubjCode %in% valid.17)
-
-
-
 ```
 
 ## Participant demographic information
@@ -312,7 +350,6 @@ subj.info.205 <- {
 }
 
 subj.info.205
-
 ```
 
 ```{r}
@@ -405,7 +442,6 @@ dist.RainPlot.205
 
 
 ```{r}
-
 dura.labels <- c("17ms", "200ms")
 names(dura.labels) <- c(17, 200)
 
@@ -427,7 +463,6 @@ dist.ColuPlot.205 <- {
 }
 
 dist.ColuPlot.205
-
 ```
 
 ## Percentage of face stimuli
@@ -454,11 +489,9 @@ desc_ratio_205 <- {
     ) %>%
     ungroup()
 }
-
 ```
 
 ```{r }
-
 rate.ColuPlot.205 <- {
   ggplot(data = desc_ratio_205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
@@ -477,11 +510,10 @@ rate.ColuPlot.205 <- {
 }
 
 rate.ColuPlot.205
-
 ```
 
 Combine the two plots (for publication):
-```{r eval=FALSE, include=FALSE, fig.asp=.5, fig.width = 5}
+```{r include=TRUE, fig.asp=.5}
 # combine the two behavior response plots
 
 dist_ColuPlot_205 <- 
@@ -523,8 +555,7 @@ plot_two_response <- ggpubr::ggarrange(dist_ColuPlot_205, resp_ColuPlot_205, nro
             labels = c("A", "B"),
             font.label = list(size = 24))  # ratio between the two subplots)
 
-ggsave('plot_two_response.pdf', plot_two_response, width = 10, height = 5)
-
+# ggsave('plot_two_response.pdf', plot_two_response, width = 10, height = 5)
 ```
 
 # ERP amplitude analysis
@@ -547,7 +578,6 @@ df.erp.E2 <- {
 df.erp.E2 %>% 
   group_by(SubjCode, Stimuli, Hemisphere, Type, Category, Duration) %>% 
   summarize(count = n())
-
 ```
 
 ## Linear mixed model across responses
@@ -557,7 +587,6 @@ df.erp.E2 %>%
 # dummy coding
 df.erp.E2.all <- sdif_coding_P203_erp(df.erp.E2)
 ```
-
 
 ### Amplitudes of the P1
 ```{r erp df for the P1 E2}
@@ -575,7 +604,6 @@ if (saveCSV) {
 # the structure of this dataset
 head(df.erp.P1.E2, 10)
 ```
-
 
 #### The maximal model
 ```{r maximal lmm for P1 E2}
@@ -602,7 +630,6 @@ if (!file.exists(file.max.P1.E2)) {
 }
 
 print(summary(lmm.max.P1.E2), corr = FALSE)
-
 ```
 
 #### The zero-correlation-parameter model
@@ -630,18 +657,14 @@ if (!file.exists(file.zcp.P1.E2)) {
 }
 
 print(summary(lmm.zcp.P1.E2), corr = FALSE)
-
 ```
-
 
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E2 P1}
 summary(rePCA(lmm.zcp.P1.E2))
 ```
 
-
 ```{r }
-
 file.rdc.P1.E2 <- file.path(folder_nesi, "E205_P1_lmm_rdc.RData")
 
 # fit the rdc model
@@ -662,7 +685,6 @@ if (!file.exists(file.rdc.P1.E2)) {
 }
 
 print(summary(lmm.rdc.P1.E2), corr = FALSE)
-
 ```
 
 ```{r}
@@ -671,7 +693,6 @@ anova(lmm.rdc.P1.E2, lmm.zcp.P1.E2, refit = FALSE)
 
 #### The extended model
 ```{r }
-
 file.etd.P1.E2 <- file.path(folder_nesi, "E205_P1_lmm_etd.RData")
 
 # fit the etd model
@@ -693,7 +714,6 @@ if (!file.exists(file.etd.P1.E2)) {
 }
 
 print(summary(lmm.etd.P1.E2.2), corr = FALSE)
-
 ```
 
 ```{r}
@@ -730,14 +750,12 @@ emm.P1.E205 %>%
 
 ```
 
-
 #### Plots
 ```{r}
 # emmip(emm.P1.E205, Category ~ Duration | Type + Hemisphere, CIs = TRUE)
 ```
 
-```{r p1.all.LinePlot fig.asp=1, fig.width = 4}
-
+```{r p1.all.LinePlot, fig.asp=1}
 hemiLabel <- c("left", "right")
 names(hemiLabel) <- c("Left", "Right")
 
@@ -766,12 +784,10 @@ p1.all.LinePlot = {
 # }
 # ggsave('P1_all.png', p1.all.LinePlot.slide, width = 7, height = 4)
 
-
 p1.all.LinePlot
 ```
 
-
-```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
+```{r eval=FALSE, fig.asp=5/6}
 library(RColorBrewer)
 duration_color <- c(brewer.pal(9, 'Blues')[c(6:8)], brewer.pal(12, "Paired")[6]) 
 category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
@@ -805,7 +821,6 @@ p1_all_LinePlot <- {
 
 ggsave('P1_all_pub.pdf', p1_all_LinePlot, width = 6, height = 5)
 ```
-
 
 #### Contrasts
 ##### Main results for intact stimuli
@@ -905,7 +920,6 @@ print(summary(lmm.max.N170.E2), corr = FALSE)
 
 ```
 
-
 #### The zero-correlation-parameter model
 ```{r zcp lmm for E2 N170}
 
@@ -937,16 +951,12 @@ print(summary(lmm.zcp.N170.E2), corr = FALSE)
 
 ```
 
-
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E2 N170}
-
 summary(rePCA(lmm.zcp.N170.E2))
 ```
 
-
 ```{r}
-
 file.rdc.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_rdc.RData")
 
 # fit the rdc model
@@ -968,7 +978,6 @@ if (!file.exists(file.rdc.N170.E2)) {
 }
 
 print(summary(lmm.rdc.N170.E2), corr = FALSE)
-
 ```
 
 ```{r}
@@ -977,7 +986,6 @@ anova(lmm.rdc.N170.E2, lmm.zcp.N170.E2, refit = FALSE)
 
 #### The extended model
 ```{r }
-
 file.etd.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd.RData")
 
 # fit the etd model
@@ -998,7 +1006,6 @@ if (!file.exists(file.etd.N170.E2)) {
 }
 
 print(summary(lmm.etd.N170.E2), corr = FALSE)
-
 ```
 
 ```{r}
@@ -1006,7 +1013,6 @@ summary(rePCA(lmm.etd.N170.E2))
 ```
 
 ```{r }
-
 file.etd1.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd1.RData")
 
 # fit the etd1 model
@@ -1027,17 +1033,13 @@ if (!file.exists(file.etd1.N170.E2)) {
 }
 
 print(summary(lmm.etd1.N170.E2), corr = FALSE)
-
 ```
-
 
 ```{r}
 summary(rePCA(lmm.etd1.N170.E2))
 ```
 
-
 ```{r }
-
 file.etd2.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd2.RData")
 
 # fit the etd2 model
@@ -1058,16 +1060,13 @@ if (!file.exists(file.etd2.N170.E2)) {
 }
 
 print(summary(lmm.etd2.N170.E2), corr = FALSE)
-
 ```
 
 ```{r}
 summary(rePCA(lmm.etd2.N170.E2))
 ```
 
-
 ```{r }
-
 file.etd3.N170.E2 <- file.path(folder_nesi, "E205_N170_lmm_etd3.RData")
 
 # fit the etd3 model
@@ -1088,9 +1087,7 @@ if (!file.exists(file.etd3.N170.E2)) {
 }
 
 print(summary(lmm.etd3.N170.E2), corr = FALSE)
-
 ```
-
 
 ```{r}
 anova(lmm.etd3.N170.E2, lmm.rdc.N170.E2, refit = FALSE)
@@ -1098,13 +1095,10 @@ anova(lmm.etd3.N170.E2, lmm.rdc.N170.E2, refit = FALSE)
 
 #### The optimal model
 ```{r }
-
 lmm.opt.N170.E205 <- lmm.rdc.N170.E2
 
 print(summary(lmm.opt.N170.E205), corr = FALSE)
-
 ```
-
 
 #### Diagnostic plots
 ```{r qqplot for lmm.opt.N170.E2}
@@ -1119,19 +1113,15 @@ emm.N170.E205 <- emmeans(lmm.opt.N170.E205,  ~ Type + Hemisphere + Category + Du
 emm.N170.E205 %>% 
   as.data.frame() %>% 
   arrange(Type, Hemisphere, Category, Duration)
-  
 ```
-
 
 #### Plots
 ```{r}
 # emmip(emm.N170.E205, Category ~ Duration | Type + Hemisphere, CIs = TRUE) + 
 #   scale_y_continuous(trans = "reverse")
-
 ```
 
 ```{r n170.all.LinePlot}
-
 n170.all.LinePlot = {
   ggplot(data = data.frame(emm.N170.E205), aes(y = emmean, x = Duration, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(size = 2) +
@@ -1161,8 +1151,7 @@ n170.all.LinePlot = {
 n170.all.LinePlot
 ```
 
-```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
-
+```{r eval=FALSE,  fig.asp=5/6}
 n170_all_LinePlot <- {
   ggplot(data = data.frame(emm.N170.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) +
@@ -1191,11 +1180,7 @@ n170_all_LinePlot <- {
 }
 
 ggsave('N170_all_pub.pdf', n170_all_LinePlot, width = 6, height = 5)
-
 ```
-
-
-
 
 #### Contrasts
 ##### Main results for intact stimuli
@@ -1328,7 +1313,6 @@ if (saveCSV) {
 head(df.erp.P1.SC.E2, 10)
 ```
 
-
 #### The maximal model
 ```{r maximal lmm for P1 E2 SC}
 
@@ -1340,9 +1324,7 @@ lmm.max.P1.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
                          control = lmerControl(optimizer = "bobyqa"))  # nloptwrap Nelder_Mead
 
 print(summary(lmm.max.P1.SC.E2), corr = FALSE)
-
 ```
-
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for P1 E2 SC}
@@ -1356,12 +1338,10 @@ print(summary(lmm.zcp.P1.SC.E2), corr = FALSE)
 
 ```
 
-
 #### The reduced model
 ```{r PCA analysis for zcp lmm for E2 P1 SC}
 summary(rePCA(lmm.zcp.P1.SC.E2))
 ```
-
 
 ```{r }
 
@@ -1372,7 +1352,6 @@ lmm.rdc.P1.SC.E2 <- update(lmm.zcp.P1.SC.E2,
 
 
 print(summary(lmm.rdc.P1.SC.E2), corr = FALSE)
-
 ```
 
 ```{r}
@@ -1382,8 +1361,6 @@ anova(lmm.rdc.P1.SC.E2, lmm.zcp.P1.SC.E2, refit = FALSE)
 
 #### The extended model
 ```{r }
-
-
 lmm.etd.P1.SC.E2 <- update(lmm.rdc.P1.SC.E2,
                            formula = MeanAmp ~ Category * Hemisphere * DuraConf +
                              (1 + Cate_C + Hemi_C | SubjCode) +
@@ -1391,7 +1368,6 @@ lmm.etd.P1.SC.E2 <- update(lmm.rdc.P1.SC.E2,
 
 
 print(summary(lmm.etd.P1.SC.E2), corr = FALSE)
-
 ```
 
 
@@ -1401,7 +1377,6 @@ anova(lmm.rdc.P1.SC.E2, lmm.etd.P1.SC.E2, refit = FALSE)
 
 #### The optimal model
 ```{r }
-
 lmm.opt.P1.SC.E205 <- lmm.etd.P1.SC.E2
 
 # print(summary(lmm.opt.P1.SC.E2), corr = FALSE)
@@ -1410,7 +1385,6 @@ summary(lmm.opt.P1.SC.E205)
 confint(lmm.opt.P1.SC.E205, method = "Wald")
 
 anova(lmm.opt.P1.SC.E205)
-
 ```
 
 
@@ -1435,7 +1409,6 @@ emm.P1.SC.E205 %>%
 ```
 
 ```{r p1.conf.LinePlot}
-
 duraconf.labels = c("17ms\nguess", "17ms\nlow", "17ms\nhigh", "200ms\nhigh")
 
 p1.conf.LinePlot = {
@@ -1467,8 +1440,7 @@ p1.conf.LinePlot = {
 p1.conf.LinePlot
 ```
 
-```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
-
+```{r eval=FALSE,  fig.asp=5/6}
 duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")[6]) 
 category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
@@ -1587,7 +1559,6 @@ lmm.max.N170.SC.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraConf +
                            control = lmerControl(optimizer = "bobyqa"))  # nloptwrap Nelder_Mead
 
 print(summary(lmm.max.N170.SC.E2), corr = FALSE)
-
 ```
 
 
@@ -1616,7 +1587,6 @@ summary(rePCA(lmm.zcp.N170.SC.E2))
 
 
 ```{r}
-
 lmm.rdc.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraConf +
                                (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
@@ -1624,7 +1594,6 @@ lmm.rdc.N170.SC.E2 <- update(lmm.zcp.N170.SC.E2,
 
 
 print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
-
 ```
 
 
@@ -1634,7 +1603,6 @@ anova(lmm.rdc.N170.SC.E2, lmm.zcp.N170.SC.E2, refit = FALSE)
 
 #### The extended model
 ```{r}
-
 lmm.etd.N170.SC.E2 <- update(lmm.rdc.N170.SC.E2,
                              formula = MeanAmp ~ Category * Hemisphere * DuraConf +
                                (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
@@ -1642,7 +1610,6 @@ lmm.etd.N170.SC.E2 <- update(lmm.rdc.N170.SC.E2,
 
 
 print(summary(lmm.rdc.N170.SC.E2), corr = FALSE)
-
 ```
 
 ```{r}
@@ -1651,7 +1618,6 @@ anova(lmm.rdc.N170.SC.E2, lmm.etd.N170.SC.E2, refit = FALSE)
 
 #### The optimal model
 ```{r }
-
 lmm.opt.N170.SC.E205 <- lmm.etd.N170.SC.E2
 
 print(summary(lmm.opt.N170.SC.E205), corr = FALSE)
@@ -1714,8 +1680,7 @@ n170.conf.LinePlot = {
 n170.conf.LinePlot
 ```
 
-```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
-
+```{r eval=FALSE,  fig.asp=5/6}
 duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")[6]) 
 category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
@@ -1850,7 +1815,7 @@ desc.resp.E205.Block <- {
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
     ) %>% 
     ungroup() %>% 
-    add_row(blockID = 2, Category = "house", Duration = 200, Resp = 2, Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
+    add_row(blockID = "2", Category = "house", Duration = "200", Resp = "2", Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
             SE.hi = 0, CI = 0, Median = 0, Lower = 0, Upper = 0)
 }
 
@@ -1860,8 +1825,6 @@ avg.resp.wide.E205.Block <- {
     select(SubjCode, Conditions, RespRate) %>% 
     spread(Conditions, RespRate)
 }
-
-
 ```
 
 ```{r}
@@ -1871,8 +1834,6 @@ block.high <- {
 }
 
 t.test(filter(block.high, blockID == 1)$RespRate, filter(block.high, blockID == 2)$RespRate, paired = T)
-
-
 ```
 
 
@@ -1897,9 +1858,9 @@ rt.RainPlot.E205.Block <- {
     # coord_cartesian(ylim = c(0, 1.05)) +  # set the limit for y axis
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     theme_bw() + # the backgroud color
-    plot_theme
+    plot_theme +
+    NULL
 }
-
 ```
 
 &nbsp;
@@ -1910,7 +1871,6 @@ rt.RainPlot.E205.Block
 
 
 ```{r}
-
 bloc.labels <- c("1st Half", "2nd Half")
 names(bloc.labels) <- c(1, 2)
 
@@ -1933,7 +1893,6 @@ acc.ColuPlot.E205.Block <- {
 }
 
 acc.ColuPlot.E205.Block
-
 ```
 
 
@@ -1960,13 +1919,11 @@ desc.ratio.E205.Block <- {
     ) %>% 
     ungroup()
 }
-
 ```
 
 
 
 ```{r}
-
 ratio.ColuPlot.E205.Block <- {
   ggplot(data = desc.ratio.E205.Block, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
@@ -1986,7 +1943,6 @@ ratio.ColuPlot.E205.Block <- {
 }
 
 ratio.ColuPlot.E205.Block
-
 ```
 
 
@@ -1997,7 +1953,6 @@ df.erp.high.E2 <- {
     mutate(DuraBlock = paste(Duration, Block_ST_table, sep = "_")) %>% 
     sdif_coding_E205_erp_conf()
 }
-
 ```
 
 
@@ -2021,7 +1976,6 @@ head(df.erp.P1.high.E2, 10)
 
 #### The maximal model
 ```{r maximal lmm for P1 E2 high}
-
 lmm.max.P1.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
                              (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
                              (1 + Hemi_C | Stimuli),
@@ -2031,7 +1985,6 @@ lmm.max.P1.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
                                                  optCtrl = list(maxfun = 1e5)))
 
 print(summary(lmm.max.P1.high.E2), corr = FALSE)
-
 ```
 
 #### The zero-correlation-parameter model
@@ -2044,15 +1997,12 @@ lmm.zcp.P1.high.E2 <- update(lmm.max.P1.high.E2,
 
 
 print(summary(lmm.zcp.P1.high.E2), corr = FALSE)
-
 ```
-
 
 #### The reduced model
 ```{r}
 summary(rePCA(lmm.zcp.P1.high.E2))
 ```
-
 
 ```{r}
 lmm.rdc.P1.high.E2 <- update(lmm.zcp.P1.high.E2,
@@ -2097,8 +2047,6 @@ anova(lmm.opt.P1.high.E205)
 qqplot_lmer(lmm.opt.P1.high.E205)
 ```
 
-
-
 #### Estimated marginal means
 ```{r}
 emm.P1.high.E205 <- emmeans(lmm.opt.P1.high.E205, ~ DuraBlock + Category + Hemisphere)
@@ -2113,9 +2061,7 @@ emm.P1.high.E205 %>%
 # emmip(emm.P1.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE)
 ```
 
-
 ```{r p1.high.LinePlot}
-
 durablock.labels = c("17ms\nhalf 1", "17ms\nhalf 2", "200ms\nhalf 2")
 
 p1.high.LinePlot = {
@@ -2148,8 +2094,7 @@ p1.high.LinePlot
 ```
 
 
-```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
-
+```{r eval=FALSE,  fig.asp=5/6}
 duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]) 
 category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
@@ -2232,7 +2177,6 @@ summary(contra_high_P1_spec[4:6], delta = delta_null, side = ">")
 summary(contra_high_P1_spec[4:6], delta = delta_null, side = "<")
 ```
 
-
 ##### Other results
 Comparisons of P1 amplitudes for different durations and high confidence (without multiple comparison corrections):
 ```{r}
@@ -2257,10 +2201,8 @@ if (saveCSV) {
 head(df.erp.N170.high.E2, 10)
 ```
 
-
 #### The maximal model
 ```{r maximal lmm for N170 E2 high}
-
 lmm.max.N170.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
                                (1 + Cate_C + Hemi_C + Cate_Hemi | SubjCode) +
                                (1 + Hemi_C | Stimuli),
@@ -2270,19 +2212,16 @@ lmm.max.N170.high.E2 <- lmer(MeanAmp ~ Category * Hemisphere * DuraBlock +
                                                    optCtrl = list(maxfun = 1e5)))
 
 print(summary(lmm.max.N170.high.E2), corr = FALSE)
-
 ```
 
 #### The zero-correlation-parameter model
 ```{r zcp lmm for N170 E2 high}
-
 lmm.zcp.N170.high.E2 <- update(lmm.max.N170.high.E2,
                                formula = MeanAmp ~ Category * Hemisphere * DuraBlock +
                                  (1 + Cate_C + Hemi_C + Cate_Hemi || SubjCode) +
                                  (1 + Hemi_C || Stimuli))
 
 print(summary(lmm.zcp.N170.high.E2), corr = FALSE)
-
 ```
 
 
@@ -2332,7 +2271,6 @@ anova(lmm.opt.N170.high.E205)
 qqplot_lmer(lmm.opt.N170.high.E205)
 ```
 
-
 #### Estimated marginal means
 ```{r}
 emm.N170.high.E205 <- emmeans(lmm.opt.N170.high.E205, ~ DuraBlock + Category + Hemisphere)
@@ -2342,7 +2280,6 @@ emm.N170.high.E205 %>%
   arrange(DuraBlock, Category, Hemisphere)
 ```
 
-
 #### Plots
 ```{r}
 # emmip(emm.N170.high.E205, Category ~ DuraBlock | Hemisphere, CIs = TRUE) +
@@ -2350,9 +2287,7 @@ emm.N170.high.E205 %>%
 
 ```
 
-
 ```{r n170.high.LinePlot}
-
 n170.high.LinePlot = {
   ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, color = Category, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(size = 2) +
@@ -2383,8 +2318,7 @@ n170.high.LinePlot = {
 n170.high.LinePlot
 ```
 
-```{r eval=FALSE, include=FALSE, fig.asp=5/6, fig.width = 6}
-
+```{r eval=FALSE,  fig.asp=5/6}
 duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]) 
 category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
@@ -2467,7 +2401,6 @@ contra_high_N170_spec[4:6]
 summary(contra_high_N170_spec[4:6], delta = delta_null, level = .9)
 summary(contra_high_N170_spec[4:6], delta = delta_null, side = ">")
 summary(contra_high_N170_spec[4:6], delta = delta_null, side = "<")
-
 ```
 
 Comparisons of face-specific N170 amplitude component lateralization for (intact) faces with different durations and high confidence:
@@ -2510,32 +2443,8 @@ For the analysis for every dependent variable, an optimal model was obtained by 
 
 More details about this whole process chould be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
 
-## Algorithm of function `step` {#stepfun}
-The outline of the algorithm of `step(fit, reduce.fixed = false)` function is: 
-
->  Simplification of the random effects structure:
->
->   1. Let M be the linear mixed effects model specified by a user. 
->
->   2. If there are random effects in M then go to 3, otherwise stop. 
->
->   3. For each random effect ri in M do: 
->       (a) Create a reduced model Mi by eliminating ri from M. 
->
->       (b) Calculate pi, the p value from the likelihood ratio test of comparing M to Mi. 
->
->       (c) Save pi and Mi.
->
->   4. Find pmax; the maximum of all pi and let Mmax denote the corresponding model. 
->
->   5. Set M to Mmax. If pmax is guesser than α level then go back to 3, otherwise stop.
-
-More deatils could be found: Kuznetsova, A., Brockhoff, P. B., & Christensen, R. H. B. (2017). lmerTest Package: Tests in Linear Mixed Effects Models. Journal of Statistical Software, 82(13), 1-26. http://doi.org/10.18637/jss.v082.i13 **Page 8**
-
-
 ## Stimuli specific effects
 ```{r}
-
 # 28 participants in total
 
 resp.stim <- {
@@ -2572,7 +2481,6 @@ ggplot(resp.stim, aes(x = Stimuli, y = avgCount, fill = Type_Category)) +
 
 
 ```{r}
-
 resp.stim.1 <- {
   clean_beha_205 %>% 
     mutate(isKey1 = as.numeric(Resp == "1")) %>% 
@@ -2606,6 +2514,209 @@ library(plotly)
 heatmap_17 <- plot_ly(z = data.matrix(resp.stim.1.17), type = "heatmap", name = "Figrename")
 heatmap_200 <- plot_ly(z = data.matrix(resp.stim.1.200), type = "heatmap", name = "Figrename")
 
+```
+
+## Gray plots for publication
+### Equivalence tests
+```{r}
+gg_equi_bw
+```
+
+### Behavioural responses
+```{r}
+plot_two_response
+```
+
+### P1 -- all
+```{r}
+p1_all_LinePlot_bw <- {
+  ggplot(data = data.frame(emm.P1.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) + # , alpha = .7
+    scale_fill_manual(values = c("gray70", "black"), guide = "none") +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.15, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(Type ~ Hemisphere, # switch = "x", 
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration (ms)", y = expression(paste("P1 Amplitudes (", mu, "V)")), color = "Category", linetype = "Category") +  # set the names for main, x and y axises title = "", 
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme +
+    theme(
+      legend.position = c(.5, .5),
+      legend.title=element_text(size=10), 
+      legend.text=element_text(size=10),
+    ) +
+    guides(linetype = guide_legend(title.position = "left", nrow = 1),
+           color = guide_legend(title.position = "left", nrow = 1)) +
+    NULL
+}
+
+p1_all_LinePlot_bw
+```
+
+### N170 -- all
+```{r}
+n170_all_LinePlot_bw <- {
+  ggplot(data = data.frame(emm.N170.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) + # , alpha = .7
+    scale_fill_manual(values = c("gray70", "black"), guide = "none") +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.15, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(Type ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration (ms)", y = expression(paste("N170 Amplitudes (", mu, "V)")), color = "Category", linetype = "Category") +  # set the names for main, x and y axises title = "", 
+    # scale_x_discrete(labels = c("left", "right")) +
+    # geom_text(label = c("", "", "", "", "***", "", "", ""), color = "red", size = 6, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    theme_bw() +
+    erp_theme +
+    theme(
+      legend.position = c(.5, .5),
+      legend.title=element_text(size=10), 
+      legend.text=element_text(size=10),
+    ) +
+    guides(linetype = guide_legend(title.position = "left", nrow = 1),
+           color = guide_legend(title.position = "left", nrow = 1))
+}
+
+n170_all_LinePlot_bw
+```
+
+### P1 -- con
+```{r}
+p1_con_LinePlot_bw = {
+  ggplot(data = data.frame(emm.P1.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = c("gray75", "gray60", "gray35", "black"), guide = "none") +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.15, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
+    scale_x_discrete(labels = duraconf.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme + 
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+p1_con_LinePlot_bw
+```
+
+### N170 -- con
+```{r}
+n170_con_LinePlot_bw = {
+  ggplot(data = data.frame(emm.N170.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = c("gray75", "gray60", "gray35", "black"), guide = "none") +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.15, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_x_discrete(labels = duraconf.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Subjective Confidence", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+n170_con_LinePlot_bw
+```
+
+### P1 -- high
+```{r}
+p1_high_LinePlot_bw = {
+  ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, variables for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = c("gray60", "gray35", "black"), guide = "none") +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.15, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
+    scale_x_discrete(labels = durablock.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Halves", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+p1_high_LinePlot_bw
+```
+
+### N170 -- high
+```{r}
+n170_high_LinePlot_bw = {
+  ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
+    scale_fill_manual(values = c("gray60", "gray35", "black"), guide = "none") +
+    geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.15, alpha = .5) + # ,                   position = position_dodge(width=0.9)
+    facet_grid(. ~ Hemisphere, # switch = "x",
+               labeller = labeller(Hemisphere = hemiLabel)) +
+    scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
+    scale_x_discrete(labels = durablock.labels) +
+    # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(x = "Duration and Halves", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
+    theme_bw() +
+    erp_theme +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      legend.margin = margin(t = -10),
+      legend.title=element_text(size=12), 
+      legend.text=element_text(size=12),
+    )
+}
+
+n170_high_LinePlot_bw
+```
+
+### Save plots
+```{r}
+# filetype <- "pdf"
+# ggsave(paste0("equivalence_test_bw.", filetype), gg_equi_bw, width = 8, height = 4.7)
+# ggsave(paste0('plot_two_response_bw.', filetype), plot_two_response, width = 10, height = 5)
+# ggsave(paste0('P1_all_pub_bw.', filetype), p1_all_LinePlot_bw, width = 6, height = 5)
+# ggsave(paste0('N170_all_pub_bw.', filetype), n170_all_LinePlot_bw, width = 6, height = 5)
+# ggsave(paste0('P1_con_pub_bw.', filetype), p1_con_LinePlot_bw, width = 7, height = 5)
+# ggsave(paste0('N170_con_pub_bw.', filetype), n170_con_LinePlot_bw, width = 7, height = 5)
+# ggsave(paste0('p1_high_pub_bw.', filetype), p1_high_LinePlot_bw, width = 7, height = 4.5)
+# ggsave(paste0('n170_high_pub_bw.', filetype), n170_high_LinePlot_bw, width = 7, height = 4.5)
 ```
 
 # Versions of packages used
