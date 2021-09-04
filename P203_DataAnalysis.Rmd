@@ -5,6 +5,7 @@ date: "`r format(Sys.time(), '%d-%m-%Y')`"
 output:
   html_document:
     code_folding: hide
+    df_print: paged
     number_sections: true
     toc: true
     toc_depth: 4
