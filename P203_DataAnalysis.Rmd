@@ -2711,6 +2711,37 @@ n170_high_LinePlot_bw
 # ggsave(paste0('n170_high_pub_bw.', filetype), n170_high_LinePlot_bw, width = 7, height = 4.5)
 ```
 
+## Stimulus duration
+The duration in this section was the differences between the onset of masking and the onset of experimental stimuli, which were the time points of triggers sent by E-prime to EGI amplifier.
+
+```{r message=FALSE}
+stim_dura <- read_csv(file.path("data", "E205_stimulus_duration.csv"))
+```
+
+```{r}
+stim_dura %>% 
+  group_by(OnEvent, ISI) %>% 
+  summarize(count = n())
+```
+As shown in the above table, when the stimuli were intended to presented for 17ms, the actual interval between the onset of stimulus and masking were 32 (only a few trials), 33, or 34ms. When the stimuli were intended to presented for 200ms, the actual interval between the onset of stimulus and masking were 216 or 217 ms. 
+
+## Timing test
+The 
+```{r}
+timing <- read_csv(file.path("data", "timing_test_duration.csv"))
+```
+
+```{r}
+timing %>% 
+  group_by(OnEvents, timing) %>% 
+  summarize(count = n())
+```
+
+```{r}
+timing %>% 
+  group_by(OnEvents, dura) %>% 
+  summarize(count = n())
+```
 # Versions of packages used
 ```{r versions}
 # rstudioapi::versionInfo()
