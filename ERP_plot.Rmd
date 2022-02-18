@@ -32,7 +32,7 @@ xaringanExtra::use_clipboard()
 ```
 
 # Preparation
-```{r load the libraries}
+```{r setup}
 library(tidyverse)
 library(RColorBrewer)
 source(file.path("R", "substr_Event.R"))
@@ -78,7 +78,7 @@ df.binerp.N170 <- filter(df.binerp.clean, Component == "N170")
 ```
 
 ## Plots
-```{r fig.width = 12, fig.height = 20}
+```{r}
 N170.Plot.205 <- {
   ggplot(data = df.binerp.N170, aes(y = amplitude, x = TimePoint, color = Duration, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_line(size = .9) +  # plot the lines
@@ -188,7 +188,9 @@ duration_color <- c(brewer.pal(9, 'Blues')[8], brewer.pal(12, "Paired")[6])
 
 # arrange facet to one row
 N170_Plot_205 <- {
-  ggplot(data = df.binerp.N170, aes(y = amplitude, x = TimePoint, color = Duration, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
+  df.binerp.N170 %>% 
+    mutate(Duration = fct_recode(Duration, `33` = "17", `216` = "200")) %>% 
+    ggplot(aes(y = amplitude, x = TimePoint, color = Duration, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_line(size = .9) +  # plot the lines
     scale_linetype_manual(values=c("solid", "dashed")) +
     scale_color_manual(values=duration_color) +
@@ -279,6 +281,54 @@ N170_Plot_205_bw <- {
 N170_Plot_205_bw 
 ```
 
+```{r fig.asp=.4, fig.width = 8}
+# arrange facet to one row
+N170_Plot_205_cc <- {
+  df.binerp.N170 %>% 
+    mutate(Duration = fct_recode(Duration, `33` = "17", `216` = "200")) %>% 
+  ggplot(aes(y = amplitude, x = TimePoint, color = Duration, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_line(size = .9) +  # plot the lines
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    scale_color_manual(values=c("gray70", "black")) +
+    facet_grid(Type~ Hemisphere) +  # show the left and right hemisphere separately
+    theme_classic(base_size = 20) +  # set the theme as classical  
+    scale_y_reverse(limits = c(ymax, ymin), breaks = seq(-6, 6, 3)) +  # remove the space between columns and x axis
+    coord_cartesian(xlim = c(-200, 300)) +  # the limit for y axis 
+    scale_x_continuous(breaks = seq(-200, 300, by = 100)) +  # the marks for x axis
+    labs(x = "Time points (ms)", 
+         y = expression(paste("Amplitudes (", mu, "V)")), 
+         color = "Duration", 
+         linetype = "Category") +  # set the names for main, x and y axises   Bin ERP Plots for the N170 (E1)
+    # theme(plot.title = element_text(size = 22), axis.title = element_text(size = 20), axis.text = element_text(size = 20)) + # the size of the texts in plot   
+    # theme(legend.title=element_blank()) +  # remove legend title
+    theme(strip.text = element_text(size=22, lineheight=5.0), 
+          strip.background = element_rect(fill="white", colour="white", size=1), 
+          strip.placement = "outside", 
+          # legend.position = "bottom", 
+          # legend.title = element_text(size = 20), 
+          legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-10,-10,-5,-10),
+          # legend.text=element_text(size=19),
+          legend.key.width = unit(.9, "cm"),
+          legend.position = c(.55, .45),
+          legend.title=element_text(size=14), 
+          legend.text=element_text(size=14),
+          legend.spacing.y = unit(-0.005, "cm")
+          ) +
+    guides(linetype = guide_legend(title.position = "left", nrow = 1),
+           color = guide_legend(title.position = "left", nrow = 1)) +
+    geom_hline(yintercept = 0, linetype = 5, alpha = 0.5) +  # add line for y=0
+    geom_vline(xintercept = 0, linetype = 5, alpha = 0.5) +  # add line for x=0
+    geom_rect(aes(xmin = 96 - 0.1, xmax = 136 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
+              fill = "transparent", color = "grey70", size = 1, linetype = "dashed", show.legend= FALSE) + # add the time window for N170
+    geom_rect(aes(xmin = 152 - 0.1, xmax = 192 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
+              fill = "transparent", color = "grey70", size = 1, show.legend= FALSE) # add the time window for N170
+}
+
+# ggsave('N170_Plot_205_cc.pdf', N170_Plot_205_cc, width = 11, height = 5)
+
+N170_Plot_205_cc 
+```
 
 # ERP plots for intact stim with confidence
 ## Load and clean the data
@@ -308,7 +358,7 @@ str(df.con.clean)
 
 
 ## Plots
-```{r fig.width = 12, fig.height = 20}
+```{r }
 con.Plot.205 <- {
   ggplot(data = df.con.clean, aes(y = amplitude, x = TimePoint, color = DuraConf, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_line(size = .9) +  # plot the lines
@@ -424,10 +474,12 @@ duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")
 
 # arrange facet to one row
 con_Plot_205 <- {
-  ggplot(data = df.con.clean %>% mutate(DuraConf = if_else(DuraConf=="17_guess", "17ms_guess",
-                                                           if_else(DuraConf=="17_low", "17ms_low",
-                                                                   if_else(DuraConf=="17_high", "17ms_high", "200ms_high"))),
-                                        DuraConf = factor(DuraConf, levels = c("17ms_guess", "17ms_low", "17ms_high", "200ms_high"))), aes(y = amplitude, x = TimePoint, color = DuraConf, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
+  df.con.clean %>% 
+    mutate(DuraConf = if_else(DuraConf=="17_guess", "33ms_guess",
+                              if_else(DuraConf=="17_low", "33ms_low",
+                                      if_else(DuraConf=="17_high", "33ms_high", "216ms_high"))),
+           DuraConf = factor(DuraConf, levels = c("33ms_guess", "33ms_low", "33ms_high", "216ms_high"))) %>% 
+    ggplot(aes(y = amplitude, x = TimePoint, color = DuraConf, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_line(size = .9) +  # plot the lines
     scale_linetype_manual(values=c("solid", "dashed")) +
     scale_color_manual(values=duration_color) +
@@ -463,7 +515,7 @@ con_Plot_205 <- {
     geom_rect(aes(xmin = 96 - 0.1, xmax = 136 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
               fill = "transparent", color = "grey70", size = 1, linetype = "dashed", show.legend= FALSE) + # add the time window for N170
     geom_rect(aes(xmin = 152 - 0.1, xmax = 192 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
-              fill = "transparent", color = "grey70", size = 1, show.legend= FALSE) # add the time window for N170
+              fill = "transparent", color = "grey70", size = 1, linetype = "solid", show.legend= FALSE) # add the time window for N170
 }
 
 # ggsave('con_Plot_205.pdf', con_Plot_205, width = 22, height = 4)
@@ -521,6 +573,59 @@ con_Plot_205_bw <- {
 con_Plot_205_bw 
 ```
 
+```{r fig.asp=.4, fig.width = 8}
+# arrange facet to one row
+con_Plot_205_cc <- {
+  df.con.clean %>% 
+    mutate(DuraConf = if_else(DuraConf=="17_guess", "33ms_guess",
+                              if_else(DuraConf=="17_low", "33ms_low",
+                                      if_else(DuraConf=="17_high", "33ms_high", "216ms_high"))),
+           DuraConf = factor(DuraConf, levels = c("33ms_guess", "33ms_low", "33ms_high", "216ms_high"))) %>% 
+  ggplot(aes(y = amplitude, x = TimePoint, color = DuraConf, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_line(size = .9) +  # plot the lines
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    scale_color_manual(values=c("gray75", "gray60", "gray35", "black")) +
+    facet_grid(Category ~ Hemisphere) +  # show the left and right hemisphere separately
+    theme_classic(base_size = 20) +  # set the theme as classical  
+    scale_y_reverse(limits = c(ymax, ymin), breaks = seq(-6, 6, 3)) +  # remove the space between columns and x axis
+    coord_cartesian(xlim = c(-200, 300)) +  # the limit for y axis 
+    scale_x_continuous(breaks = seq(-200, 500, by = 100)) +  # the marks for x axis
+    labs(x = "Time points (ms)", 
+         y = expression(paste("Amplitudes (", mu, "V)")), 
+         color = "Duration_Confidence", 
+         linetype = "Category") +  # set the names for main, x and y axises   Bin ERP Plots for the N170 (E1)
+    # theme(plot.title = element_text(size = 22), axis.title = element_text(size = 20), axis.text = element_text(size = 20)) + # the size of the texts in plot   
+    # theme(legend.title=element_blank()) +  # remove legend title
+    theme(strip.text = element_text(size=22, lineheight=5.0), 
+          strip.background = element_rect(fill="white", colour="white", size=1), 
+          strip.placement = "outside", 
+          legend.position = "bottom",
+          # legend.title = element_text(size = 20), 
+          legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-15,-10,-5,-10),
+          # legend.text=element_text(size=19),
+          legend.key.width = unit(.7, "cm"),
+          # legend.position = c(.49, .85),
+          legend.title=element_text(size=14), 
+          legend.text=element_text(size=14)
+          ) +
+    guides(color = guide_legend(order = 1)) +
+    # guides(linetype = guide_legend(title.position = "left", nrow = 1),
+    #        color = guide_legend(title.position = "left", nrow = 2)) +
+    geom_hline(yintercept = 0, linetype = 5, alpha = 0.5) +  # add line for y=0
+    geom_vline(xintercept = 0, linetype = 5, alpha = 0.5) +  # add line for x=0
+    geom_rect(aes(xmin = 96 - 0.1, xmax = 136 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
+              fill = "transparent", color = "grey70", size = 1, linetype = "dashed", show.legend= FALSE) + # add the time window for N170
+    geom_rect(aes(xmin = 152 - 0.1, xmax = 192 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
+              fill = "transparent", color = "grey70", size = 1, linetype = "solid", show.legend= FALSE) # add the time window for N170
+}
+
+# ggsave('con_Plot_205_cc.pdf', con_Plot_205_cc, width = 11, height = 5.25)
+
+con_Plot_205_cc 
+```
+
+
 # ERP plots for intact stim with blocks
 ## Load and clean the data
 ```{r}
@@ -550,7 +655,7 @@ str(df.block.clean)
 
 
 ## Plots
-```{r fig.width = 12, fig.height = 20}
+```{r }
 block.Plot.205 <- {
   ggplot(data = df.block.clean, aes(y = amplitude, x = TimePoint, color = DuraBlock, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_line(size = .9) +  # plot the lines
@@ -658,7 +763,9 @@ block_Plot_205
 duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]) 
 
 block_Plot_205 <- {
-  ggplot(data = df.block.clean %>% mutate(DuraBlock = if_else(DuraBlock == "17-1", "17ms_half1", if_else(DuraBlock == "17-2", "17ms_half2", "200ms_half2"))), aes(y = amplitude, x = TimePoint, color = DuraBlock, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
+  df.block.clean %>% 
+    mutate(DuraBlock = fct_recode(DuraBlock, `33ms_half1` = "17-1", `33ms_half2` = "17-2", `216ms_half2` = "200-2")) %>% 
+    ggplot(aes(y = amplitude, x = TimePoint, color = DuraBlock, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_line(size = .9) +  # plot the lines
     scale_linetype_manual(values=c("solid", "dashed")) +
     scale_color_manual(values=duration_color) +
@@ -744,4 +851,51 @@ block_Plot_205_bw <- {
 # ggsave('block_Plot_205_bw.pdf', block_Plot_205_bw, width = 22, height = 4)
 
 block_Plot_205_bw 
+```
+
+```{r fig.asp=.4, fig.width = 8}
+block_Plot_205_cc <- {
+  df.block.clean %>% 
+    mutate(DuraBlock = fct_recode(DuraBlock, `33ms_half1` = "17-1", `33ms_half2` = "17-2", `216ms_half2` = "200-2")) %>% 
+  ggplot(aes(y = amplitude, x = TimePoint, color = DuraBlock, linetype = Category)) + # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_line(size = .9) +  # plot the lines
+    scale_linetype_manual(values=c("solid", "dashed")) +
+    scale_color_manual(values=c("gray60", "gray35", "black")) +
+    facet_grid(Category ~ Hemisphere) +  # show the left and right hemisphere separately
+    theme_classic(base_size = 20) +  # set the theme as classical  
+    scale_y_reverse(limits = c(ymax, ymin), breaks = seq(-6, 6, 3)) +  # remove the space between columns and x axis
+    coord_cartesian(xlim = c(-200, 300)) +  # the limit for y axis 
+    scale_x_continuous(breaks = seq(-200, 500, by = 100)) +  # the marks for x axis
+    labs(x = "Time points (ms)", 
+         y = expression(paste("Amplitudes (", mu, "V)")), 
+         color = "Duration_Half", 
+         linetype = "Category") +  # set the names for main, x and y axises   Bin ERP Plots for the N170 (E1)
+    # theme(plot.title = element_text(size = 22), axis.title = element_text(size = 20), axis.text = element_text(size = 20)) + # the size of the texts in plot   
+    # theme(legend.title=element_blank()) +  # remove legend title
+    theme(strip.text = element_text(size=22, lineheight=5.0), 
+          strip.background = element_rect(fill="white", colour="white", size=1), 
+          strip.placement = "outside", 
+          legend.position = "bottom", 
+          # legend.title = element_text(size = 18), 
+          legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-15,-10,-5,-10),
+          legend.key.width = unit(.9, "cm"),
+          legend.title=element_text(size=14), 
+          legend.text=element_text(size=14)
+          ) +
+    guides(
+      color = guide_legend(nrow = 1, byrow = TRUE, order = 1),
+      linetype = guide_legend(nrow = 1, byrow = TRUE, order = 2)
+    ) +
+    geom_hline(yintercept = 0, linetype = 5, alpha = 0.5) +  # add line for y=0
+    geom_vline(xintercept = 0, linetype = 5, alpha = 0.5) +  # add line for x=0
+    geom_rect(aes(xmin = 96 - 0.1, xmax = 136 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
+              fill = "transparent", color = "grey70", size = 1, linetype = "dashed", show.legend= FALSE) + # add the time window for N170
+    geom_rect(aes(xmin = 152 - 0.1, xmax = 192 + 0.1, ymin = ymin + 0.05, ymax = ymax - 0.05),
+              fill = "transparent", color = "grey70", size = 1, linetype = "solid", show.legend= FALSE) # add the time window for N170
+}
+
+# ggsave('block_Plot_205_cc.pdf', block_Plot_205_cc, width = 11, height = 5)
+
+block_Plot_205_cc 
 ```

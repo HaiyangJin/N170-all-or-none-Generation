@@ -44,7 +44,7 @@ xaringanExtra::use_clipboard()
 + Stimulus Type (`Type`: *intact* vs. *scrambled*)
 + Stimulus Category (`Category`: *faces* vs. *houses*)
 + Hemisphere (`Hemisphere`: *left* vs. *right*)
-+ Duration (`Duration`: *17* vs. *200*)
++ Duration (`Duration`: *33*[*17*] vs. *216*[*200*]) 
 
 ## Preparations
 ```{r setup, message=FALSE}
@@ -108,7 +108,7 @@ Duration <- c("17", "200")
 Amplitudes <- c(-2.5, -5)
 Hypotheses <- rep("means", 2)
 
-df_lit <- data_frame(Duration, Amplitudes, Hypotheses)
+df_lit <- tibble(Duration, Amplitudes, Hypotheses)
 
 plot_lit <- {
   ggplot(data = df_lit, aes(y = Amplitudes, x = Duration, fill = Duration)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
@@ -136,7 +136,7 @@ Amplitudes <- c(c(rep(-2.5, 5), rep(-5, 5)), c(rep(-.83, 3), rep(-5, 7)))
 TrialNum <- rep(as.character(rep(c(1:5), 2)), 2)
 Hypotheses <- c(rep("Possibility 1", 10), rep("Possibility 2", 10))
 
-df_st <- data_frame(Duration, Amplitudes, TrialNum, Hypotheses)
+df_st <- tibble(Duration, Amplitudes, TrialNum, Hypotheses)
 
 plot_st <- {
   ggplot(data = df_st, aes(y = Amplitudes, x = Duration, fill = Duration, color = TrialNum)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
@@ -156,7 +156,6 @@ plot_st <- {
 
 plot_st
 ```
-
 
 ```{r combine the aggregated mean amp plots and the explanation plots, include=FALSE}
 # library(ggpubr)
@@ -232,6 +231,7 @@ gg_equi_bw <- ggplot(df_equi, aes(xmin = CI_low, xmax = CI_upp, y = Scenarios)) 
     text = element_text(size = 10),
     axis.title = element_text(size = 16), 
     axis.text = element_text(size = 15), # the size of the texts in plot
+    axis.title.y=element_blank(),  #remove y axis labels
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     legend.title=element_text(size=16),
     legend.text=element_text(size=16),
@@ -256,7 +256,7 @@ gg_equi_bw
 
 
 # Behavior results
-```{r load behavioral results of 205}
+```{r load behavioral results of 205, message=FALSE}
 raw_beha_205 <- {
   "E205_35_Behavior.csv" %>% 
     file.path(folder_data, .) %>% 
@@ -287,7 +287,6 @@ clean_beha_205 <- {
       RT.Within3Z = ifelse(RT.Z <= 3 & RT.Z >= -3, 1, ifelse(RT.Z < -3 | RT.Z > 3, 0, NaN)) # if the Z values are between -3 and 3, will be marked as 1
     ) %>% 
     ungroup() # ungroup the data 
-  
 }
 
 # behavior.tidyup
@@ -349,7 +348,7 @@ subj.info.205 <- {
     distinct() # only keep the unique rows
 }
 
-subj.info.205
+subj.info.205 
 ```
 
 ```{r}
@@ -369,38 +368,36 @@ tmp.count <- {
 
 avg.dist.long.205 <- {
   clean_beha_205 %>% 
-    # mutate(RespRateFace = if_else(Category == "face", ACC, if_else(Category == "house", as.numeric(!ACC), NaN))) %>% 
     group_by(SubjCode, Type, Category, Duration, Resp) %>% 
-    summarize(Count = n()) %>% 
-    
+    summarize(Count = n(), .groups = "drop") %>% 
+    right_join(., tidyr::expand(., SubjCode, Type, Category, Duration, Resp),
+               by = c("SubjCode", "Type", "Category", "Duration", "Resp")) %>% # make missing rows explicit
+    mutate(Count = if_else(is.na(Count), 0L, Count)) %>% 
     right_join(tmp.count, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
-    mutate(RespRate = Count / Count_sum) %>% 
-    ungroup()
+    mutate(RespRate = Count / Count_sum)
 }
 
 # descriptive statistics of accuracy for plotting
 desc.dist.205 <- {
   avg.dist.long.205 %>%
     group_by(Type, Category, Duration, Resp) %>%
-    summarize(Mean = mean(RespRate)
-              , N = n()
-              , SD = if_else(N > 1, sd(RespRate), 0)
+    summarize(N = n()
+              , Mean = sum(RespRate)/N
+              , SD = sd(RespRate)
               , SE = SD/sqrt(N)
               , SE.lo = Mean - SE, SE.hi = Mean + SE
               , CI_lo = Mean - SE * 1.96
               , CI_hi = Mean + SE * 1.96
               , Median = median(RespRate)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
-    ) %>% 
-    ungroup() %>% 
-    add_row(Type = "intact", Category = "house", Duration = "200", Resp = "2", Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
-            SE.hi = 0, CI_lo = 0, CI_hi = 0, Median = 0, Lower = 0, Upper = 0, .before = 17)
+              , .groups = "drop"
+    )
 }
 
 avg.dist.wide.205 <- {
-  avg.dist.long.205 %>% 
-    mutate(Conditions = paste(Type, Category, Duration, Resp, sep = "_")) %>% 
-    select(SubjCode, Conditions, RespRate) %>% 
+  avg.dist.long.205 %>%
+    mutate(Conditions = paste(Type, Category, Duration, Resp, sep = "_")) %>%
+    dplyr::select(SubjCode, Conditions, RespRate) %>%
     spread(Conditions, RespRate)
 }
 
@@ -479,7 +476,7 @@ desc_ratio_205 <- {
     group_by(Type, Duration, Resp) %>%
     summarize(Mean = mean(ratio)
               , N = n()
-              , SD = if_else(N > 1, sd(ratio), 0)
+              , SD = sd(ratio)
               , SE = SD/sqrt(N)
               , SE.lo = Mean - SE, SE.hi = Mean + SE
               , CI_lo = Mean - SE * 1.96
@@ -514,13 +511,18 @@ rate.ColuPlot.205
 
 Combine the two plots (for publication):
 ```{r include=TRUE, fig.asp=.5}
-# combine the two behavior response plots
 
+dura16.labels <- c("33 ms", "216 ms")
+names(dura16.labels) <- c(17, 200)
+
+# combine the two behavior response plots
 dist_ColuPlot_205 <- 
-  ggplot(data = desc.dist.205, aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  desc.dist.205 %>% 
+  # mutate(Duration = fct_recode(Duration, `33` = "17", `216` = "200")) %>% 
+  ggplot(aes(y = Mean, x = Resp, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
   geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
   facet_grid(Type ~ Duration,
-             labeller = labeller(Duration = dura.labels)) +
+             labeller = labeller(Duration = dura16.labels)) +
   geom_errorbar(mapping = aes(ymin = CI_lo, ymax = CI_hi), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
@@ -534,10 +536,12 @@ dist_ColuPlot_205 <-
   theme(legend.position = c(0.53, 0.3)) 
 
 resp_ColuPlot_205 <- {
-  ggplot(data = desc_ratio_205, aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  desc_ratio_205 %>% 
+  # mutate(Duration = fct_recode(Duration, "33" = "17", "216" = "200")) %>% 
+  ggplot(aes(y = Mean, x = Resp)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Type ~ Duration, 
-               labeller = labeller(Duration = dura.labels)) +
+               labeller = labeller(Duration = dura16.labels)) +
     geom_errorbar(mapping = aes(ymin = SE.lo, ymax = SE.hi), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -793,7 +797,9 @@ duration_color <- c(brewer.pal(9, 'Blues')[c(6:8)], brewer.pal(12, "Paired")[6])
 # category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
 p1_all_LinePlot <- {
-  ggplot(data = data.frame(emm.P1.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.P1.E205) %>% 
+    mutate(Duration = fct_recode(Duration, `33`="17", `216`="200")) %>% 
+  ggplot(aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = duration_color[c(3, 4)], guide = "none") +
     geom_line(aes(linetype = Category)) +  # position = "dodge", alpha = .7
@@ -1153,7 +1159,9 @@ n170.all.LinePlot
 
 ```{r eval=FALSE}
 n170_all_LinePlot <- {
-  ggplot(data = data.frame(emm.N170.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.N170.E205) %>% 
+    mutate(Duration = fct_recode(Duration, `33`="17", `216`="200")) %>% 
+    ggplot(aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = duration_color[c(3, 4)], guide = "none") +
     geom_line(aes(linetype = Category)) +  # position = "dodge", alpha = .7
@@ -1444,7 +1452,10 @@ duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")
 # category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
 p1_con_LinePlot = {
-  ggplot(data = data.frame(emm.P1.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.P1.SC.E205) %>% 
+    mutate(DuraConf = fct_recode(DuraConf, 
+                                 `33_guess` = "17_guess", `33_low` = "17_low", `33_high` = "17_high", `216_high` = "200_high")) %>%
+  ggplot(aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = duration_color, guide = "none") +
     geom_line(aes(linetype = Category)) +  # position = "dodge", alpha = .7
@@ -1454,7 +1465,7 @@ p1_con_LinePlot = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
-    scale_x_discrete(labels = duraconf.labels) +
+    scale_x_discrete(labels = c("33 ms\nguess", "33 ms\nlow", "33 ms\nhigh", "216 ms\nhigh")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -1682,7 +1693,10 @@ duration_color <- c(brewer.pal(9, 'Blues')[c(6, 7, 9)], brewer.pal(12, "Paired")
 # category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
 n170_con_LinePlot = {
-  ggplot(data = data.frame(emm.N170.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.N170.SC.E205) %>% 
+    mutate(DuraConf = fct_recode(DuraConf, 
+                                 `33_guess` = "17_guess", `33_low` = "17_low", `33_high` = "17_high", `216_high` = "200_high")) %>%
+    ggplot(aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = duration_color, guide = "none") +
     geom_line(aes(linetype = Category)) +  # position = "dodge", alpha = .7
@@ -1692,7 +1706,7 @@ n170_con_LinePlot = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
-    scale_x_discrete(labels = duraconf.labels) +
+    scale_x_discrete(labels = c("33 ms\nguess", "33 ms\nlow", "33 ms\nhigh", "216 ms\nhigh")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -1790,8 +1804,9 @@ avg.resp.long.E205.Block <- {
   clean_beha_205 %>% 
     filter(Type == "intact") %>% 
     group_by(SubjCode, Category, Duration, blockID, Resp) %>% 
-    summarize(Count = n()) %>% 
-    
+    summarize(Count = n(), .groups = "drop") %>% 
+    right_join(., tidyr::expand(., SubjCode, blockID, Category, Duration)) %>% 
+    mutate(Count = if_else(is.na(Count), 0L, Count)) %>% 
     right_join(tmpBlock.count, by = c("SubjCode", "blockID", "Category", "Duration")) %>% 
     mutate(RespRate = Count / Count_sum) %>% 
     ungroup()
@@ -1803,16 +1818,14 @@ desc.resp.E205.Block <- {
     group_by(blockID, Category, Duration, Resp) %>%
     summarize(Mean = mean(RespRate)
               , N = n()
-              , SD = if_else(N > 1, sd(RespRate), 0)
+              , SD = sd(RespRate)
               , SE = SD/sqrt(N)
               , SE.lo = Mean - SE, SE.hi = Mean + SE
               , CI = SE * qt(0.975,N)
               , Median = median(RespRate)
               , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
     ) %>% 
-    ungroup() %>% 
-    add_row(blockID = "2", Category = "house", Duration = "200", Resp = "2", Mean = 0, N = 0, SD = 0, SE = 0, SE.lo = 0,
-            SE.hi = 0, CI = 0, Median = 0, Lower = 0, Upper = 0)
+    ungroup() 
 }
 
 avg.resp.wide.E205.Block <- {
@@ -1898,7 +1911,7 @@ df.ratio.E205.Block <- {
     filter(Type == "intact") %>% 
     mutate(isFace = if_else(Category == "face", 1, 0)) %>% 
     group_by(SubjCode, blockID, Duration, Resp) %>% 
-    summarize(ratio = mean(isFace), Count = n())
+    summarize(ratio = mean(isFace), Count = n(), .groups = "drop") 
 }
 
 desc.ratio.E205.Block <- {
@@ -1906,7 +1919,7 @@ desc.ratio.E205.Block <- {
     group_by(blockID, Duration, Resp) %>%
     summarize(Mean = mean(ratio)
               , N = n()
-              , SD = if_else(N > 1, sd(ratio), 0)
+              , SD = sd(ratio)
               , SE = SD/sqrt(N)
               , SE.lo = Mean - SE, SE.hi = Mean + SE
               , CI = SE * qt(0.975,N)
@@ -1916,8 +1929,6 @@ desc.ratio.E205.Block <- {
     ungroup()
 }
 ```
-
-
 
 ```{r}
 ratio.ColuPlot.E205.Block <- {
@@ -2095,7 +2106,10 @@ duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]
 # category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
 p1_high_LinePlot = {
-  ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.P1.high.E205) %>% 
+    mutate(DuraBlock = fct_recode(DuraBlock, 
+                                 `33_1` = "17_1", `33_2` = "17_2", `216_2` = "200_2")) %>% 
+  ggplot(aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = duration_color, guide = "none") +
     geom_line(aes(linetype = Category)) +  # position = "dodge", alpha = .7
@@ -2105,7 +2119,7 @@ p1_high_LinePlot = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
-    scale_x_discrete(labels = durablock.labels) +
+    scale_x_discrete(labels = c("33 ms\nhalf 1", "33 ms\nhalf 2", "216 ms\nhalf 2")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Halves", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -2316,7 +2330,10 @@ duration_color <- c(brewer.pal(9, 'Blues')[c(6, 8)], brewer.pal(12, "Paired")[6]
 # category_color <- brewer.pal(8, 'Dark2')[c(6,1)]
 
 n170_high_LinePlot = {
-  ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.N170.high.E205) %>% 
+    mutate(DuraBlock = fct_recode(DuraBlock, 
+                                 `33_1` = "17_1", `33_2` = "17_2", `216_2` = "200_2")) %>% 
+  ggplot(aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = duration_color, guide = "none") +
     geom_line(aes(linetype = Category)) +  # position = "dodge", alpha = .7
@@ -2326,7 +2343,7 @@ n170_high_LinePlot = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
-    scale_x_discrete(labels = durablock.labels) +
+    scale_x_discrete(labels = c("33 ms\nhalf 1", "33 ms\nhalf 2", "216 ms\nhalf 2")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Halves", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -2431,9 +2448,8 @@ For the analysis for every dependent variable, an optimal model was obtained by 
 2. **ZCP Model**: a zero-correlated-parameter (zcp) model based on the maximum model is built. The only difference between zcp and maximum models is that the correlations between random effects are forced to be zero in the zcp model.
 3. **Reduced Model**: the random effects which are not supported by the data will be removed from the zcp model. The function `step(fit, fixed.reduce = FALSE)` from `library(lmerTest)` is used for this step. The algorithm could be found [here](#stepfun).
 4. **Extended Model**: extending the reduced model with correlation parameters between the remaining random effects.
-5. **Pruning Model**: pruning low correlation parameters. (Usually I don't do this.)
 
-More details about this whole process chould be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
+More details about this whole process could be found here: Bates, D., Kliegl, R., Vasishth, S., & Baayen, H. (2015). Parsimonious Mixed Models. Retrieved from http://arxiv.org/abs/1506.04967.
 
 ## Stimuli specific effects
 ```{r}
@@ -2522,7 +2538,9 @@ plot_two_response
 ### P1 -- all
 ```{r}
 p1_all_LinePlot_bw <- {
-  ggplot(data = data.frame(emm.P1.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.P1.E205) %>% 
+    mutate(Duration = fct_recode(Duration, `33` = "17", `216` = "200")) %>% 
+    ggplot(aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) + # , alpha = .7
     scale_fill_manual(values = c("gray70", "black"), guide = "none") +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2554,7 +2572,9 @@ p1_all_LinePlot_bw
 ### N170 -- all
 ```{r}
 n170_all_LinePlot_bw <- {
-  ggplot(data = data.frame(emm.N170.E205), aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.N170.E205) %>% 
+    mutate(Duration = fct_recode(Duration, `33` = "17", `216` = "200")) %>% 
+    ggplot(data = , aes(y = emmean, x = Duration, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = Duration), size=4, shape=21, stroke=0) + # , alpha = .7
     scale_fill_manual(values = c("gray70", "black"), guide = "none") +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2584,8 +2604,11 @@ n170_all_LinePlot_bw
 
 ### P1 -- con
 ```{r}
-p1_con_LinePlot_bw = {
-  ggplot(data = data.frame(emm.P1.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+p1_con_LinePlot_bw <- {
+  data.frame(emm.P1.SC.E205) %>% 
+    mutate(DuraConf = fct_recode(DuraConf, 
+                                 `33_guess` = "17_guess", `33_low` = "17_low", `33_high` = "17_high", `216_high` = "200_high")) %>%   
+    ggplot(aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = c("gray75", "gray60", "gray35", "black"), guide = "none") +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2595,7 +2618,7 @@ p1_con_LinePlot_bw = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
-    scale_x_discrete(labels = duraconf.labels) +
+    scale_x_discrete(labels = c("33 ms\nguess", "33 ms\nlow", "33 ms\nhigh", "216 ms\nhigh")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -2614,7 +2637,10 @@ p1_con_LinePlot_bw
 ### N170 -- con
 ```{r}
 n170_con_LinePlot_bw = {
-  ggplot(data = data.frame(emm.N170.SC.E205), aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.N170.SC.E205) %>% 
+    mutate(DuraConf = fct_recode(DuraConf, 
+                                 `33_guess` = "17_guess", `33_low` = "17_low", `33_high` = "17_high", `216_high` = "200_high")) %>%
+    ggplot(aes(y = emmean, x = DuraConf, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraConf), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = c("gray75", "gray60", "gray35", "black"), guide = "none") +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2624,7 +2650,7 @@ n170_con_LinePlot_bw = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
-    scale_x_discrete(labels = duraconf.labels) +
+    scale_x_discrete(labels = c("33 ms\nguess", "33 ms\nlow", "33 ms\nhigh", "216 ms\nhigh")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Subjective Confidence", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -2643,7 +2669,10 @@ n170_con_LinePlot_bw
 ### P1 -- high
 ```{r}
 p1_high_LinePlot_bw = {
-  ggplot(data = data.frame(emm.P1.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, variables for x and y axises, and the variable for dividing data
+  data.frame(emm.P1.high.E205) %>% 
+    mutate(DuraBlock = fct_recode(DuraBlock, 
+                                 `33_1` = "17_1", `33_2` = "17_2", `216_2` = "200_2")) %>% 
+    ggplot(data = , aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, variables for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = c("gray60", "gray35", "black"), guide = "none") +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2653,7 +2682,7 @@ p1_high_LinePlot_bw = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_p1) +  # set the limit for y axis
-    scale_x_discrete(labels = durablock.labels) +
+    scale_x_discrete(labels = c("33 ms\nhalf 1", "33 ms\nhalf 2", "216 ms\nhalf 2")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Halves", y = expression(paste("P1 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -2672,7 +2701,10 @@ p1_high_LinePlot_bw
 ### N170 -- high
 ```{r}
 n170_high_LinePlot_bw = {
-  ggplot(data = data.frame(emm.N170.high.E205), aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+  data.frame(emm.N170.high.E205) %>% 
+    mutate(DuraBlock = fct_recode(DuraBlock, 
+                                  `33_1` = "17_1", `33_2` = "17_2", `216_2` = "200_2")) %>% 
+    ggplot(aes(y = emmean, x = DuraBlock, group = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
     geom_point(aes(fill = DuraBlock), size=4, shape=21, stroke=0) +
     scale_fill_manual(values = c("gray60", "gray35", "black"), guide = "none") +
     geom_line(aes(linetype = Category), size = .85) +  # position = "dodge", alpha = .7
@@ -2682,7 +2714,7 @@ n170_high_LinePlot_bw = {
     facet_grid(. ~ Hemisphere, # switch = "x",
                labeller = labeller(Hemisphere = hemiLabel)) +
     scale_y_reverse(limits = ylimit_n170, breaks = seq(1, -5, -1)) +  # set the limit for y axis
-    scale_x_discrete(labels = durablock.labels) +
+    scale_x_discrete(labels = c("33 ms\nhalf 1", "33 ms\nhalf 2", "216 ms\nhalf 2")) +
     # scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
     labs(x = "Duration and Halves", y = expression(paste("N170 Amplitudes (", mu, "V)")), fill = "Category") +  # set the names for main, x and y axises title = "", 
     theme_bw() +
@@ -2742,6 +2774,64 @@ timing %>%
   group_by(OnEvents, dura) %>% 
   summarize(count = n())
 ```
+
+## Reply to Reviewer
+
+```{r}
+# ("acc") descriptive statistics of accuracy for plotting
+acc.dist.205 <- clean_beha_205 %>% 
+    mutate(Resp_acc = if_else(Resp %in% c(1,2), "1 or 2",
+                              if_else(Resp %in% c(4,5), "4 or 5",
+                                      if_else(Resp == 3, "3", "NA")))) %>% 
+    group_by(SubjCode, Type, Category, Duration, Resp_acc) %>% 
+    summarize(Count = n(), .groups = "drop") %>% 
+    right_join(., tidyr::expand(., SubjCode, Type, Category, Duration, Resp_acc)) %>%
+    mutate(Count = if_else(is.na(Count), 0L, Count)) %>%
+    right_join(tmp.count, by = c("SubjCode", "Type", "Category", "Duration")) %>% 
+    mutate(RespRate = Count / Count_sum) %>% 
+    # ungroup() 
+    group_by(Type, Category, Duration, Resp_acc) %>%
+    summarize(N = n()
+              , Mean = sum(RespRate)/N
+              , SD = sd(RespRate)
+              , SE = SD/sqrt(N)
+              , SE.lo = Mean - SE, SE.hi = Mean + SE
+              , CI_lo = Mean - SE * 1.96
+              , CI_hi = Mean + SE * 1.96
+              , Median = median(RespRate)
+              , Lower = Mean - SD, Upper = Mean + SD # for rainclound plot
+    ) 
+
+acc.dist.205
+```
+
+```{r}
+dura.labels <- c("17ms", "200ms")
+names(dura.labels) <- c(17, 200)
+
+dist.acc.ColuPlot.205 <- {
+  ggplot(data = acc.dist.205, aes(y = Mean, x = Resp_acc, fill = Category)) +  # set the data, varialbes for x and y axises, and the variable for dividing data
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Type ~ Duration,
+               labeller = labeller(Duration = dura.labels)) +
+    geom_errorbar(mapping = aes(ymin = CI_lo, ymax = CI_hi), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    coord_cartesian(ylim = c(0,1.1)) +  # set the limit for y axis
+    scale_y_continuous(expand= c(0, 0)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Responses", y = "Percentage", fill = "Category") +  # set the names for main, x and y axises Subjective Responses for E205
+    scale_fill_grey() +  # set the color for columns
+    # geom_text(label = c("***", "***", "", ""), color = c("red", "red", "red", "red"), size = 6, nudge_y = 0.05, nudge_x = rep(c(-0.225, 0.225), 2)) + # add starts to the significant columns
+    erp_theme
+}
+
+# ggsave("acc_column_plot.png", dist.acc.ColuPlot.205, width = 8, height = 7)
+
+dist.acc.ColuPlot.205
+```
+
+
 # Versions of packages used
 ```{r versions}
 # rstudioapi::versionInfo()
